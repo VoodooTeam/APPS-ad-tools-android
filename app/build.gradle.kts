@@ -2,6 +2,11 @@ plugins {
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.jetbrainsKotlinAndroid)
     alias(libs.plugins.jetbrainsKotlinSerialization)
+    id("applovin-quality-service")
+}
+
+applovin {
+    apiKey = "«ad-review-key»"
 }
 
 android {
@@ -70,6 +75,9 @@ dependencies {
     implementation(libs.kotlin.collections)
     implementation(libs.coil)
     implementation(libs.bundles.retrofit)
+
+    // Ads
+    implementation(project(":ads"))
 
     // Test
     testImplementation(libs.junit)

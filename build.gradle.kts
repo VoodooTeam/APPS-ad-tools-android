@@ -2,6 +2,16 @@
 plugins {
     alias(libs.plugins.androidApplication) apply false
     alias(libs.plugins.jetbrainsKotlinAndroid) apply false
+    alias(libs.plugins.androidLibrary) apply false
+}
+
+buildscript {
+    repositories {
+        maven { url = uri("https://artifacts.applovin.com/android") }
+    }
+    dependencies {
+        classpath("com.applovin.quality:AppLovinQualityServiceGradlePlugin:5.1.7")
+    }
 }
 
 subprojects {

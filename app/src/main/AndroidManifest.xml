@@ -12,6 +12,11 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.AdsTools"
         tools:targetApi="31">
+
+        <meta-data
+            android:name="applovin.sdk.key"
+            android:value="«sdk-key»" />
+
         <activity
             android:name=".MainActivity"
             android:exported="true"
