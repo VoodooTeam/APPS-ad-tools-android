@@ -18,8 +18,6 @@ class MaxMRECAdWrapper internal constructor(
 
     override var analyticsInfo: AnalyticsInfo = ad.buildAnalyticsInfo(null)
         internal set
-    override var seen: Boolean = false
-        internal set
     internal var moderationResult: AdResult? = null
 
     override val isExpired: Boolean

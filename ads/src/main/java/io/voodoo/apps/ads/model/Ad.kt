@@ -10,7 +10,6 @@ sealed class Ad {
 
     abstract val isBlocked: Boolean
     abstract val isExpired: Boolean
-    abstract val seen: Boolean
 
     abstract fun render(view: View)
 

@@ -16,7 +16,7 @@ import com.applovin.mediation.MaxAdViewAdListener
 import com.applovin.mediation.MaxError
 import com.applovin.mediation.ads.MaxAdView
 import com.applovin.sdk.AppLovinSdkUtils
-import io.voodoo.apps.ads.api.AdClient
+import io.voodoo.apps.ads.api.BaseAdClient
 import io.voodoo.apps.ads.api.listener.AdLoadingListener
 import io.voodoo.apps.ads.api.listener.AdModerationListener
 import io.voodoo.apps.ads.api.listener.AdRevenueListener
@@ -25,7 +25,7 @@ import io.voodoo.apps.ads.applovin.exception.MaxAdLoadException
 import io.voodoo.apps.ads.applovin.listener.DefaultMaxAdViewAdListener
 import io.voodoo.apps.ads.applovin.listener.MultiMaxAdViewAdListener
 import io.voodoo.apps.ads.model.Ad
-import io.voodoo.apps.ads.model.AdConfig
+import io.voodoo.apps.ads.model.AdClientConfig
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
@@ -34,13 +34,13 @@ import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 
 class MaxMRECAdClient(
-    private val config: AdConfig,
+    private val config: AdClientConfig,
     private val plugins: List<MRECAdClientPlugin> = emptyList(),
     private val loadingListener: AdLoadingListener? = null,
     private val revenueListener: AdRevenueListener? = null,
     private val moderationListener: AdModerationListener? = null,
     adViewListener: MaxAdViewAdListener? = null,
-) : AdClient<Ad.MREC> {
+) : BaseAdClient<MaxMRECAdWrapper, Ad.MREC>(bufferSize = config.bufferSize) {
 
     private val type: Ad.Type = Ad.Type.MREC
 
@@ -49,13 +49,9 @@ class MaxMRECAdClient(
 
     private val listener = MultiMaxAdViewAdListener()
 
-    private var adView: MaxAdView? = null
-    private var ad: MaxMRECAdWrapper? = null
     private var activity: Activity? = null
 
     init {
-        requireNotNull(config.mrecAdUnit) { "Attempt to init MaxMRECAdClient without mrecAdUnit" }
-
         adViewListener?.let(listener::add)
         appharbrListener = AHListener { view, _, _, reasons ->
             markAdAsBlocked(view as MaxAdView, reasons)
@@ -67,16 +63,15 @@ class MaxMRECAdClient(
     }
 
     override fun close() {
-        Timber.w("close()")
-        adView?.let(AppHarbr::removeBannerView)
-        adView?.destroy()
-        adView = null
-        ad = null
+        super.close()
         activity = null
     }
 
-    override fun getAdReadyToDisplay(): Ad.MREC? {
-        return ad?.takeUnless { it.seen || it.isExpired || it.isBlocked }
+    override fun destroyAd(ad: MaxMRECAdWrapper) {
+        if (useModeration) {
+            AppHarbr.removeBannerView(ad.view)
+        }
+        ad.view.destroy()
     }
 
     /** see https://developers.applovin.com/en/android/ad-formats/banner-mrec-ads/ */
@@ -141,16 +136,16 @@ class MaxMRECAdClient(
 
         plugins.forEach { it.onAdLoaded(view, ad) }
         loadingListener?.onAdLoadingFinished(ad)
-        this.ad = ad
+        addToBuffer(ad)
         return ad
     }
 
     private suspend fun getOrCreateView(activity: Activity): MaxAdView {
         return withContext(Dispatchers.Main.immediate) {
-            val currentView = adView
-            if (currentView != null) return@withContext currentView
+            val previousView = popBuffer()?.view
+            if (previousView != null) return@withContext previousView
 
-            MaxAdView(config.mrecAdUnit, MaxAdFormat.MREC, activity).apply {
+            MaxAdView(config.adUnit, MaxAdFormat.MREC, activity).apply {
                 val widthPx = AppLovinSdkUtils.dpToPx(activity, 300)
                 val heightPx = AppLovinSdkUtils.dpToPx(activity, 250)
                 layoutParams = ViewGroup.LayoutParams(widthPx, heightPx)
@@ -158,7 +153,7 @@ class MaxMRECAdClient(
                 setBackgroundColor(Color.TRANSPARENT)
                 setListener(listener)
                 setRevenueListener { ad ->
-                    val adWrapper = this@MaxMRECAdClient.ad?.takeIf { it.ad === ad }
+                    val adWrapper = findAdOrNull { it.ad === ad }
                         ?: MaxMRECAdWrapper(ad, this)
 
                     revenueListener?.onAdRevenuePaid(adWrapper)
@@ -172,14 +167,14 @@ class MaxMRECAdClient(
                         appharbrListener
                     )
                 }
-            }.also { adView = it }
+            }
         }
     }
 
     // TODO: the ad value could change before apphrbr listener call
     //  thus calling this listener with incorrect ad
     private fun markAdAsBlocked(view: MaxAdView, reasons: Array<AdBlockReason>) {
-        val ad = ad ?: return
+        val ad = findAdOrNull { it.view === view } ?: return
 
         // Ad was already moderated, drop event
         if (ad.moderationResult != null) return

@@ -20,9 +20,6 @@ class MaxNativeAdWrapper internal constructor(
 
     override val id: Id = ad.id
 
-    override var seen: Boolean = false
-        internal set
-
     override val isExpired: Boolean
         get() = ad.nativeAd?.isExpired == true
     override val isBlocked: Boolean
