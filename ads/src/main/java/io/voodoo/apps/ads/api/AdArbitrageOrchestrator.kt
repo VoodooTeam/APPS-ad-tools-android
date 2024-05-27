@@ -13,6 +13,7 @@ class AdArbitrageOrchestrator(
 
     private val clients = clients.toList()
     private val clientIndexByRequestIdMap = mutableMapOf<String, Int>()
+    private val clientIndexByAdIdMap = mutableMapOf<Ad.Id, Int>()
     private val mutex = Mutex()
 
     fun getAd(requestId: String): Ad? {
@@ -26,22 +27,33 @@ class AdArbitrageOrchestrator(
             }
 
             // Get all available ads and take most profitable
-            val ads = clients.map { it to it.getAd(requestId) }
-            val bestAd = ads.maxByOrNull { (_, ad) -> ad?.analyticsInfo?.revenue ?: 0.0 }
+            val ads = clients.mapNotNull { client ->
+                client to (client.getAd(requestId) ?: return@mapNotNull null)
+            }
+            val bestAd = ads.maxByOrNull { (_, ad) -> ad.analyticsInfo.revenue }
 
             // Release non-retained ad
             ads.forEach { (client, ad) ->
-                if (ad !== bestAd) {
-                    ad?.let(client::releaseAd)
+                if (ad !== bestAd?.second) {
+                    client.releaseAd(ad)
                 }
             }
 
             if (bestAd != null) {
-                clientIndexByRequestIdMap[requestId] = clients.indexOf(bestAd.first)
+                val clientIndex = clients.indexOf(bestAd.first)
+                clientIndexByRequestIdMap[requestId] = clientIndex
+                clientIndexByAdIdMap[bestAd.second.id] = clientIndex
                 bestAd.second
             } else {
                 null
             }
+        }
+    }
+
+    fun releaseAd(ad: Ad) {
+        synchronized(clientIndexByAdIdMap) {
+            val clientIndex = clientIndexByAdIdMap[ad.id]
+            clients.getOrNull(clientIndex ?: -1)?.releaseAd(ad)
         }
     }
 
