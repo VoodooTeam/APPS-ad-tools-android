@@ -35,7 +35,7 @@ import kotlin.coroutines.resumeWithException
 
 class MaxMRECAdClient(
     private val config: AdConfig,
-    private val plugins: List<MRECAdClientPlugin>,
+    private val plugins: List<MRECAdClientPlugin> = emptyList(),
     private val loadingListener: AdLoadingListener? = null,
     private val revenueListener: AdRevenueListener? = null,
     private val moderationListener: AdModerationListener? = null,
@@ -55,6 +55,8 @@ class MaxMRECAdClient(
     private var activity: Activity? = null
 
     init {
+        requireNotNull(config.mrecAdUnit) { "Attempt to init MaxMRECAdClient without mrecAdUnit" }
+
         adViewListener?.let(listener::add)
         appharbrListener = AHListener { view, _, _, reasons ->
             markAdAsBlocked(view as MaxAdView, reasons)
@@ -74,14 +76,8 @@ class MaxMRECAdClient(
         activity = null
     }
 
-    override fun getAdStatus(): AdClient.Status {
-        val ad = ad
-        return when {
-            ad == null -> AdClient.Status.NOT_LOADED
-            ad.isBlocked -> AdClient.Status.BLOCKED
-            ad.seen -> AdClient.Status.READY_SEEN
-            else -> AdClient.Status.READY_UNSEEN
-        }
+    override fun getAdReadyToDisplay(): Ad.MREC? {
+        return ad?.takeUnless { it.seen || it.isExpired || it.isBlocked }
     }
 
     /** see https://developers.applovin.com/en/android/ad-formats/banner-mrec-ads/ */
@@ -146,6 +142,7 @@ class MaxMRECAdClient(
 
         plugins.forEach { it.onAdLoaded(view, ad) }
         loadingListener?.onAdLoadingFinished(ad)
+        this.ad = ad
         return ad
     }
 

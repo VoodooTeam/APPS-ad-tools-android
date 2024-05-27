@@ -7,8 +7,6 @@ interface AdClient<T : Ad> : Closeable {
 
     val type: Ad.Type
 
-    fun getAdStatus(): Status
+    fun getAdReadyToDisplay(): T?
     suspend fun fetchAd(vararg localKeyValues: Pair<String, Any>): T
-
-    enum class Status { NOT_LOADED, READY_UNSEEN, READY_SEEN, BLOCKED }
 }

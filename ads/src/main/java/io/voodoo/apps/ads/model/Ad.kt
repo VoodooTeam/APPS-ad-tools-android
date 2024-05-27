@@ -9,9 +9,10 @@ sealed class Ad {
     abstract val analyticsInfo: AnalyticsInfo
 
     abstract val isBlocked: Boolean
+    abstract val isExpired: Boolean
     abstract val seen: Boolean
 
-    abstract fun isReady(): Boolean
+    abstract fun render(view: View)
 
     // Inner class
 
@@ -39,8 +40,6 @@ sealed class Ad {
 
         override val type: Type
             get() = Type.NATIVE
-
-        abstract fun render(view: View)
     }
 
     abstract class MREC : Ad() {
