@@ -42,8 +42,7 @@ class MaxMRECAdClient(
     adViewListener: MaxAdViewAdListener? = null,
 ) : AdClient<Ad.MREC> {
 
-    override val type: Ad.Type
-        get() = Ad.Type.MREC
+    private val type: Ad.Type = Ad.Type.MREC
 
     private val useModeration by lazy { AppHarbr.isInitialized() }
     private val appharbrListener: AHListener

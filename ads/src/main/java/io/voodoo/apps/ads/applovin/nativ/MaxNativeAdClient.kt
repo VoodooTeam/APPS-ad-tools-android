@@ -35,8 +35,7 @@ class MaxNativeAdClient(
     nativeAdListener: MaxNativeAdListener? = null,
 ) : AdClient<Ad.Native> {
 
-    override val type: Ad.Type
-        get() = Ad.Type.NATIVE
+    private val type: Ad.Type = Ad.Type.NATIVE
 
     private val listener = MultiMaxNativeAdListener()
 
@@ -62,6 +61,10 @@ class MaxNativeAdClient(
         Timber.w("close()")
         loader.destroy()
         ad = null
+    }
+
+    override fun getAdReadyToDisplay(): Ad.Native? {
+        return ad?.takeUnless { it.seen || it.isExpired || it.isBlocked }
     }
 
     /** see https://developers.applovin.com/en/android/ad-formats/native-ads#templates */
