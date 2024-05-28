@@ -5,6 +5,14 @@ import io.voodoo.apps.ads.model.Ad
 import timber.log.Timber
 import java.io.Closeable
 
+/**
+ * Ad lexicon:
+ * - canBeServed: the ad can be displayed to the user (not expired, not blocked)
+ * - served: an ad released after being rendered
+ * - locked: currently used by a ui component (free by calling [releaseAd])
+ * - rendered: rendered to the UI framework (composed/attached to window): doesn't mean it was actually seen
+ * - available: a "fresh" ad (canBeServed, not locked, not rendered), see [isAvailable]
+ */
 interface AdClient<T : Ad> : Closeable {
 
     /**
@@ -46,14 +54,6 @@ interface AdClient<T : Ad> : Closeable {
     suspend fun fetchAd(vararg localKeyValues: Pair<String, Any>): T
 }
 
-/**
- * Ad lexicon:
- * - canBeServed: the ad can be displayed to the user (not expired, not blocked)
- * - served: an ad released after being rendered
- * - locked: currently used by a ui component (free by calling [releaseAd])
- * - rendered: rendered to the UI framework (composed/attached to window): doesn't mean it was actually seen
- * - available: a "fresh" ad (canBeServed, not locked, not rendered), see [isAvailable]
- */
 abstract class BaseAdClient<ActualType : PublicType, PublicType : Ad>(
     private val servedAdsBufferSize: Int = 3
 ) : AdClient<PublicType> {
