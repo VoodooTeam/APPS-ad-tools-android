@@ -40,7 +40,7 @@ class MaxMRECAdClient(
     private val revenueListener: AdRevenueListener? = null,
     private val moderationListener: AdModerationListener? = null,
     adViewListener: MaxAdViewAdListener? = null,
-) : BaseAdClient<MaxMRECAdWrapper, Ad.MREC>(servedAdsBufferSize = config.bufferSize) {
+) : BaseAdClient<MaxMRECAdWrapper, Ad.MREC>(servedAdsBufferSize = config.servedAdsBufferSize) {
 
     private val type: Ad.Type = Ad.Type.MREC
 

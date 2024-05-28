@@ -28,12 +28,12 @@ import kotlin.coroutines.resumeWithException
 class MaxNativeAdClient(
     private val context: Context,
     private val config: AdClientConfig,
-    private val appLovinSdk: AppLovinSdk,
+    private val appLovinSdk: AppLovinSdk = AppLovinSdk.getInstance(context),
     private val loadingListener: AdLoadingListener? = null,
     private val revenueListener: AdRevenueListener? = null,
     private val moderationListener: AdModerationListener? = null,
     nativeAdListener: MaxNativeAdListener? = null,
-) : BaseAdClient<MaxNativeAdWrapper, Ad.Native>(servedAdsBufferSize = config.bufferSize) {
+) : BaseAdClient<MaxNativeAdWrapper, Ad.Native>(servedAdsBufferSize = config.servedAdsBufferSize) {
 
     private val type: Ad.Type = Ad.Type.NATIVE
 
@@ -46,6 +46,7 @@ class MaxNativeAdClient(
     )
 
     init {
+        require(appLovinSdk.isInitialized) { "AppLovin instance not initiliazed" }
         nativeAdListener?.let(listener::add)
         loader.setNativeAdListener(listener)
         loader.setRevenueListener { ad ->

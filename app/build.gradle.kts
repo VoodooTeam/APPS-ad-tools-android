@@ -78,6 +78,15 @@ dependencies {
 
     // Ads
     implementation(project(":ads"))
+    // Ads
+    //noinspection UseTomlInstead
+    implementation("com.applovin:applovin-sdk:12.4.2")
+    //noinspection UseTomlInstead
+    implementation("com.github.appharbr:appharbr-android-sdk:2.19.0")
+    //noinspection UseTomlInstead
+    implementation("com.applovin.mediation:amazon-tam-adapter:9.9.3.2")
+    //noinspection UseTomlInstead
+    implementation("com.amazon.android:aps-sdk:9.9.3")
 
     // Test
     testImplementation(libs.junit)

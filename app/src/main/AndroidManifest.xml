@@ -5,6 +5,7 @@
     <uses-permission android:name="android.permission.INTERNET" />
 
     <application
+        android:name=".LimitlessApplication"
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
@@ -12,10 +13,6 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.AdsTools"
         tools:targetApi="31">
-
-        <meta-data
-            android:name="applovin.sdk.key"
-            android:value="E1M7r57HoT7PoxvgxbXnJLA55TKI1GOGHmO6rVNdzV1mQwQMWz7rJIxOrGgtW48prWwf1II-oKkDF9Zn7gbQzX" />
 
         <activity
             android:name=".MainActivity"

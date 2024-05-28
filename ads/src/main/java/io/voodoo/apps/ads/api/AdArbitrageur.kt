@@ -2,11 +2,12 @@ package io.voodoo.apps.ads.api
 
 import io.voodoo.apps.ads.model.Ad
 import kotlinx.coroutines.async
+import kotlinx.coroutines.selects.whileSelect
 import kotlinx.coroutines.supervisorScope
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
-class AdArbitrageOrchestrator(
+class AdArbitrageur(
     clients: List<AdClient<*>>,
     private val requiredAvailableAdCount: Int = 1
 ) {
@@ -63,21 +64,29 @@ class AdArbitrageOrchestrator(
 
     suspend fun fetchAdIfNecessary(
         vararg localKeyValues: Pair<String, Any>
-    ): List<Result<Ad>> {
-        return mutex.withLock {
-            supervisorScope {
-                clients
-                    .mapNotNull { client ->
-                        if (client.getAvailableAdCount() < requiredAvailableAdCount) {
-                            async {
-                                client.fetchAd(*localKeyValues)
-                            }
-                        } else {
-                            null
+    ): Boolean = supervisorScope {
+        mutex.withLock {
+            val results = clients
+                .mapNotNull { client ->
+                    if (client.getAvailableAdCount() < requiredAvailableAdCount) {
+                        async {
+                            runCatching { client.fetchAd(*localKeyValues) }
                         }
+                    } else {
+                        null
                     }
-                    .map { runCatching { it.await() } }
+                }
+
+            // TODO: check to clean this up
+            whileSelect {
+                results
+                    .filterNot { it.isCompleted && it.getCompleted().isFailure }
+                    .forEach { result ->
+                        result.onAwait { it.isFailure }
+                    }
             }
+
+            results.any { it.isCompleted && it.getCompleted().isSuccess }
         }
     }
 }
