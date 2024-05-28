@@ -4,6 +4,7 @@ import android.app.Activity
 import android.content.Context
 import android.os.Handler
 import android.os.Looper
+import android.util.Log
 import android.widget.Toast
 import io.voodoo.apps.ads.MockData
 import io.voodoo.apps.ads.api.AdArbitrageur
@@ -47,7 +48,7 @@ class AdArbitrageurFactory(private val context: Context) {
             },
             revenueListener = object : AdRevenueListener {
                 override fun onAdRevenuePaid(ad: Ad) {
-                    showInfo("NATIVE ad paid")
+                    Log.e("Limitless", "NATIVE ad paid")
                 }
             }
         )
@@ -75,7 +76,7 @@ class AdArbitrageurFactory(private val context: Context) {
             },
             revenueListener = object : AdRevenueListener {
                 override fun onAdRevenuePaid(ad: Ad) {
-                    showInfo("MREC ad paid")
+                    Log.e("Limitless", "MREC ad paid")
                 }
             }
         ).apply { init(activity) }

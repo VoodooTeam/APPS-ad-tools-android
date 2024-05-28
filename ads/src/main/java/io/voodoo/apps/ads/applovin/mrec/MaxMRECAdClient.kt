@@ -2,6 +2,7 @@ package io.voodoo.apps.ads.applovin.mrec
 
 import android.app.Activity
 import android.graphics.Color
+import android.util.Log
 import android.view.ViewGroup
 import androidx.lifecycle.LifecycleOwner
 import com.appharbr.sdk.engine.AdBlockReason
@@ -29,7 +30,6 @@ import io.voodoo.apps.ads.model.AdClientConfig
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
-import timber.log.Timber
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 
@@ -100,7 +100,7 @@ class MaxMRECAdClient(
                                 it.resume(adWrapper)
                             } catch (e: Exception) {
                                 // Avoid crashes if callback is called multiple times
-                                Timber.e(e, "Failed to notify fetchAd")
+                                Log.e("MaxMRECAdClient", "Failed to notify fetchAd", e)
                             }
                         }
 
@@ -110,12 +110,12 @@ class MaxMRECAdClient(
                                 it.resumeWithException(MaxAdLoadException(error))
                             } catch (e: Exception) {
                                 // Avoid crashes if callback is called multiple times
-                                Timber.e(e, "Failed to notify fetchAd error")
+                                Log.e("MaxMRECAdClient", "Failed to notify fetchAd error", e)
                             }
                         }
                     }
 
-                    Timber.i("fetchAd")
+                    Log.i("MaxMRECAdClient", "fetchAd")
                     listener.add(callback)
                     localKeyValues.forEach { (key, value) ->
                         view.setLocalExtraParameter(key, value)
@@ -127,7 +127,7 @@ class MaxMRECAdClient(
                     }
                 }
             } catch (e: MaxAdLoadException) {
-                Timber.e(e, "Failed to load ad")
+                Log.e("MaxMRECAdClient", "Failed to load ad", e)
                 plugins.forEach { it.onAdLoadException(view, e) }
                 loadingListener?.onAdLoadingFailed(type, e)
                 throw e

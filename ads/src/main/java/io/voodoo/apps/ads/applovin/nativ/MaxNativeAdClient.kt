@@ -1,6 +1,7 @@
 package io.voodoo.apps.ads.applovin.nativ
 
 import android.content.Context
+import android.util.Log
 import com.appharbr.sdk.engine.AdResult
 import com.appharbr.sdk.engine.AdSdk
 import com.appharbr.sdk.engine.AppHarbr
@@ -21,7 +22,6 @@ import io.voodoo.apps.ads.model.AdClientConfig
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
-import timber.log.Timber
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 
@@ -92,7 +92,7 @@ class MaxNativeAdClient(
                                 it.resume(adWrapper)
                             } catch (e: Exception) {
                                 // Avoid crashes if callback is called multiple times
-                                Timber.e(e, "Failed to notify fetchAd")
+                                Log.e("MaxNativeAdClient", "Failed to notify fetchAd", e)
                             }
                         }
 
@@ -102,12 +102,12 @@ class MaxNativeAdClient(
                                 it.resumeWithException(MaxAdLoadException(error))
                             } catch (e: Exception) {
                                 // Avoid crashes if callback is called multiple times
-                                Timber.e(e, "Failed to notify fetchAd error")
+                                Log.e("MaxNativeAdClient", "Failed to notify fetchAd error", e)
                             }
                         }
                     }
 
-                    Timber.i("fetchAd")
+                    Log.i("MaxNativeAdClient", "fetchAd")
                     listener.add(callback)
                     localKeyValues.forEach { (key, value) ->
                         loader.setLocalExtraParameter(key, value)
@@ -119,7 +119,7 @@ class MaxNativeAdClient(
                     }
                 }
             } catch (e: MaxAdLoadException) {
-                Timber.e(e, "Failed to load ad")
+                Log.e("MaxNativeAdClient", "Failed to load ad", e)
                 loadingListener?.onAdLoadingFailed(type, e)
                 throw e
             }

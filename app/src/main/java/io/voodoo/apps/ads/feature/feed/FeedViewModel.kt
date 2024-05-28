@@ -38,7 +38,9 @@ class FeedViewModel(
 
             try {
                 val content = unsplashClient.getContent(query)
-                val items = content.map { it.toFeedItem() }
+                val items = content.map {
+                    FeedUiState.Content.ContentItem.Item(item = it.toFeedItem())
+                }
 
                 _uiState.value = FeedUiState.Content(
                     items = items.toImmutableList()

@@ -1,6 +1,7 @@
 package io.voodoo.apps.ads.applovin.mrec
 
 import android.view.View
+import android.view.ViewGroup
 import com.appharbr.sdk.engine.AdResult
 import com.appharbr.sdk.engine.AdStateResult
 import com.applovin.mediation.MaxAd
@@ -31,7 +32,10 @@ class MaxMRECAdWrapper internal constructor(
     }
 
     override fun render(view: View) {
+        require(view is ViewGroup)
+        (view.parent as? ViewGroup)?.removeView(view)
+
         markAsRendered()
-        // TODO: add this.view to view
+        view.addView(view)
     }
 }

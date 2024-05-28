@@ -2,12 +2,12 @@ plugins {
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.jetbrainsKotlinAndroid)
     alias(libs.plugins.jetbrainsKotlinSerialization)
-    id("applovin-quality-service")
+    // id("applovin-quality-service")
 }
 
-applovin {
-    apiKey = "«ad-review-key»"
-}
+//applovin {
+//    apiKey = "«ad-review-key»"
+//}
 
 android {
     namespace = "io.voodoo.apps.ads"
@@ -62,6 +62,10 @@ dependencies {
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.androidx.lifecycle.runtime.compose)
     implementation(libs.androidx.activity.compose)
+    implementation("androidx.constraintlayout:constraintlayout:2.2.0-alpha13")
+    implementation("androidx.appcompat:appcompat:1.6.1")
+    implementation("androidx.appcompat:appcompat-resources:1.6.1")
+
 
     // Compose
     implementation(platform(libs.androidx.compose.bom))
@@ -78,14 +82,9 @@ dependencies {
 
     // Ads
     implementation(project(":ads"))
-    // Ads
-    //noinspection UseTomlInstead
     implementation("com.applovin:applovin-sdk:12.4.2")
-    //noinspection UseTomlInstead
     implementation("com.github.appharbr:appharbr-android-sdk:2.19.0")
-    //noinspection UseTomlInstead
     implementation("com.applovin.mediation:amazon-tam-adapter:9.9.3.2")
-    //noinspection UseTomlInstead
     implementation("com.amazon.android:aps-sdk:9.9.3")
 
     // Test

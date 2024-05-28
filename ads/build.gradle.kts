@@ -48,8 +48,6 @@ dependencies {
     //noinspection UseTomlInstead
     implementation("com.amazon.android:aps-sdk:9.9.3")
 
-    implementation("com.jakewharton.timber:timber:5.0.1")
-
     // Test
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

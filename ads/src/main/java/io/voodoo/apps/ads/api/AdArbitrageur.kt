@@ -1,8 +1,9 @@
 package io.voodoo.apps.ads.api
 
 import io.voodoo.apps.ads.model.Ad
+import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.async
-import kotlinx.coroutines.selects.whileSelect
+import kotlinx.coroutines.selects.select
 import kotlinx.coroutines.supervisorScope
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -16,6 +17,14 @@ class AdArbitrageur(
     private val clientIndexByRequestIdMap = mutableMapOf<String, Int>()
     private val clientIndexByAdIdMap = mutableMapOf<Ad.Id, Int>()
     private val mutex = Mutex()
+
+    fun getAvailableAdCount(): Int {
+        return clients.sumOf { it.getAvailableAdCount() }
+    }
+
+    fun hasAnyAvailableAd(): Boolean {
+        return clients.any { it.getAvailableAdCount() > 0 }
+    }
 
     fun getAd(requestId: String): Ad? {
         return synchronized(clientIndexByRequestIdMap) {
@@ -66,7 +75,7 @@ class AdArbitrageur(
         vararg localKeyValues: Pair<String, Any>
     ): Boolean = supervisorScope {
         mutex.withLock {
-            val results = clients
+            clients
                 .mapNotNull { client ->
                     if (client.getAvailableAdCount() < requiredAvailableAdCount) {
                         async {
@@ -76,17 +85,21 @@ class AdArbitrageur(
                         null
                     }
                 }
+                .awaitFirstSuccess()
+        }
+    }
 
-            // TODO: check to clean this up
-            whileSelect {
-                results
-                    .filterNot { it.isCompleted && it.getCompleted().isFailure }
-                    .forEach { result ->
-                        result.onAwait { it.isFailure }
-                    }
+    // TODO: check to clean this up
+    private suspend fun List<Deferred<Result<Ad>>>.awaitFirstSuccess(): Boolean {
+        do {
+            val filtered = filterNot { it.isCompleted && it.getCompleted().isFailure }
+            if (filtered.isEmpty()) return false
+
+            val result = select {
+                filtered.forEach { deferred -> deferred.onAwait { it } }
             }
 
-            results.any { it.isCompleted && it.getCompleted().isSuccess }
-        }
+            if (result.isSuccess) return true
+        } while (true)
     }
 }

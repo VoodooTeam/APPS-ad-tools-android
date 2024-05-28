@@ -11,7 +11,9 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.snapshotFlow
@@ -21,10 +23,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.voodoo.apps.ads.MockData
+import io.voodoo.apps.ads.feature.feed.component.FeedAdItem
 import io.voodoo.apps.ads.feature.feed.component.FeedErrorState
 import io.voodoo.apps.ads.feature.feed.component.FeedItem
 import io.voodoo.apps.ads.feature.feed.component.FeedTopAppBar
 import kotlinx.coroutines.flow.conflate
+import kotlinx.coroutines.flow.flatMapLatest
 
 @Composable
 fun FeedScreen(
@@ -34,7 +38,15 @@ fun FeedScreen(
     modifier: Modifier = Modifier
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    val feedState = remember { FeedState(adInterval = 3, adArbitrageur = adArbitrageur) }.also {
+    val itemCount =
+        remember { derivedStateOf { (uiState as? FeedUiState.Content)?.items?.size ?: 0 } }
+    val feedState = remember {
+        FeedState(
+            adInterval = 3,
+            adArbitrageur = adArbitrageur,
+            updatedPageCount = itemCount::value
+        )
+    }.also {
         it.adArbitrageur = adArbitrageur
     }
 
@@ -83,8 +95,13 @@ private fun FeedScreenContent(
     modifier: Modifier = Modifier,
 ) {
     LaunchedEffect(feedState) {
-        snapshotFlow { feedState.lazyListState.firstVisibleItemIndex }
-            .conflate()
+        // Make sure to re-trigger loading if arbitrageur changes
+        // Necessary if ad is enabled after the screen is loaded
+        snapshotFlow { feedState.adArbitrageur }
+            .flatMapLatest {
+                snapshotFlow { feedState.lazyListState.firstVisibleItemIndex }
+                    .conflate()
+            }
             .collect {
                 feedState.fetchAdIfNecessary()
             }
@@ -99,15 +116,32 @@ private fun FeedScreenContent(
             count = feedState.itemCount,
             // Must use the index as a position, in case we add an ad at visible index
             key = { it },
-            contentType = {
-                if (feedState.hasAdAt(it)) {
-                    "ad"
-                } else {
-                    "item"
-                }
-            }
+            // Not mandatory and maybe not efficient, because each update would cause
+            // every content type to be re-computed
+            // contentType = {
+            //     if (feedState.hasAdAt(it)) {
+            //         "ad"
+            //     } else {
+            //         "item"
+            //     }
+            // }
         ) { index ->
-            val item = feedState.getItem(index, content)
+            val isAd by remember(index) { derivedStateOf { feedState.hasAdAt(index) } }
+            val item = if (isAd) {
+                val ad = remember(index) { feedState.getAdItem(index) }
+
+                DisposableEffect(ad) {
+                    @Suppress("UnnecessaryVariable")
+                    val adCapture = ad
+                    onDispose { feedState.releaseAd(adCapture) }
+                }
+
+                ad
+            } else {
+                val offset = feedState.adsCountInRange(0 until index)
+                content.items.getOrNull(index + offset)
+            }
+
             FeedContentItem(
                 item = item
             )
@@ -129,18 +163,7 @@ fun FeedContentItem(
             }
 
             is FeedUiState.Content.ContentItem.Ad -> {
-                if (item.ad != null) {
-                    // Show ad
-
-                } else {
-                    // Shouldn't happen
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(200.dp)
-                            .background(Color.Red)
-                    )
-                }
+                FeedAdItem(ad = item)
             }
 
             null -> {

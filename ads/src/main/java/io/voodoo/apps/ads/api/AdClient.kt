@@ -1,8 +1,8 @@
 package io.voodoo.apps.ads.api
 
+import android.util.Log
 import androidx.annotation.CallSuper
 import io.voodoo.apps.ads.model.Ad
-import timber.log.Timber
 import java.io.Closeable
 
 /**
@@ -172,7 +172,7 @@ abstract class BaseAdClient<ActualType : PublicType, PublicType : Ad>(
             val servedAds = loadedAds.filter { !it.isAvailable() && !it.isLocked() }
             val adsToDestroy = servedAds.dropLast(servedAdsBufferSize)
 
-            Timber.d("Destroying %s ads", adsToDestroy.size)
+            Log.d("AdClient", "Destroying ${adsToDestroy.size} ads")
             loadedAds.removeAll(adsToDestroy.toSet())
             removeRequestIdMapping(adsToDestroy.map { it.id })
             adsToDestroy.forEach(::destroyAd)

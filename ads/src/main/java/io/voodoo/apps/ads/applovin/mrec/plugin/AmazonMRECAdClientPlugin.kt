@@ -10,7 +10,6 @@ import com.amazon.device.ads.DTBAdSize
 import com.applovin.mediation.ads.MaxAdView
 import io.voodoo.apps.ads.api.mrec.MRECAdClientPlugin
 import io.voodoo.apps.ads.model.Ad
-import timber.log.Timber
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 
@@ -40,7 +39,6 @@ class AmazonMRECAdClientPlugin(
                 }
 
                 override fun onFailure(adError: AdError) {
-                    Timber.e("Failed to load amazon ad %s", adError.message)
                     adView.setLocalExtraParameter("amazon_ad_error", adError)
                     it.resume(false)
                 }
