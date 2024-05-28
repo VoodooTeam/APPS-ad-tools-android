@@ -40,7 +40,7 @@ class MaxMRECAdClient(
     private val revenueListener: AdRevenueListener? = null,
     private val moderationListener: AdModerationListener? = null,
     adViewListener: MaxAdViewAdListener? = null,
-) : BaseAdClient<MaxMRECAdWrapper, Ad.MREC>(bufferSize = config.bufferSize) {
+) : BaseAdClient<MaxMRECAdWrapper, Ad.MREC>(servedAdsBufferSize = config.bufferSize) {
 
     private val type: Ad.Type = Ad.Type.MREC
 
@@ -136,13 +136,13 @@ class MaxMRECAdClient(
 
         plugins.forEach { it.onAdLoaded(view, ad) }
         loadingListener?.onAdLoadingFinished(ad)
-        addToBuffer(ad)
+        addLoadedAd(ad)
         return ad
     }
 
     private suspend fun getOrCreateView(activity: Activity): MaxAdView {
         return withContext(Dispatchers.Main.immediate) {
-            val previousView = popBuffer()?.view
+            val previousView = getReusableAd()?.view
             if (previousView != null) return@withContext previousView
 
             MaxAdView(config.adUnit, MaxAdFormat.MREC, activity).apply {

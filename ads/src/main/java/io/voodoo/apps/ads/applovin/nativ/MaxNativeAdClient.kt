@@ -33,7 +33,7 @@ class MaxNativeAdClient(
     private val revenueListener: AdRevenueListener? = null,
     private val moderationListener: AdModerationListener? = null,
     nativeAdListener: MaxNativeAdListener? = null,
-) : BaseAdClient<MaxNativeAdWrapper, Ad.Native>(bufferSize = config.bufferSize) {
+) : BaseAdClient<MaxNativeAdWrapper, Ad.Native>(servedAdsBufferSize = config.bufferSize) {
 
     private val type: Ad.Type = Ad.Type.NATIVE
 
@@ -69,7 +69,7 @@ class MaxNativeAdClient(
     override suspend fun fetchAd(vararg localKeyValues: Pair<String, Any>): MaxNativeAdWrapper {
         loadingListener?.onAdLoadingStarted(type)
         // Nothing to re-use, but still pop to maintain consistency accross clients
-        popBuffer()
+        getReusableAd()
 
         val ad = withContext(Dispatchers.IO) {
             try {
@@ -129,7 +129,7 @@ class MaxNativeAdClient(
         }
 
         loadingListener?.onAdLoadingFinished(ad)
-        addToBuffer(ad)
+        addLoadedAd(ad)
         return ad
     }
 }

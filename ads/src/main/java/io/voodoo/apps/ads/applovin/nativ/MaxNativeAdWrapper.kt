@@ -28,5 +28,6 @@ class MaxNativeAdWrapper internal constructor(
     override fun render(view: View) {
         require(view is MaxNativeAdView) { "MaxNativeAdWrapper requires a MaxNativeAdView to render" }
         loader.render(view, ad)
+        markAsRendered()
     }
 }

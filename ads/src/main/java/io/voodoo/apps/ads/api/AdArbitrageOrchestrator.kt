@@ -21,14 +21,14 @@ class AdArbitrageOrchestrator(
             // Re-serve previous ad even if a more profitable one is available in another client
             val previousClientIndex = clientIndexByRequestIdMap[requestId]
             val previousAdClient = previousClientIndex?.let { clients.getOrNull(it) }
-            val previousAd = previousAdClient?.getPreviousAd(requestId)
+            val previousAd = previousAdClient?.getServedAd(requestId)
             if (previousAd != null) {
                 return previousAd
             }
 
             // Get all available ads and take most profitable
             val ads = clients.mapNotNull { client ->
-                client to (client.getAd(requestId) ?: return@mapNotNull null)
+                client to (client.getAvailableAd(requestId) ?: return@mapNotNull null)
             }
             val bestAd = ads.maxByOrNull { (_, ad) -> ad.analyticsInfo.revenue }
 
@@ -40,12 +40,16 @@ class AdArbitrageOrchestrator(
             }
 
             if (bestAd != null) {
+                // Store info of which client returned the ad
                 val clientIndex = clients.indexOf(bestAd.first)
                 clientIndexByRequestIdMap[requestId] = clientIndex
                 clientIndexByAdIdMap[bestAd.second.id] = clientIndex
+
                 bestAd.second
             } else {
-                null
+                // If no previous ad or no fresh ad found, return any ad that can be displayed
+                // to avoid a blank UI
+                clients.firstNotNullOfOrNull { it.getAnyAd() }
             }
         }
     }

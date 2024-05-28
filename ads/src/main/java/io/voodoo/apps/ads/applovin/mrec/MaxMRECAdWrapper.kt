@@ -31,7 +31,7 @@ class MaxMRECAdWrapper internal constructor(
     }
 
     override fun render(view: View) {
-        // no-op
+        markAsRendered()
         // TODO: add this.view to view
     }
 }

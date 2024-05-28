@@ -11,7 +11,16 @@ sealed class Ad {
     abstract val isBlocked: Boolean
     abstract val isExpired: Boolean
 
+    var rendered: Boolean = false
+        private set
+
+    fun canBeServed() = !isBlocked && !isExpired
+
     abstract fun render(view: View)
+
+    fun markAsRendered() {
+        rendered = true
+    }
 
     // Inner class
 
