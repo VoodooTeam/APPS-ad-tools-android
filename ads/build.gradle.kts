@@ -33,19 +33,15 @@ android {
 }
 
 dependencies {
-    // Androidx
-    implementation(libs.androidx.core.ktx)
-    implementation(libs.androidx.appcompat)
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.1")
 
     // Ads
-    //noinspection UseTomlInstead
     implementation("com.applovin:applovin-sdk:12.4.2")
-    //noinspection UseTomlInstead
     implementation("com.github.appharbr:appharbr-android-sdk:2.19.0")
+
     // Amazon requires specific implementation code...
-    //noinspection UseTomlInstead
+    // TODO: extract in a separate gradle module
     implementation("com.applovin.mediation:amazon-tam-adapter:9.9.3.2")
-    //noinspection UseTomlInstead
     implementation("com.amazon.android:aps-sdk:9.9.3")
 
     // Test

@@ -17,6 +17,7 @@ import com.applovin.mediation.MaxAdViewAdListener
 import com.applovin.mediation.MaxError
 import com.applovin.mediation.ads.MaxAdView
 import com.applovin.sdk.AppLovinSdkUtils
+import io.voodoo.apps.ads.api.AdClient
 import io.voodoo.apps.ads.api.BaseAdClient
 import io.voodoo.apps.ads.api.listener.AdLoadingListener
 import io.voodoo.apps.ads.api.listener.AdModerationListener
@@ -26,7 +27,6 @@ import io.voodoo.apps.ads.applovin.exception.MaxAdLoadException
 import io.voodoo.apps.ads.applovin.listener.DefaultMaxAdViewAdListener
 import io.voodoo.apps.ads.applovin.listener.MultiMaxAdViewAdListener
 import io.voodoo.apps.ads.model.Ad
-import io.voodoo.apps.ads.model.AdClientConfig
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
@@ -34,13 +34,13 @@ import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 
 class MaxMRECAdClient(
-    private val config: AdClientConfig,
+    config: AdClient.Config,
     private val plugins: List<MRECAdClientPlugin> = emptyList(),
     private val loadingListener: AdLoadingListener? = null,
     private val revenueListener: AdRevenueListener? = null,
     private val moderationListener: AdModerationListener? = null,
     adViewListener: MaxAdViewAdListener? = null,
-) : BaseAdClient<MaxMRECAdWrapper, Ad.MREC>(servedAdsBufferSize = config.servedAdsBufferSize) {
+) : BaseAdClient<MaxMRECAdWrapper, Ad.MREC>(config = config) {
 
     private val type: Ad.Type = Ad.Type.MREC
 

@@ -52,18 +52,23 @@ interface AdClient<T : Ad> : Closeable {
      * if you call this 10 times, it'll load 10 different ads.
      */
     suspend fun fetchAd(vararg localKeyValues: Pair<String, Any>): T
+
+    data class Config(
+        val servedAdsBufferSize: Int,
+        val adUnit: String,
+    )
 }
 
 abstract class BaseAdClient<ActualType : PublicType, PublicType : Ad>(
-    private val servedAdsBufferSize: Int = 3
+    protected val config: AdClient.Config,
 ) : AdClient<PublicType> {
 
-    private val loadedAds = ArrayList<ActualType>(servedAdsBufferSize + 1)
+    private val loadedAds = ArrayList<ActualType>(config.servedAdsBufferSize + 1)
     private val adIdByRequestIdMap = mutableMapOf<String, Ad.Id>()
     private val lockedAdIdList = mutableSetOf<Ad.Id>()
 
     init {
-        require(servedAdsBufferSize >= 0) { "servedAdBufferCount must be >= 0" }
+        require(config.servedAdsBufferSize >= 0) { "servedAdBufferCount must be >= 0" }
     }
 
     @CallSuper
@@ -147,7 +152,7 @@ abstract class BaseAdClient<ActualType : PublicType, PublicType : Ad>(
     protected fun getReusableAd(): ActualType? {
         return synchronized(loadedAds) {
             val servedAds = loadedAds.filter { !it.isAvailable() && !it.isLocked() }
-            val ad = servedAds.dropLast(servedAdsBufferSize).firstOrNull()
+            val ad = servedAds.dropLast(config.servedAdsBufferSize).firstOrNull()
 
             if (ad != null) {
                 loadedAds.remove(ad)
@@ -167,10 +172,10 @@ abstract class BaseAdClient<ActualType : PublicType, PublicType : Ad>(
     private fun ensureBufferSize() {
         synchronized(loadedAds) {
             // Special case, make sure to keep at least once ad to be re-used for improved perf
-            if (servedAdsBufferSize == 0 && loadedAds.size == 1) return
+            if (config.servedAdsBufferSize == 0 && loadedAds.size == 1) return
 
             val servedAds = loadedAds.filter { !it.isAvailable() && !it.isLocked() }
-            val adsToDestroy = servedAds.dropLast(servedAdsBufferSize)
+            val adsToDestroy = servedAds.dropLast(config.servedAdsBufferSize)
 
             Log.d("AdClient", "Destroying ${adsToDestroy.size} ads")
             loadedAds.removeAll(adsToDestroy.toSet())

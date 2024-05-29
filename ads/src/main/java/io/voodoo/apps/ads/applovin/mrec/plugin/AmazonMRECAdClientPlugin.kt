@@ -17,15 +17,12 @@ class AmazonMRECAdClientPlugin(
     private val amazonSlotId: String
 ) : MRECAdClientPlugin {
 
-    private var loadedOnce = false
-
     override suspend fun onPreLoadAd(adView: View) {
         if (!AdRegistration.isInitialized()) return
         require(adView is MaxAdView)
 
-        // Only call for the first load
-        if (loadedOnce) return
-        loadedOnce = true
+        if (adView.getTag(TAG_AMAZON_AD) == true) return
+        adView.setTag(TAG_AMAZON_AD, true)
 
         val amazonLoader = DTBAdRequest().also {
             it.setSizes(DTBAdSize(300, 250, amazonSlotId))
@@ -52,5 +49,9 @@ class AmazonMRECAdClientPlugin(
 
     override suspend fun onAdLoaded(adView: View, ad: Ad.MREC) {
         // no-op
+    }
+
+    companion object {
+        private val TAG_AMAZON_AD = View.generateViewId()
     }
 }

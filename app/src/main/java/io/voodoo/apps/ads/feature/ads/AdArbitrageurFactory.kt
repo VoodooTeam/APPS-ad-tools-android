@@ -14,7 +14,6 @@ import io.voodoo.apps.ads.api.listener.AdRevenueListener
 import io.voodoo.apps.ads.applovin.mrec.MaxMRECAdClient
 import io.voodoo.apps.ads.applovin.nativ.MaxNativeAdClient
 import io.voodoo.apps.ads.model.Ad
-import io.voodoo.apps.ads.model.AdClientConfig
 
 class AdArbitrageurFactory(private val context: Context) {
 
@@ -28,11 +27,11 @@ class AdArbitrageurFactory(private val context: Context) {
 
     private fun createNativeClient(): AdClient<Ad.Native> {
         return MaxNativeAdClient(
-            context = context,
-            config = AdClientConfig(
+            config = AdClient.Config(
                 servedAdsBufferSize = 3,
                 adUnit = MockData.NATIVE_AD_UNIT
             ),
+            context = context,
             loadingListener = object : AdLoadingListener {
                 override fun onAdLoadingStarted(type: Ad.Type) {
                     // no-op
@@ -56,7 +55,7 @@ class AdArbitrageurFactory(private val context: Context) {
 
     private fun createMRECClient(activity: Activity): AdClient<Ad.MREC> {
         return MaxMRECAdClient(
-            config = AdClientConfig(
+            config = AdClient.Config(
                 servedAdsBufferSize = 3,
                 adUnit = MockData.MREC_AD_UNIT
             ),

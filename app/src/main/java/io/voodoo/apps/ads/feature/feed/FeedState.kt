@@ -122,11 +122,13 @@ class FeedState(
     }
 
     private fun insertAdIndex() {
+        val lastRenderedItem = lazyListState.layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0
+
         val index = max(
-            // TODO: compute first non visible item?
-            lazyListState.firstVisibleItemIndex + 2,
+            lastRenderedItem + 1,
             (adIndices.maxOrNull() ?: -1) + adInterval + 1
         ).coerceAtMost(totalItemCount)
+
         Log.d("FeedState", "insert ad at $index")
         adIndices.add(index)
     }
@@ -176,6 +178,10 @@ fun FeedState.DefaultScrollAdBehaviorEffect() {
                 coroutineScope.launch {
                     fetchAdIfNecessary()
                 }
+
+                // Because ads are not always added in adIndices when loaded
+                // We check if we should add one everytime the current index in LazyList changes
+                checkAndInsertAvailableAds()
             }
     }
 

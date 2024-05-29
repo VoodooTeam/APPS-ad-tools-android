@@ -11,6 +11,7 @@ import com.applovin.mediation.nativeAds.MaxNativeAdListener
 import com.applovin.mediation.nativeAds.MaxNativeAdLoader
 import com.applovin.mediation.nativeAds.MaxNativeAdView
 import com.applovin.sdk.AppLovinSdk
+import io.voodoo.apps.ads.api.AdClient
 import io.voodoo.apps.ads.api.BaseAdClient
 import io.voodoo.apps.ads.api.listener.AdLoadingListener
 import io.voodoo.apps.ads.api.listener.AdModerationListener
@@ -18,7 +19,6 @@ import io.voodoo.apps.ads.api.listener.AdRevenueListener
 import io.voodoo.apps.ads.applovin.exception.MaxAdLoadException
 import io.voodoo.apps.ads.applovin.listener.MultiMaxNativeAdListener
 import io.voodoo.apps.ads.model.Ad
-import io.voodoo.apps.ads.model.AdClientConfig
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
@@ -26,14 +26,14 @@ import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 
 class MaxNativeAdClient(
+    config: AdClient.Config,
     private val context: Context,
-    private val config: AdClientConfig,
-    private val appLovinSdk: AppLovinSdk = AppLovinSdk.getInstance(context),
+    appLovinSdk: AppLovinSdk = AppLovinSdk.getInstance(context),
     private val loadingListener: AdLoadingListener? = null,
     private val revenueListener: AdRevenueListener? = null,
     private val moderationListener: AdModerationListener? = null,
     nativeAdListener: MaxNativeAdListener? = null,
-) : BaseAdClient<MaxNativeAdWrapper, Ad.Native>(servedAdsBufferSize = config.servedAdsBufferSize) {
+) : BaseAdClient<MaxNativeAdWrapper, Ad.Native>(config = config) {
 
     private val type: Ad.Type = Ad.Type.NATIVE
 
@@ -46,7 +46,7 @@ class MaxNativeAdClient(
     )
 
     init {
-        require(appLovinSdk.isInitialized) { "AppLovin instance not initiliazed" }
+        require(appLovinSdk.isInitialized) { "AppLovin instance not initialized" }
         nativeAdListener?.let(listener::add)
         loader.setNativeAdListener(listener)
         loader.setRevenueListener { ad ->
@@ -69,7 +69,7 @@ class MaxNativeAdClient(
     /** see https://developers.applovin.com/en/android/ad-formats/native-ads#templates */
     override suspend fun fetchAd(vararg localKeyValues: Pair<String, Any>): MaxNativeAdWrapper {
         loadingListener?.onAdLoadingStarted(type)
-        // Nothing to re-use, but still pop to maintain consistency accross clients
+        // Nothing to re-use, but still pop to maintain consistency across clients
         getReusableAd()
 
         val ad = withContext(Dispatchers.IO) {

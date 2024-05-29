@@ -18,7 +18,7 @@ sealed class Ad {
 
     abstract fun render(view: View)
 
-    fun markAsRendered() {
+    protected fun markAsRendered() {
         rendered = true
     }
 
