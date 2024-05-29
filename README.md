@@ -5,7 +5,7 @@ known issues.
 
 For any question regarding the integration, slack me @Yann Badoual
 
-### Demo app
+### demo app
 
 The app module is a demo app with a list (`LazyColumn`) of posts like instagram.
 
@@ -21,9 +21,9 @@ need to insert them dynamically once loaded into the LazyList. `FeedState` provi
 integration of this behavior and tries to handle most edge cases for the behavior wanted in such an
 app.
 
-### ads module
+### library
 
-This is a WIP, on the long term, the module will be split in several modules:
+This is a WIP, on the long term, the `ads` module will be split in several modules:
 
 * `ads-api` (api subpackage): abstraction layer with no dependency to applovin/any network
 * `ads-applovin` (applovin subpackage): the implementation of the API with applovin SDK dependency
