@@ -43,6 +43,11 @@ This is a WIP, on the long term, the `ads` module will be split in several modul
 * Pull the `ads` module in your project
     * this is temporary until we deploy a maven artifact, so I don't recommend making changes in it.
       If you need to make changes in it, slack me at @Yann Badoual and we'll do it in the repo
+* Pull the `MaxNativeAdContent` + `MRECAdContent` composable in your app for convenience
+    * Note: the applovin native ad format relies on you providing an xml layout file with
+      pre-defined views and specifying the binding via `MaxNativeAdViewBinder`
+    * see https://developers.applovin.com/en/android/ad-formats/native-ads#manual
+    * see `layout_feed_ad_item` layout
 * Add the dependency for each network in your app module (not in the `ads` module, cf above)
     * Note: by calling `AppLovinSdk.getInstance(context.applicationContext).showMediationDebugger()`
       you can launch the mediation debugger and check that every integration is working properly (
@@ -58,11 +63,8 @@ This is a WIP, on the long term, the `ads` module will be split in several modul
   here https://developers.applovin.com/en/android/overview/integration#enable-ad-review
 * Initialize AppLovin (+ Apphrbr, Amazon, ...) SDKs by following the official documentation and the
   demo app in `AdsInitiliazer`
-* Pull the `MaxNativeAdContent` + `MRECAdContent` composable in your app for convenience
-    * Note: the applovin native ad format relies on you providing an xml layout file with
-      pre-defined views and specifying the binding via `MaxNativeAdViewBinder`
-    * see https://developers.applovin.com/en/android/ad-formats/native-ads#manual
-    * see `layout_feed_ad_item` layout
+    * Note: before initializing applovin/apphrbr and instanciating any clients, wait until you have
+      the user's GDPR consents for ads
 * Create an `MaxNativeAdClient` and/or `MaxMRECAdClient` and/or `AdArbitrageurFactory` and start
   loading/displaying ads following the example in the sample app
 
