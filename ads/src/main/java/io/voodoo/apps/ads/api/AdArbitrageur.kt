@@ -26,18 +26,35 @@ class AdArbitrageur(
         onBufferOverflow = BufferOverflow.DROP_OLDEST
     )
 
+    /**
+     * @return a flow that'll emit every client's [AdClient.fetchAd] results
+     */
     fun getAdFetchResults(): Flow<Result<Ad>> {
         return adFetchResults.asSharedFlow()
     }
 
+    /**
+     * @return the sum of [AdClient.getAvailableAdCount]
+     */
     fun getAvailableAdCount(): Int {
         return clients.sumOf { it.getAvailableAdCount() }
     }
 
+    /**
+     * @return true if any client has an available ad
+     */
     fun hasAnyAvailableAd(): Boolean {
         return clients.any { it.getAvailableAdCount() > 0 }
     }
 
+    /**
+     * Get an ad for the given [requestId].
+     *
+     * @return in order of priority:
+     * - Previously served ad if a call was already made with the same [requestId] and if the ad is still in memory
+     * - The most profitable ad ([Ad.AnalyticsInfo.revenue]) that's available (not already displayed)
+     * - Any ad that was already displayed but is still in memory and not used by another component
+     */
     fun getAd(requestId: String): Ad? {
         return synchronized(clientIndexByRequestIdMap) {
             // Re-serve previous ad even if a more profitable one is available in another client
@@ -54,7 +71,7 @@ class AdArbitrageur(
             }
             val bestAd = ads.maxByOrNull { (_, ad) -> ad.analyticsInfo.revenue }
 
-            // Release non-retained ad
+            // Release non-retained ad (since render was not called, it won't be destroyed)
             ads.forEach { (client, ad) ->
                 if (ad !== bestAd?.second) {
                     client.releaseAd(ad)
@@ -76,6 +93,7 @@ class AdArbitrageur(
         }
     }
 
+    /** Forward call to [AdClient.releaseAd] to the client that served the given [ad] */
     fun releaseAd(ad: Ad) {
         synchronized(clientIndexByAdIdMap) {
             val clientIndex = clientIndexByAdIdMap[ad.id]
@@ -83,6 +101,18 @@ class AdArbitrageur(
         }
     }
 
+    /**
+     * Start a [AdClient.fetchAd] call for each clients that doesn't have at least
+     * [requiredAvailableAdCount] ads available.
+     *
+     * If a client has enough available ads, no call is made.
+     *
+     * Suspends until all the calls are completed.
+     * A failure in one client will not impact the other calls.
+     * If a call is already in progress for a particular client, no additional call is made.
+     *
+     * @return a mapping for each client in the result being the result if a call was made, or null otherwise.
+     */
     suspend fun fetchAdIfNecessary(
         vararg localKeyValues: Pair<String, Any>
     ): List<Result<Ad>?> = supervisorScope {
@@ -92,6 +122,7 @@ class AdArbitrageur(
                     val mutex = mutexByClientMap[client] ?: return@async null
 
                     if (client.getAvailableAdCount() < requiredAvailableAdCount) {
+                        // lock to prevent simultaneous requests
                         if (mutex.tryLock()) {
                             try {
                                 runCatching { client.fetchAd(*localKeyValues) }
