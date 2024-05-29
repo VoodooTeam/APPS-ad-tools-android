@@ -67,3 +67,17 @@ This is a WIP, on the long term, the `ads` module will be split in several modul
   loading/displaying ads following the example in the sample app
 
 To display the ad properly in your app, check the demo app (see README Demo app section)
+
+### Cool tips
+
+* To test a specific network:
+    * you might need to change your location with a VPN
+    * some free VPN won't work, NordVPN seems to work
+    * the location will depend of the network (some networks only serve in a few countries)
+    * in the `configureSettings` add the following call:
+
+```kotlin
+setExtraParameter("test_mode_network", "ADMOB_BIDDING")
+```
+
+* If loading ads starts to get slow or you get a lot of no-fill, try to reset your advertising ID
