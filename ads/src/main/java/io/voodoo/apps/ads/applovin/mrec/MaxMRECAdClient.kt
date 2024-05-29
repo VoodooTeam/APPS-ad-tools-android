@@ -135,6 +135,7 @@ class MaxMRECAdClient(
         }
 
         plugins.forEach { it.onAdLoaded(view, ad) }
+        Log.i("MaxNativeAdClient", "fetchAd success")
         loadingListener?.onAdLoadingFinished(ad)
         addLoadedAd(ad)
         return ad

@@ -6,7 +6,6 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.selects.select
 import kotlinx.coroutines.supervisorScope
 import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
 
 class AdArbitrageur(
     clients: List<AdClient<*>>,
@@ -16,7 +15,7 @@ class AdArbitrageur(
     private val clients = clients.toList()
     private val clientIndexByRequestIdMap = mutableMapOf<String, Int>()
     private val clientIndexByAdIdMap = mutableMapOf<Ad.Id, Int>()
-    private val mutex = Mutex()
+    private val mutexByClientMap = clients.associateWith { Mutex() }
 
     fun getAvailableAdCount(): Int {
         return clients.sumOf { it.getAvailableAdCount() }
@@ -74,7 +73,6 @@ class AdArbitrageur(
     suspend fun fetchAdIfNecessary(
         vararg localKeyValues: Pair<String, Any>
     ): Boolean = supervisorScope {
-        mutex.withLock {
             clients
                 .mapNotNull { client ->
                     if (client.getAvailableAdCount() < requiredAvailableAdCount) {
@@ -86,10 +84,8 @@ class AdArbitrageur(
                     }
                 }
                 .awaitFirstSuccess()
-        }
     }
 
-    // TODO: check to clean this up
     private suspend fun List<Deferred<Result<Ad>>>.awaitFirstSuccess(): Boolean {
         do {
             val filtered = filterNot { it.isCompleted && it.getCompleted().isFailure }

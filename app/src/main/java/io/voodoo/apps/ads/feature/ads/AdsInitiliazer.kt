@@ -27,6 +27,7 @@ class AdsInitiliazer {
             AppLovinSdkInitializationConfiguration.builder(MockData.APPLOVIN_SDK_KEY, context)
                 .setMediationProvider(AppLovinMediationProvider.MAX)
                 .setAdUnitIds(listOf(MockData.NATIVE_AD_UNIT, MockData.MREC_AD_UNIT))
+                .setTestDeviceAdvertisingIds(listOf("a6e26802-9759-4801-b8b6-10ca1ad1abe1"))
                 .configureSettings {
                     // Shake to see debug info about ads
                     it.isCreativeDebuggerEnabled = true

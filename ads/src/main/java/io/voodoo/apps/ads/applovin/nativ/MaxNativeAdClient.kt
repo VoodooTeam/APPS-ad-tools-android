@@ -129,6 +129,7 @@ class MaxNativeAdClient(
             moderationListener?.onAdBlocked(ad)
         }
 
+        Log.i("MaxNativeAdClient", "fetchAd success")
         loadingListener?.onAdLoadingFinished(ad)
         addLoadedAd(ad)
         return ad

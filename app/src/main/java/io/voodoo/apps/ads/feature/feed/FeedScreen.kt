@@ -40,15 +40,11 @@ fun FeedScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val itemCount =
         remember { derivedStateOf { (uiState as? FeedUiState.Content)?.items?.size ?: 0 } }
-    val feedState = remember {
-        FeedState(
-            adInterval = 3,
-            adArbitrageur = adArbitrageur,
-            updatedPageCount = itemCount::value
-        )
-    }.also {
-        it.adArbitrageur = adArbitrageur
-    }
+    val feedState = rememberFeedState(
+        adInterval = 3,
+        adArbitrageur = adArbitrageur,
+        itemCount = itemCount::value
+    )
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
@@ -113,7 +109,7 @@ private fun FeedScreenContent(
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         items(
-            count = feedState.itemCount,
+            count = feedState.totalItemCount,
             // Must use the index as a position, in case we add an ad at visible index
             key = { it },
             // Not mandatory and maybe not efficient, because each update would cause
@@ -128,15 +124,19 @@ private fun FeedScreenContent(
         ) { index ->
             val isAd by remember(index) { derivedStateOf { feedState.hasAdAt(index) } }
             val item = if (isAd) {
-                val ad = remember(index) { feedState.getAdItem(index) }
-
-                DisposableEffect(ad) {
-                    @Suppress("UnnecessaryVariable")
-                    val adCapture = ad
-                    onDispose { feedState.releaseAd(adCapture) }
+                val adItem = remember(index) {
+                    FeedUiState.Content.ContentItem.Ad(feedState.getAdAt(index))
                 }
 
-                ad
+                if (adItem.ad != null) {
+                    DisposableEffect(adItem) {
+                        @Suppress("UnnecessaryVariable")
+                        val ad = adItem.ad
+                        onDispose { feedState.releaseAd(ad) }
+                    }
+                }
+
+                adItem
             } else {
                 val offset = feedState.adsCountInRange(0 until index)
                 content.items.getOrNull(index + offset)
