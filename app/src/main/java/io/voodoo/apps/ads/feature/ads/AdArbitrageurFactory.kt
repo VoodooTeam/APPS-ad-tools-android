@@ -11,9 +11,9 @@ import io.voodoo.apps.ads.api.AdArbitrageur
 import io.voodoo.apps.ads.api.AdClient
 import io.voodoo.apps.ads.api.listener.AdLoadingListener
 import io.voodoo.apps.ads.api.listener.AdRevenueListener
+import io.voodoo.apps.ads.api.model.Ad
 import io.voodoo.apps.ads.applovin.mrec.MaxMRECAdClient
 import io.voodoo.apps.ads.applovin.nativ.MaxNativeAdClient
-import io.voodoo.apps.ads.model.Ad
 
 class AdArbitrageurFactory(private val context: Context) {
 

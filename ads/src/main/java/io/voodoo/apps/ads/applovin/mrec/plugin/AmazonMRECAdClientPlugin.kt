@@ -8,8 +8,8 @@ import com.amazon.device.ads.DTBAdRequest
 import com.amazon.device.ads.DTBAdResponse
 import com.amazon.device.ads.DTBAdSize
 import com.applovin.mediation.ads.MaxAdView
+import io.voodoo.apps.ads.api.model.Ad
 import io.voodoo.apps.ads.api.mrec.MRECAdClientPlugin
-import io.voodoo.apps.ads.model.Ad
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 

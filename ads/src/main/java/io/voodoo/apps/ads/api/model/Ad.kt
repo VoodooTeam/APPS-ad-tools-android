@@ -1,4 +1,4 @@
-package io.voodoo.apps.ads.model
+package io.voodoo.apps.ads.api.model
 
 import android.view.View
 

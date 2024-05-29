@@ -22,11 +22,11 @@ import io.voodoo.apps.ads.api.BaseAdClient
 import io.voodoo.apps.ads.api.listener.AdLoadingListener
 import io.voodoo.apps.ads.api.listener.AdModerationListener
 import io.voodoo.apps.ads.api.listener.AdRevenueListener
+import io.voodoo.apps.ads.api.model.Ad
 import io.voodoo.apps.ads.api.mrec.MRECAdClientPlugin
 import io.voodoo.apps.ads.applovin.exception.MaxAdLoadException
 import io.voodoo.apps.ads.applovin.listener.DefaultMaxAdViewAdListener
 import io.voodoo.apps.ads.applovin.listener.MultiMaxAdViewAdListener
-import io.voodoo.apps.ads.model.Ad
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext

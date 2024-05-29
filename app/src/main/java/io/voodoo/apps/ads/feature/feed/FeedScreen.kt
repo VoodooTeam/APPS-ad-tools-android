@@ -1,5 +1,6 @@
 package io.voodoo.apps.ads.feature.feed
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -12,6 +13,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -115,7 +117,6 @@ private fun FeedScreenContent(
 
                 if (adItem.ad != null) {
                     DisposableEffect(adItem) {
-                        @Suppress("UnnecessaryVariable")
                         val ad = adItem.ad
                         onDispose { feedState.releaseAd(ad) }
                     }
@@ -125,6 +126,15 @@ private fun FeedScreenContent(
             } else {
                 val offset = feedState.adsCountInRange(0 until index)
                 content.items.getOrNull(index + offset)
+            }
+
+            LaunchedEffect(Unit) {
+                // TODO: This should be logged on crashlytics/anywhere to monitor
+                if (item == null) {
+                    Log.wtf("Limitless", "null item at $index")
+                } else if (item is FeedUiState.Content.ContentItem.Ad && item.ad == null) {
+                    Log.wtf("Limitless", "null ad at $index")
+                }
             }
 
             FeedContentItem(
@@ -152,6 +162,7 @@ fun FeedContentItem(
             }
 
             null -> {
+                // Shouldn't happen, debug code
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()

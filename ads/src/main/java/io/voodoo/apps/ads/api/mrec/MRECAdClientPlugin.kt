@@ -1,7 +1,7 @@
 package io.voodoo.apps.ads.api.mrec
 
 import android.view.View
-import io.voodoo.apps.ads.model.Ad
+import io.voodoo.apps.ads.api.model.Ad
 
 interface MRECAdClientPlugin {
 

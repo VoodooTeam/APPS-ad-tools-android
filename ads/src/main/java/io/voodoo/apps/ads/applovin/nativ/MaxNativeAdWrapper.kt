@@ -6,9 +6,9 @@ import com.appharbr.sdk.engine.AdStateResult
 import com.applovin.mediation.MaxAd
 import com.applovin.mediation.nativeAds.MaxNativeAdLoader
 import com.applovin.mediation.nativeAds.MaxNativeAdView
+import io.voodoo.apps.ads.api.model.Ad
 import io.voodoo.apps.ads.applovin.util.buildAnalyticsInfo
 import io.voodoo.apps.ads.applovin.util.id
-import io.voodoo.apps.ads.model.Ad
 
 class MaxNativeAdWrapper internal constructor(
     internal val ad: MaxAd,

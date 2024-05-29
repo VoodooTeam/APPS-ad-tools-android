@@ -1,6 +1,6 @@
 package io.voodoo.apps.ads.api
 
-import io.voodoo.apps.ads.model.Ad
+import io.voodoo.apps.ads.api.model.Ad
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.channels.BufferOverflow

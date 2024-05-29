@@ -6,9 +6,9 @@ import com.appharbr.sdk.engine.AdResult
 import com.appharbr.sdk.engine.AdStateResult
 import com.applovin.mediation.MaxAd
 import com.applovin.mediation.ads.MaxAdView
+import io.voodoo.apps.ads.api.model.Ad
 import io.voodoo.apps.ads.applovin.util.buildAnalyticsInfo
 import io.voodoo.apps.ads.applovin.util.id
-import io.voodoo.apps.ads.model.Ad
 
 class MaxMRECAdWrapper internal constructor(
     internal val ad: MaxAd,

@@ -16,10 +16,10 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.applovin.mediation.nativeAds.MaxNativeAdViewBinder
 import io.voodoo.apps.ads.R
+import io.voodoo.apps.ads.api.model.Ad
 import io.voodoo.apps.ads.feature.ads.MRECAdContent
-import io.voodoo.apps.ads.feature.ads.NativeAdContent
+import io.voodoo.apps.ads.feature.ads.MaxNativeAdContent
 import io.voodoo.apps.ads.feature.feed.FeedUiState
-import io.voodoo.apps.ads.model.Ad
 
 @Composable
 fun FeedAdItem(
@@ -42,7 +42,7 @@ fun FeedAdItem(
         }
 
         null -> {
-            // Shouldn't happen
+            // Shouldn't happen, debug UI
             Box(
                 modifier = modifier
                     .fillMaxWidth()
@@ -62,7 +62,7 @@ fun FeedMRECAdItem(
         modifier = modifier,
         icon = {
             Image(
-                painter = painterResource(io.voodoo.apps.ads.R.drawable.ic_launcher_foreground),
+                painter = painterResource(R.drawable.ic_launcher_foreground),
                 contentDescription = null
             )
         },
@@ -97,18 +97,18 @@ fun FeedNativeAdItem(
     ad: Ad.Native,
     modifier: Modifier = Modifier
 ) {
-    NativeAdContent(
+    MaxNativeAdContent(
         modifier = modifier,
         ad = ad,
         binderProvider = {
-            MaxNativeAdViewBinder.Builder(io.voodoo.apps.ads.R.layout.layout_feed_ad_item)
-                .setIconImageViewId(io.voodoo.apps.ads.R.id.icon_image_view)
-                .setTitleTextViewId(io.voodoo.apps.ads.R.id.title_text_view)
-                .setBodyTextViewId(io.voodoo.apps.ads.R.id.body_text_view)
-                .setStarRatingContentViewGroupId(io.voodoo.apps.ads.R.id.star_rating_view)
-                .setAdvertiserTextViewId(io.voodoo.apps.ads.R.id.advertiser_textView)
-                .setMediaContentViewGroupId(io.voodoo.apps.ads.R.id.media_view_container)
-                .setOptionsContentViewGroupId(io.voodoo.apps.ads.R.id.ad_options_view)
+            MaxNativeAdViewBinder.Builder(R.layout.layout_feed_ad_item)
+                .setIconImageViewId(R.id.icon_image_view)
+                .setTitleTextViewId(R.id.title_text_view)
+                .setBodyTextViewId(R.id.body_text_view)
+                .setStarRatingContentViewGroupId(R.id.star_rating_view)
+                .setAdvertiserTextViewId(R.id.advertiser_textView)
+                .setMediaContentViewGroupId(R.id.media_view_container)
+                .setOptionsContentViewGroupId(R.id.ad_options_view)
                 .setCallToActionButtonId(R.id.cta_button)
                 .build()
         }

@@ -20,7 +20,7 @@ sealed interface FeedUiState {
             data class Item(val item: FeedItemUiState) : ContentItem
 
             @Immutable
-            data class Ad(val ad: io.voodoo.apps.ads.model.Ad?) : ContentItem
+            data class Ad(val ad: io.voodoo.apps.ads.api.model.Ad?) : ContentItem
         }
     }
 }

@@ -2,7 +2,7 @@ package io.voodoo.apps.ads.api
 
 import android.util.Log
 import androidx.annotation.CallSuper
-import io.voodoo.apps.ads.model.Ad
+import io.voodoo.apps.ads.api.model.Ad
 import java.io.Closeable
 
 /**

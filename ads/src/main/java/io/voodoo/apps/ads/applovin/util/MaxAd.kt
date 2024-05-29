@@ -3,7 +3,7 @@ package io.voodoo.apps.ads.applovin.util
 import com.appharbr.sdk.engine.AdResult
 import com.appharbr.sdk.engine.AdStateResult
 import com.applovin.mediation.MaxAd
-import io.voodoo.apps.ads.model.Ad
+import io.voodoo.apps.ads.api.model.Ad
 
 val MaxAd.id: Ad.Id get() = Ad.Id(System.identityHashCode(this).toString())
 
