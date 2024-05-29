@@ -3,17 +3,25 @@ package io.voodoo.apps.ads.feature.feed
 import android.util.Log
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.Saver
 import androidx.compose.runtime.saveable.listSaver
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import io.voodoo.apps.ads.model.Ad
+import kotlinx.coroutines.flow.conflate
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.launch
 import kotlin.math.max
 
 @Composable
@@ -61,9 +69,9 @@ class FeedState(
     suspend fun fetchAdIfNecessary() {
         val arbitrageur = adArbitrageur?.arbitrageur ?: return
         Log.d("FeedState", "fetchAdIfNecessary")
-        checkAndInsertAvailableAds()
+
+        // This is a blocking call, only returns when all operations are finished
         arbitrageur.fetchAdIfNecessary()
-        checkAndInsertAvailableAds()
     }
 
     fun hasAdAt(index: Int): Boolean = index in adIndices
@@ -74,6 +82,10 @@ class FeedState(
 
     fun adsCountInRange(range: IntRange): Int {
         return adIndices.count { it in range }
+    }
+
+    fun clearAdIndices() {
+        adIndices.clear()
     }
 
     fun getAdAt(index: Int): Ad? {
@@ -87,11 +99,7 @@ class FeedState(
         adArbitrageur?.arbitrageur?.releaseAd(ad)
     }
 
-    /**
-     * Because we only wait for 1 positive result when fetching an ad, maybe we didn't insert
-     * every available ads
-     */
-    private fun checkAndInsertAvailableAds() {
+    fun checkAndInsertAvailableAds() {
         // If we're before the last ad added, we may have scrolled back, since ads will be used
         // for previous indices, don't insert for now
         val firstVisibleItemIndex = lazyListState.firstVisibleItemIndex
@@ -148,5 +156,45 @@ class FeedState(
                 )
             }
         )
+    }
+}
+
+@Composable
+fun FeedState.DefaultScrollAdBehaviorEffect() {
+    val coroutineScope = rememberCoroutineScope()
+
+    LaunchedEffect(this) {
+        snapshotFlow { adArbitrageur }
+            .flatMapLatest {
+                snapshotFlow { lazyListState.firstVisibleItemIndex }
+                    .conflate()
+            }
+            .collect {
+                // fetchAdIfNecessary will block until all launched fetch operations are finished
+                // we don't want to block the collection because one ad client could be slow
+                // while the other responsive, and we should keep serving and loading ads regardless
+                coroutineScope.launch {
+                    fetchAdIfNecessary()
+                }
+            }
+    }
+
+    AdFetchResultEffect {
+        checkAndInsertAvailableAds()
+    }
+}
+
+@Composable
+inline fun FeedState.AdFetchResultEffect(
+    crossinline body: suspend () -> Unit,
+) {
+    LaunchedEffect(this) {
+        snapshotFlow { adArbitrageur?.arbitrageur }
+            .filterNotNull()
+            .flatMapLatest { it.getAdFetchResults() }
+            .filter { it.isSuccess }
+            .collect {
+                body()
+            }
     }
 }

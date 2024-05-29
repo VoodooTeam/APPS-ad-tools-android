@@ -12,11 +12,9 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -27,8 +25,6 @@ import io.voodoo.apps.ads.feature.feed.component.FeedAdItem
 import io.voodoo.apps.ads.feature.feed.component.FeedErrorState
 import io.voodoo.apps.ads.feature.feed.component.FeedItem
 import io.voodoo.apps.ads.feature.feed.component.FeedTopAppBar
-import kotlinx.coroutines.flow.conflate
-import kotlinx.coroutines.flow.flatMapLatest
 
 @Composable
 fun FeedScreen(
@@ -90,18 +86,7 @@ private fun FeedScreenContent(
     feedState: FeedState,
     modifier: Modifier = Modifier,
 ) {
-    LaunchedEffect(feedState) {
-        // Make sure to re-trigger loading if arbitrageur changes
-        // Necessary if ad is enabled after the screen is loaded
-        snapshotFlow { feedState.adArbitrageur }
-            .flatMapLatest {
-                snapshotFlow { feedState.lazyListState.firstVisibleItemIndex }
-                    .conflate()
-            }
-            .collect {
-                feedState.fetchAdIfNecessary()
-            }
-    }
+    feedState.DefaultScrollAdBehaviorEffect()
 
     LazyColumn(
         state = feedState.lazyListState,

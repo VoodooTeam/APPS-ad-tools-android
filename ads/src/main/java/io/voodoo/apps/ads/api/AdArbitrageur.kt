@@ -1,9 +1,12 @@
 package io.voodoo.apps.ads.api
 
 import io.voodoo.apps.ads.model.Ad
-import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.async
-import kotlinx.coroutines.selects.select
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.channels.BufferOverflow
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.supervisorScope
 import kotlinx.coroutines.sync.Mutex
 
@@ -13,9 +16,19 @@ class AdArbitrageur(
 ) {
 
     private val clients = clients.toList()
+    private val mutexByClientMap = clients.associateWith { Mutex() }
+
     private val clientIndexByRequestIdMap = mutableMapOf<String, Int>()
     private val clientIndexByAdIdMap = mutableMapOf<Ad.Id, Int>()
-    private val mutexByClientMap = clients.associateWith { Mutex() }
+
+    private val adFetchResults = MutableSharedFlow<Result<Ad>>(
+        extraBufferCapacity = 8,
+        onBufferOverflow = BufferOverflow.DROP_OLDEST
+    )
+
+    fun getAdFetchResults(): Flow<Result<Ad>> {
+        return adFetchResults.asSharedFlow()
+    }
 
     fun getAvailableAdCount(): Int {
         return clients.sumOf { it.getAvailableAdCount() }
@@ -72,30 +85,43 @@ class AdArbitrageur(
 
     suspend fun fetchAdIfNecessary(
         vararg localKeyValues: Pair<String, Any>
-    ): Boolean = supervisorScope {
-            clients
-                .mapNotNull { client ->
+    ): List<Result<Ad>?> = supervisorScope {
+        clients
+            .map { client ->
+                async {
+                    val mutex = mutexByClientMap[client] ?: return@async null
+
                     if (client.getAvailableAdCount() < requiredAvailableAdCount) {
-                        async {
-                            runCatching { client.fetchAd(*localKeyValues) }
+                        if (mutex.tryLock()) {
+                            try {
+                                runCatching { client.fetchAd(*localKeyValues) }
+                                    .also { adFetchResults.emit(it) }
+                            } finally {
+                                mutex.unlock()
+                            }
+                        } else {
+                            // Request already in progress in another call
+                            null
                         }
                     } else {
+                        // No fetch needed
                         null
                     }
                 }
-                .awaitFirstSuccess()
-    }
-
-    private suspend fun List<Deferred<Result<Ad>>>.awaitFirstSuccess(): Boolean {
-        do {
-            val filtered = filterNot { it.isCompleted && it.getCompleted().isFailure }
-            if (filtered.isEmpty()) return false
-
-            val result = select {
-                filtered.forEach { deferred -> deferred.onAwait { it } }
             }
-
-            if (result.isSuccess) return true
-        } while (true)
+            .awaitAll()
     }
+
+//    private suspend fun List<Deferred<Result<Ad>>>.awaitFirstSuccess(): Boolean {
+//        do {
+//            val filtered = filterNot { it.isCompleted && it.getCompleted().isFailure }
+//            if (filtered.isEmpty()) return false
+//
+//            val result = select {
+//                filtered.forEach { deferred -> deferred.onAwait { it } }
+//            }
+//
+//            if (result.isSuccess) return true
+//        } while (true)
+//    }
 }

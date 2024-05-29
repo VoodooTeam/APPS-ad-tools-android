@@ -32,10 +32,10 @@ class MaxMRECAdWrapper internal constructor(
     }
 
     override fun render(view: View) {
-        require(view is ViewGroup)
-        (view.parent as? ViewGroup)?.removeView(view)
+        (this.view.parent as? ViewGroup)?.removeView(this.view)
 
+        require(view is ViewGroup)
+        view.addView(this.view)
         markAsRendered()
-        view.addView(view)
     }
 }
