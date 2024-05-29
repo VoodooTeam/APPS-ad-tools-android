@@ -15,6 +15,7 @@ The app module is a demo app with a list (`LazyColumn`) of posts like instagram.
 * `FeedScreen`: main screen, list of post
 * `FeedState`: demo integration of ads in a `LazyList`
 * `FeedAdItem`: composable to display the ad item
+* `layout_feed_ad_item`: native ad layout to emulate a post's design
 
 Because ads are loaded and can take time to be available, it creates a lot of edge cases, and we
 need to insert them dynamically once loaded into the LazyList. `FeedState` provides a default
@@ -54,6 +55,10 @@ This is a WIP, on the long term, the `ads` module will be split in several modul
 * Initialize AppLovin (+ Apphrbr, Amazon, ...) SDKs by following the official documentation and the
   demo app in `AdsInitiliazer`
 * Pull the `MaxNativeAdContent` + `MRECAdContent` composable in your app for convenience
+  * Note: the applovin native ad format relies on you providing an xml layout file with
+    pre-defined views and specifying the binding via `MaxNativeAdViewBinder`
+  * see https://developers.applovin.com/en/android/ad-formats/native-ads#manual
+  * see `layout_feed_ad_item` layout
 * Create an `MaxNativeAdClient` and/or `MaxMRECAdClient` and/or `AdArbitrageurFactory` and start
   loading/displaying ads following the example in the sample app
 
