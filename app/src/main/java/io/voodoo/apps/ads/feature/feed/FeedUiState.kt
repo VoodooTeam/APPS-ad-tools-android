@@ -16,11 +16,19 @@ sealed interface FeedUiState {
         @Immutable
         sealed interface ContentItem {
 
-            @Immutable
-            data class Item(val item: FeedItemUiState) : ContentItem
+            val id: String
 
             @Immutable
-            data class Ad(val ad: io.voodoo.apps.ads.api.model.Ad?) : ContentItem
+            data class Item(val item: FeedItemUiState) : ContentItem {
+                override val id: String
+                    get() = item.id
+            }
+
+            @Immutable
+            data class Ad(val ad: io.voodoo.apps.ads.api.model.Ad?) : ContentItem {
+                override val id: String
+                    get() = ad?.id?.id.orEmpty()
+            }
         }
     }
 }

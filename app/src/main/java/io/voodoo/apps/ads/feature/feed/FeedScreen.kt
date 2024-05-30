@@ -93,8 +93,12 @@ private fun FeedScreenContent(
     ) {
         items(
             count = feedState.totalItemCount,
-            // Must use the index as a position, in case we add an ad at visible index
-            key = { it },
+            key = { index ->
+                when {
+                    feedState.hasAdAt(index) -> null
+                    else -> content.items.getOrNull(index)?.id
+                } ?: index
+            },
             // Not mandatory and maybe not efficient, because each update would cause
             // every content type to be re-computed
             // contentType = {

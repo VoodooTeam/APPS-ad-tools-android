@@ -26,6 +26,7 @@ import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 
 data class FeedItemUiState(
+    val id: String,
     val iconUrl: String,
     val title: String,
     val subtitle: String,
