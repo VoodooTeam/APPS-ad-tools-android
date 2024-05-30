@@ -1,12 +1,9 @@
 package io.voodoo.apps.ads.feature.feed
 
 import android.util.Log
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.CircularProgressIndicator
@@ -19,7 +16,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.voodoo.apps.ads.MockData
@@ -130,6 +126,7 @@ private fun FeedScreenContent(
 
             LaunchedEffect(Unit) {
                 // TODO: This should be logged on crashlytics/anywhere to monitor
+                //  it can happen when content changes/ad is blocked async, but shouldn't happen too often
                 if (item == null) {
                     Log.wtf("Limitless", "null item at $index")
                 } else if (item is FeedUiState.Content.ContentItem.Ad && item.ad == null) {
@@ -162,13 +159,7 @@ fun FeedContentItem(
             }
 
             null -> {
-                // Shouldn't happen, debug code
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(200.dp)
-                        .background(Color.Green)
-                )
+                // Edge-case after a content change (before totalItemCount gets recomputed)
             }
         }
     }

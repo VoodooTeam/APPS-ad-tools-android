@@ -3,8 +3,6 @@ package io.voodoo.apps.ads.feature.feed.component
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
@@ -42,13 +40,8 @@ fun FeedAdItem(
         }
 
         null -> {
-            // Shouldn't happen, debug UI
-            Box(
-                modifier = modifier
-                    .fillMaxWidth()
-                    .height(200.dp)
-                    .background(Color.Red)
-            )
+            // Edge-case that can happen when no ads are available to display (even old ones)
+            // because it was destroyed or blocked
         }
     }
 }

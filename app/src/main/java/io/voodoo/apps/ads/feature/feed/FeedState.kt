@@ -39,7 +39,7 @@ fun rememberFeedState(
     }.apply {
         this.adArbitrageur = adArbitrageur
         this.adInterval = adInterval
-        this.pageCount = itemCount
+        this.itemCount = itemCount
     }
 }
 
@@ -54,7 +54,7 @@ class FeedState(
 ) {
 
     val lazyListState = LazyListState(firstVisibleItemIndex, firstVisibleItemScrollOffset)
-    var pageCount by mutableStateOf(updatedItemCount)
+    var itemCount by mutableStateOf(updatedItemCount)
 
     var adInterval by mutableIntStateOf(adInterval)
     var adArbitrageur by mutableStateOf(adArbitrageur)
@@ -64,7 +64,7 @@ class FeedState(
      * the actual item count + the ad count,
      * pass this value to [androidx.compose.foundation.lazy.LazyListScope.items] builder
      */
-    val totalItemCount by derivedStateOf { pageCount() + adIndices.size }
+    val totalItemCount by derivedStateOf { computeTotalItemCount() }
 
     suspend fun fetchAdIfNecessary() {
         val arbitrageur = adArbitrageur?.arbitrageur ?: return
@@ -123,14 +123,26 @@ class FeedState(
 
     private fun insertAdIndex() {
         val lastRenderedItem = lazyListState.layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0
-
+        val totalItemCount = totalItemCount
         val index = max(
-            lastRenderedItem + 1,
+            (lastRenderedItem + 1).coerceAtMost(totalItemCount),
             (adIndices.maxOrNull() ?: -1) + adInterval + 1
-        ).coerceAtMost(totalItemCount)
+        )
+
+        if (index > totalItemCount) {
+            // We can't display the ad
+            return
+        }
 
         Log.d("FeedState", "insert ad at $index")
         adIndices.add(index)
+    }
+
+    private fun computeTotalItemCount(): Int {
+        return (itemCount() + adIndices.size)
+            // Remove all ads if actual content changed and we have ads outside the dataset
+            // Note: this is just a nice-to-have, you should call clearAdIndices() manually when content changes
+            .also { if ((adIndices.lastOrNull() ?: Int.MIN_VALUE) > it) clearAdIndices() }
     }
 
     companion object {
@@ -144,7 +156,7 @@ class FeedState(
                     it.adIndices.toIntArray(),
                     it.lazyListState.firstVisibleItemIndex,
                     it.lazyListState.firstVisibleItemScrollOffset,
-                    it.pageCount(),
+                    it.itemCount(),
                 )
             },
             restore = {
