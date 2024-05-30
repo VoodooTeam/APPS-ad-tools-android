@@ -96,7 +96,7 @@ private fun FeedScreenContent(
             key = { index ->
                 when {
                     feedState.hasAdAt(index) -> null
-                    else -> content.items.getOrNull(index)?.id
+                    else -> content.items.getOrNull(feedState.getRealIndex(index))?.id
                 } ?: index
             },
             // Not mandatory and maybe not efficient, because each update would cause
@@ -124,8 +124,7 @@ private fun FeedScreenContent(
 
                 adItem
             } else {
-                val offset = feedState.adsCountInRange(0 until index)
-                content.items.getOrNull(index + offset)
+                content.items.getOrNull(feedState.getRealIndex(index))
             }
 
             LaunchedEffect(Unit) {

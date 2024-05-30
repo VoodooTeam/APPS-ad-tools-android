@@ -94,7 +94,7 @@ here https://artifacts.applovin.com/android/com/applovin/quality/AppLovinQuality
     * you might need to change your location with a VPN
     * some free VPN won't work, NordVPN seems to work
     * the location will depend of the network (some networks only serve in a few countries)
-    * in the `configureSettings` add the following call:
+  * in the `configureSettings` block add the following call:
 
 ```kotlin
 setExtraParameter("test_mode_network", "ADMOB_BIDDING")

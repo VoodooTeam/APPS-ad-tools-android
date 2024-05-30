@@ -3,7 +3,6 @@ package io.voodoo.apps.ads.feature.feed.component
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -73,13 +72,7 @@ fun FeedMRECAdItem(
                 contentAlignment = Alignment.Center,
                 modifier = Modifier.background(Color(0xFF0E0E0E), RoundedCornerShape(16.dp))
             ) {
-                Box(
-                    modifier = Modifier
-                        .background(Color(0xFF161616), RoundedCornerShape(16.dp))
-                        .padding(vertical = 32.dp)
-                ) {
-                    MRECAdContent(ad = ad)
-                }
+                MRECAdContent(ad = ad)
             }
         }
     )

@@ -76,12 +76,9 @@ class FeedState(
 
     fun hasAdAt(index: Int): Boolean = index in adIndices
 
-    fun adsCountInRange(startInclusive: Int, endExclusive: Int): Int {
-        return adsCountInRange(startInclusive until endExclusive)
-    }
-
-    fun adsCountInRange(range: IntRange): Int {
-        return adIndices.count { it in range }
+    /** @return the real index in the original dataset (without the ads) from the lazylist index */
+    fun getRealIndex(index: Int): Int {
+        return index - adIndices.count { it < index }
     }
 
     fun clearAdIndices() {
@@ -122,11 +119,12 @@ class FeedState(
     }
 
     private fun insertAdIndex() {
-        val lastRenderedItem = lazyListState.layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0
+        val lastRenderedItem =
+            lazyListState.layoutInfo.visibleItemsInfo.maxByOrNull { it.index }?.index ?: 0
         val totalItemCount = totalItemCount
         val index = max(
             (lastRenderedItem + 1).coerceAtMost(totalItemCount),
-            (adIndices.maxOrNull() ?: -1) + adInterval + 1
+            (adIndices.lastOrNull() ?: -1) + adInterval + 1
         )
 
         if (index > totalItemCount) {
