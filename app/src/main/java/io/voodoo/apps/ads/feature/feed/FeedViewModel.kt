@@ -56,6 +56,7 @@ class FeedViewModel(
 
     private fun UnsplashPhoto.toFeedItem(): FeedItemUiState {
         return FeedItemUiState(
+            id = id,
             iconUrl = user.profileImage.medium,
             title = description.orEmpty(),
             subtitle = user.name,

@@ -49,6 +49,8 @@ This is a WIP, on the long term, the `ads` module will be split in several modul
     * see https://developers.applovin.com/en/android/ad-formats/native-ads#manual
     * see `layout_feed_ad_item` layout
 * Add the dependency for each network in your app module (not in the `ads` module, cf above)
+    * Check https://developers.applovin.com/en/android/preparing-mediated-networks to see if you
+      need additional steps beside adding the dependency
     * Note: by calling `AppLovinSdk.getInstance(context.applicationContext).showMediationDebugger()`
       you can launch the mediation debugger and check that every integration is working properly (
       and enable test mode to test a specific network,
@@ -70,6 +72,22 @@ This is a WIP, on the long term, the `ads` module will be split in several modul
 
 To display the ad properly in your app, check the demo app (see README Demo app section)
 
+### Updating AppLovin/network adapter
+
+Applovin's adapters versioning is the concat of the SDK version + an adapter version. eg: if the SDK
+version is `9.9.3`, the applovin adapter version will be `9.9.3.X`.
+
+To update applovin or a network adapter, you first need to check that apphrbr is supporting this
+version (they tend to be very slow to support new versions). Check apphrbr support
+here https://helpcenter.appharbr.com/hc/en-us/articles/17039424125457-Before-Starting
+
+Once you checked the latest supported version of a network SDK, you'll need to check the latest
+applovin adapter for this network. The easiest way is to check on mvnrepository.com
+(eg for amazon: https://mvnrepository.com/artifact/com.applovin.mediation/amazon-tam-adapter).
+
+To see the latest adreview plugin version, check
+here https://artifacts.applovin.com/android/com/applovin/quality/AppLovinQualityServiceGradlePlugin/maven-metadata.xml
+
 ### Cool tips
 
 * To test a specific network:
@@ -82,4 +100,4 @@ To display the ad properly in your app, check the demo app (see README Demo app 
 setExtraParameter("test_mode_network", "ADMOB_BIDDING")
 ```
 
-* If loading ads starts to get slow or you get a lot of no-fill, try to reset your advertising ID
+* If loading ads starts to get slow or you get a lot of no-fill, try to reset your advertising ID 
