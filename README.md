@@ -5,12 +5,44 @@ known issues.
 
 For any question regarding the integration, slack me @Yann Badoual
 
+### Setup
+
+[Changelog](https://github.com/VoodooTeam/APPS-ad-tools-android/releases)
+
+```groovy
+maven {
+    url = uri("https://apps-sdk.voodoo-tech.io/android/")
+    mavenContent {
+        includeGroup("io.voodoo.apps")
+    }
+}
+
+// For every module using the ads
+implementation("io.voodoo.apps:ads-api:<latest_version>")
+
+// For your app module to 
+// * provide the AdClient/AdArbitrageur dependency via a DI framework
+// * initialize the AppLovin/AppHrbr sdk and ad network sdk when custom configuration is necessary (eg: amazon, facebook, ...)
+implementation("io.voodoo.apps:ads-applovin:<latest_version>")
+
+// If using amazon network
+implementation("io.voodoo.apps:ads-applovin-plugin-amazon:<latest_version>")
+```
+
+Note: the SDK versioning is based on applovin's version, and concatenates a version number
+eg: if applovin version is `12.5.0`, the matching sdk versions will be `12.5.0.X`
+
+The same thing is true for the amazon plugin, we use the applovin amazon adapter plugin,
+which is itself using the amazon's SDK version
+eg: if amazon sdk version is `9.9.3`, the applovin adapter will be `9.9.3.X` and the sdk plugin
+version will be `9.9.3.X.Y`
+
 ### demo app
 
 The app module is a demo app with a list (`LazyColumn`) of posts like instagram.
 
 * AppLovin SDK + Apphrbr (moderation) initialization in `AdsInitiliazer` class (called
-  from `Application.onCreate`)
+  from `MainActivity` after the consent is received)
 * `AdArbitrageurFactory`: `AdClient` + `AdArbitrageur` instantiation
 * `FeedScreen`: main screen, list of post
 * `FeedState`: demo integration of ads in a `LazyList`
@@ -24,43 +56,32 @@ app.
 
 ### library
 
-This is a WIP, on the long term, the `ads` module will be split in several modules:
-
-* `ads-api` (api subpackage): abstraction layer with no dependency to applovin/any network
-* `ads-applovin` (applovin subpackage): the implementation of the API with applovin SDK dependency
+* `ads-api`: abstraction layer with no dependency to applovin/any network
+* `ads-applovin`: the implementation of the API with applovin SDK dependency
     * apphrbr is included until we find a clean API to extract it in another module like we did for
       amazon's integration
-* `ads-noop`: a dummy implementation of `ads-api` to build your app without ads (eg: for faster
+* `ads-applovin-plugin-*`: every extension plugin that might be required for a network to be
+  integrated (eg: amazon for mrec in `AmazonMRECAdClientPlugin`)
+* TODO `ads-noop`: a dummy implementation of `ads-api` to build your app without ads (eg: for faster
   debug build)
-* `ads-plugin-*`: every extension plugin that might be required for a network to be integrated (eg:
-  amazon for mrec in `AmazonMRECAdClientPlugin`)
 
 ## Integration steps
 
 * Add jitpack as a dependency resolution strategy (see https://jitpack.io/)
     * this is needed for apphrbr SDK (moderation)
 * Check https://developers.applovin.com/en/android/overview/integration/ for reference
-* Pull the `ads` module in your project
-    * this is temporary until we deploy a maven artifact, so I don't recommend making changes in it.
-      If you need to make changes in it, slack me at @Yann Badoual and we'll do it in the repo
 * Pull the `MaxNativeAdContent` + `MRECAdContent` composable in your app for convenience
     * Note: the applovin native ad format relies on you providing an xml layout file with
       pre-defined views and specifying the binding via `MaxNativeAdViewBinder`
     * see https://developers.applovin.com/en/android/ad-formats/native-ads#manual
-    * see `layout_feed_ad_item` layout
+  * see `layout_feed_ad_item` layout for a sample
 * Add the dependency for each network in your app module (not in the `ads` module, cf above)
-    * Check https://developers.applovin.com/en/android/preparing-mediated-networks to see if you
-      need additional steps beside adding the dependency
+    * Check https://developers.applovin.com/en/android/preparing-mediated-networks for each network
+      to see if you need additional steps
     * Note: by calling `AppLovinSdk.getInstance(context.applicationContext).showMediationDebugger()`
-      you can launch the mediation debugger and check that every integration is working properly (
-      and enable test mode to test a specific network,
+      you can launch the mediation debugger and check that every integration is working properly
+      (and enable test mode to test a specific network,
       see https://developers.applovin.com/en/android/testing-networks/mediation-debugger/)
-* Optional: if you don't need the amazon network, remove the dependencies from the `ads` module and
-  delete the `AmazonMRECAdClientPlugin` class. For now we need those in the module until we split
-  the module.
-* Optional (not recommended): if you don't want the apphrbr moderation layer:
-    * remove the `com.github.appharbr:appharbr-android-sdk` dependency
-    * in `MaxNativeAdClient` and `MaxMRECAdClient` remove any call to the SDK
 * Configure the ad review plugin by following the steps
   here https://developers.applovin.com/en/android/overview/integration#enable-ad-review
 * Initialize AppLovin (+ Apphrbr, Amazon, ...) SDKs by following the official documentation and the
