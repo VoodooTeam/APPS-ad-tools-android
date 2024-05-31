@@ -9,13 +9,25 @@ pluginManagement {
         }
         mavenCentral()
         gradlePluginPortal()
+        maven {
+            url = uri("https://artifacts.applovin.com/android")
+            mavenContent {
+                includeGroup("com.applovin.quality")
+            }
+        }
     }
 }
+
 dependencyResolutionManagement {
     repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
     repositories {
         google()
         mavenCentral()
+        mavenLocal {
+            mavenContent {
+                includeGroup("io.voodoo.apps")
+            }
+        }
         maven { setUrl("https://jitpack.io") }
     }
 }

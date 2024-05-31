@@ -2,12 +2,14 @@ plugins {
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.jetbrainsKotlinAndroid)
     alias(libs.plugins.jetbrainsKotlinSerialization)
-    // id("applovin-quality-service")
+    //id("applovin-quality-service")
 }
 
 //applovin {
 //    apiKey = "«ad-review-key»"
 //}
+
+val buildLocalSDK = false
 
 android {
     namespace = "io.voodoo.apps.ads"
@@ -82,7 +84,11 @@ dependencies {
     implementation(libs.bundles.retrofit)
 
     // Ads
-    implementation(project(":ads"))
+    if (buildLocalSDK) {
+        implementation(project(":ads"))
+    } else {
+        implementation("io.voodoo.apps:ads:0.0.1")
+    }
     implementation("com.applovin:applovin-sdk:12.4.2")
     implementation("com.github.appharbr:appharbr-android-sdk:2.19.0")
     implementation("com.applovin.mediation:amazon-tam-adapter:9.9.3.2")
@@ -98,3 +104,18 @@ dependencies {
     debugImplementation(libs.androidx.ui.test.manifest)
 }
 
+tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
+    kotlinOptions {
+        freeCompilerArgs += "-opt-in=kotlin.RequiresOptIn"
+        freeCompilerArgs += "-opt-in=kotlin.time.ExperimentalTime"
+        freeCompilerArgs += "-opt-in=kotlin.contracts.ExperimentalContracts"
+        freeCompilerArgs += "-opt-in=kotlinx.coroutines.ExperimentalCoroutinesApi"
+
+        // Compose opt-in
+        freeCompilerArgs += "-opt-in=androidx.compose.foundation.ExperimentalFoundationApi"
+        freeCompilerArgs += "-opt-in=androidx.compose.foundation.layout.ExperimentalLayoutApi"
+        freeCompilerArgs += "-opt-in=androidx.compose.ui.ExperimentalComposeUiApi"
+        freeCompilerArgs += "-opt-in=androidx.compose.animation.ExperimentalAnimationApi"
+        freeCompilerArgs += "-opt-in=androidx.compose.material3.ExperimentalMaterial3Api"
+    }
+}
