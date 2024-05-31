@@ -29,13 +29,13 @@ dependencyResolutionManagement {
             }
         }
         maven {
-            url = uri("https://apps-sdk.voodoo-tech.io/android/")
+            setUrl("https://apps-sdk.voodoo-tech.io/android/")
             mavenContent {
                 includeGroup("io.voodoo.apps")
             }
         }
         maven {
-            url = uri("https://apps-sdk.voodoo-tech.io/android-dev/")
+            setUrl("https://apps-sdk.voodoo-tech.io/android-dev/")
             mavenContent {
                 includeGroup("io.voodoo.apps")
             }

@@ -11,11 +11,13 @@ For any question regarding the integration, slack me @Yann Badoual
 
 ```groovy
 maven {
-    url = uri("https://apps-sdk.voodoo-tech.io/android/")
+    setUrl("https://apps-sdk.voodoo-tech.io/android/")
     mavenContent {
         includeGroup("io.voodoo.apps")
     }
 }
+// jitpack required for apphrbr, feel free to add an mavenContent/includeGroup clause
+maven { setUrl("https://jitpack.io") }
 
 // For every module using the ads
 implementation("io.voodoo.apps:ads-api:<latest_version>")
@@ -65,14 +67,9 @@ app.
 
 ## Integration steps
 
-* Add jitpack as a dependency resolution strategy (see https://jitpack.io/)
-    * this is needed for apphrbr SDK (moderation)
-* Check https://developers.applovin.com/en/android/overview/integration/ for reference
-* Pull the `MaxNativeAdContent` + `MRECAdContent` composable in your app for convenience
-    * Note: the applovin native ad format relies on you providing an xml layout file with
-      pre-defined views and specifying the binding via `MaxNativeAdViewBinder`
-    * see https://developers.applovin.com/en/android/ad-formats/native-ads#manual
-  * see `layout_feed_ad_item` layout for a sample
+* Add SDK dependencies (see Setup section above)
+* Check sample `AdsInitiliazer` + https://developers.applovin.com/en/android/overview/integration/
+  for reference
 * Add the dependency for each network in your app module (not in the `ads` module, cf above)
     * Check https://developers.applovin.com/en/android/preparing-mediated-networks for each network
       to see if you need additional steps
@@ -88,6 +85,11 @@ app.
       the user's GDPR consents for ads
 * Create an `MaxNativeAdClient` and/or `MaxMRECAdClient` and/or `AdArbitrageurFactory` and start
   loading/displaying ads following the example in the sample app
+
+* Note: the applovin native ad format relies on you providing an xml layout file with
+  pre-defined views and specifying the binding via `MaxNativeAdViewBinder`
+    * see https://developers.applovin.com/en/android/ad-formats/native-ads#manual
+    * see `layout_feed_ad_item` layout for a sample
 
 To display the ad properly in your app, check the demo app (see README Demo app section)
 
