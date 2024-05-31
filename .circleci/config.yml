@@ -49,16 +49,13 @@ commands:
             rm -rf !(io)
 
       - aws-cli/setup:
-          aws_access_key_id: AWS_ACCESS_KEY_ID
-          aws_secret_access_key: AWS_SECRET_ACCESS_KEY
-          region: AWS_REGION
+          role_arn: AWS_ROLE_ARN
+          role_session_name: CIRCLE_PROJECT_REPONAME
+          region: "eu-west-1"
       - run:
           name: Upload sdk to S3
           command: |
-            S3_PATH="s3://voodoo-adn-framework/android/v2"
-            if [[ << parameters.is_dev >> == true ]]; then
-              S3_PATH="s3://voodoo-adn-framework-dev/android/v2"
-            fi
+            S3_PATH="s3://apps-sdk-20240531084238593600000001/android"
             aws s3 sync ~/.m2/repository $S3_PATH --acl public-read
 
 jobs:
