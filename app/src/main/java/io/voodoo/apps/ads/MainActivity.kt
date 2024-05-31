@@ -1,6 +1,7 @@
 package io.voodoo.apps.ads
 
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
@@ -15,6 +16,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.applovin.sdk.AppLovinSdk
+import io.voodoo.app.privacy.VoodooPrivacyManager
+import io.voodoo.app.privacy.model.VoodooPrivacyConsent
 import io.voodoo.apps.ads.feature.ads.AdArbitrageurFactory
 import io.voodoo.apps.ads.feature.ads.AdsInitiliazer
 import io.voodoo.apps.ads.feature.feed.FeedAdArbitrageur
@@ -28,6 +31,31 @@ class MainActivity : ComponentActivity() {
     // This is bound to the activity, and shouldn't be leaked outside the activity scope
     private val arbitrageur by lazy { AdArbitrageurFactory(application).create(this) }
 
+    private val voodooConsentManager by lazy {
+        VoodooPrivacyManager(
+            currentActivity = this,
+            autoShowPopup = true,
+            onConsentReceived = {
+                onReceiveConsent(it)
+            },
+            onError = {
+                it.printStackTrace()
+                onPrivacyError()
+            }
+        )
+    }
+
+    private fun onPrivacyError(){
+        Toast.makeText(applicationContext, "Privacy loading failed",Toast.LENGTH_SHORT).show()
+    }
+
+    private fun onReceiveConsent(consent: VoodooPrivacyConsent) {
+        if (consent.adConsent || !consent.privacyApplicable) {
+            //Ads can only being initialized when consent is retrieved / when privacy is not applicable
+            AdsInitiliazer().init(this)
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -40,6 +68,12 @@ class MainActivity : ComponentActivity() {
                 MainActivityContent()
             }
         }
+        voodooConsentManager.initializeConsent()
+    }
+
+    override fun onDestroy() {
+        voodooConsentManager.onDestroy()
+        super.onDestroy()
     }
 
     @Composable

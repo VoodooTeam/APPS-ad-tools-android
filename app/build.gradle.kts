@@ -88,6 +88,9 @@ dependencies {
     implementation("com.applovin.mediation:amazon-tam-adapter:9.9.3.2")
     implementation("com.amazon.android:aps-sdk:9.9.3")
 
+    // Consent
+    implementation(project(":privacy"))
+
     // Test
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
