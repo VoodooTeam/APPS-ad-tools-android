@@ -3,7 +3,7 @@ ext {
     TARGET_SDK = 34
     COMPILE_SDK = 34
 
-    SDK_VER = '0.0.1'
+    SDK_VER = '0.0.1.0'
 }
 
 
