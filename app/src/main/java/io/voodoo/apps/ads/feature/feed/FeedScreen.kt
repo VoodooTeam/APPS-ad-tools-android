@@ -6,6 +6,8 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
@@ -19,6 +21,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.voodoo.apps.ads.MockData
+import io.voodoo.apps.ads.applovin.compose.list.DefaultScrollAdBehaviorEffect
+import io.voodoo.apps.ads.applovin.compose.list.LazyListAdMediator
+import io.voodoo.apps.ads.applovin.compose.list.rememberLazyListAdMediator
+import io.voodoo.apps.ads.applovin.compose.model.AdArbitrageurHolder
 import io.voodoo.apps.ads.feature.feed.component.FeedAdItem
 import io.voodoo.apps.ads.feature.feed.component.FeedErrorState
 import io.voodoo.apps.ads.feature.feed.component.FeedItem
@@ -27,16 +33,18 @@ import io.voodoo.apps.ads.feature.feed.component.FeedTopAppBar
 @Composable
 fun FeedScreen(
     viewModel: FeedViewModel,
-    adArbitrageur: FeedAdArbitrageur?,
+    adArbitrageur: AdArbitrageurHolder?,
     onNavigateToMediationDebugger: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val itemCount =
         remember { derivedStateOf { (uiState as? FeedUiState.Content)?.items?.size ?: 0 } }
-    val feedState = rememberFeedState(
-        adInterval = 3,
+    val listState = rememberLazyListState()
+    val lazyListAdMediator = rememberLazyListAdMediator(
+        lazyListState = listState,
         adArbitrageur = adArbitrageur,
+        adInterval = 3,
         itemCount = itemCount::value
     )
 
@@ -70,7 +78,8 @@ fun FeedScreen(
                 is FeedUiState.Content -> {
                     FeedScreenContent(
                         content = currentUiState,
-                        feedState = feedState,
+                        listState = listState,
+                        adMediator = lazyListAdMediator,
                     )
                 }
             }
@@ -81,50 +90,51 @@ fun FeedScreen(
 @Composable
 private fun FeedScreenContent(
     content: FeedUiState.Content,
-    feedState: FeedState,
+    listState: LazyListState,
+    adMediator: LazyListAdMediator,
     modifier: Modifier = Modifier,
 ) {
-    feedState.DefaultScrollAdBehaviorEffect()
+    adMediator.DefaultScrollAdBehaviorEffect()
 
     LazyColumn(
-        state = feedState.lazyListState,
+        state = listState,
         modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         items(
-            count = feedState.totalItemCount,
+            count = adMediator.totalItemCount,
             key = { index ->
                 when {
-                    feedState.hasAdAt(index) -> null
-                    else -> content.items.getOrNull(feedState.getRealIndex(index))?.id
+                    adMediator.hasAdAt(index) -> null
+                    else -> content.items.getOrNull(adMediator.getRealIndex(index))?.id
                 } ?: index
             },
             // Not mandatory and maybe not efficient, because each update would cause
             // every content type to be re-computed
             // contentType = {
-            //     if (feedState.hasAdAt(it)) {
+            //     if (lazyListAdMediator.hasAdAt(it)) {
             //         "ad"
             //     } else {
             //         "item"
             //     }
             // }
         ) { index ->
-            val isAd by remember(index) { derivedStateOf { feedState.hasAdAt(index) } }
+            val isAd by remember(index) { derivedStateOf { adMediator.hasAdAt(index) } }
             val item = if (isAd) {
                 val adItem = remember(index) {
-                    FeedUiState.Content.ContentItem.Ad(feedState.getAdAt(index))
+                    FeedUiState.Content.ContentItem.Ad(adMediator.getAdAt(index))
                 }
 
                 if (adItem.ad != null) {
                     DisposableEffect(adItem) {
                         val ad = adItem.ad
-                        onDispose { feedState.releaseAd(ad) }
+                        onDispose { adMediator.releaseAd(ad) }
                     }
                 }
 
                 adItem
             } else {
-                content.items.getOrNull(feedState.getRealIndex(index))
+                content.items.getOrNull(adMediator.getRealIndex(index))
             }
 
             LaunchedEffect(Unit) {

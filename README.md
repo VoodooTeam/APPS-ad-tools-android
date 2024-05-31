@@ -5,15 +5,48 @@ known issues.
 
 For any question regarding the integration, slack me @Yann Badoual
 
+### Setup
+
+[Changelog](https://github.com/VoodooTeam/APPS-ad-tools-android/releases)
+
+```groovy
+maven {
+    setUrl("https://apps-sdk.voodoo-tech.io/android/")
+    mavenContent {
+        includeGroup("io.voodoo.apps")
+    }
+}
+// jitpack required for apphrbr, feel free to add an mavenContent/includeGroup clause
+maven { setUrl("https://jitpack.io") }
+
+// Ads
+implementation("io.voodoo.apps:ads-api:<latest_version>")
+implementation("io.voodoo.apps:ads-applovin:<latest_version>")
+implementation("io.voodoo.apps:ads-applovin-compose:<latest_version>")
+
+// GDPR/Consent flow
+implementation("io.voodoo.apps:ads-privacy:<latest_version>")
+
+// If using amazon network
+implementation("io.voodoo.apps:ads-applovin-plugin-amazon:<latest_version>")
+```
+
+Note: the SDK versioning is based on applovin's version, and concatenates a version number
+eg: if applovin version is `12.5.0`, the matching sdk versions will be `12.5.0.X`
+
+The same thing is true for the amazon plugin, we use the applovin amazon adapter plugin,
+which is itself using the amazon's SDK version
+eg: if amazon sdk version is `9.9.3`, the applovin adapter will be `9.9.3.X` and the sdk plugin
+version will be `9.9.3.X.Y`
+
 ### demo app
 
 The app module is a demo app with a list (`LazyColumn`) of posts like instagram.
 
 * AppLovin SDK + Apphrbr (moderation) initialization in `AdsInitiliazer` class (called
-  from `Application.onCreate`)
+  from `MainActivity` after the consent is received)
 * `AdArbitrageurFactory`: `AdClient` + `AdArbitrageur` instantiation
 * `FeedScreen`: main screen, list of post
-* `FeedState`: demo integration of ads in a `LazyList`
 * `FeedAdItem`: composable to display the ad item
 * `layout_feed_ad_item`: native ad layout to emulate a post's design
 
@@ -24,43 +57,29 @@ app.
 
 ### library
 
-This is a WIP, on the long term, the `ads` module will be split in several modules:
-
-* `ads-api` (api subpackage): abstraction layer with no dependency to applovin/any network
-* `ads-applovin` (applovin subpackage): the implementation of the API with applovin SDK dependency
+* `ads-api`: abstraction layer with no dependency to applovin/any network
+* `ads-applovin`: the implementation of the API with applovin SDK dependency
     * apphrbr is included until we find a clean API to extract it in another module like we did for
       amazon's integration
-* `ads-noop`: a dummy implementation of `ads-api` to build your app without ads (eg: for faster
+* `ads-applovin-compose`: provides some useful classes/extensions to use the lib with compose.
+    * `LazyListAdMediator` is a basic integration of the ads into a LazyList (used in sample app)
+* `ads-applovin-plugin-*`: every extension plugin that might be required for a network to be
+  integrated (eg: amazon for mrec in `AmazonMRECAdClientPlugin`)
+* TODO `ads-noop`: a dummy implementation of `ads-api` to build your app without ads (eg: for faster
   debug build)
-* `ads-plugin-*`: every extension plugin that might be required for a network to be integrated (eg:
-  amazon for mrec in `AmazonMRECAdClientPlugin`)
 
 ## Integration steps
 
-* Add jitpack as a dependency resolution strategy (see https://jitpack.io/)
-    * this is needed for apphrbr SDK (moderation)
-* Check https://developers.applovin.com/en/android/overview/integration/ for reference
-* Pull the `ads` module in your project
-    * this is temporary until we deploy a maven artifact, so I don't recommend making changes in it.
-      If you need to make changes in it, slack me at @Yann Badoual and we'll do it in the repo
-* Pull the `MaxNativeAdContent` + `MRECAdContent` composable in your app for convenience
-    * Note: the applovin native ad format relies on you providing an xml layout file with
-      pre-defined views and specifying the binding via `MaxNativeAdViewBinder`
-    * see https://developers.applovin.com/en/android/ad-formats/native-ads#manual
-    * see `layout_feed_ad_item` layout
+* Add SDK dependencies (see Setup section above)
+* Check sample `AdsInitiliazer` + https://developers.applovin.com/en/android/overview/integration/
+  for reference
 * Add the dependency for each network in your app module (not in the `ads` module, cf above)
-    * Check https://developers.applovin.com/en/android/preparing-mediated-networks to see if you
-      need additional steps beside adding the dependency
+    * Check https://developers.applovin.com/en/android/preparing-mediated-networks for each network
+      to see if you need additional steps
     * Note: by calling `AppLovinSdk.getInstance(context.applicationContext).showMediationDebugger()`
-      you can launch the mediation debugger and check that every integration is working properly (
-      and enable test mode to test a specific network,
+      you can launch the mediation debugger and check that every integration is working properly
+      (and enable test mode to test a specific network,
       see https://developers.applovin.com/en/android/testing-networks/mediation-debugger/)
-* Optional: if you don't need the amazon network, remove the dependencies from the `ads` module and
-  delete the `AmazonMRECAdClientPlugin` class. For now we need those in the module until we split
-  the module.
-* Optional (not recommended): if you don't want the apphrbr moderation layer:
-    * remove the `com.github.appharbr:appharbr-android-sdk` dependency
-    * in `MaxNativeAdClient` and `MaxMRECAdClient` remove any call to the SDK
 * Configure the ad review plugin by following the steps
   here https://developers.applovin.com/en/android/overview/integration#enable-ad-review
 * Initialize AppLovin (+ Apphrbr, Amazon, ...) SDKs by following the official documentation and the
@@ -69,6 +88,11 @@ This is a WIP, on the long term, the `ads` module will be split in several modul
       the user's GDPR consents for ads
 * Create an `MaxNativeAdClient` and/or `MaxMRECAdClient` and/or `AdArbitrageurFactory` and start
   loading/displaying ads following the example in the sample app
+
+* Note: the applovin native ad format relies on you providing an xml layout file with
+  pre-defined views and specifying the binding via `MaxNativeAdViewBinder`
+    * see https://developers.applovin.com/en/android/ad-formats/native-ads#manual
+    * see `layout_feed_ad_item` layout for a sample
 
 To display the ad properly in your app, check the demo app (see README Demo app section)
 

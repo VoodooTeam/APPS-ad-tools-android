@@ -1,9 +1,9 @@
-package io.voodoo.app.privacy.config
+package io.voodoo.apps.privacy.config
 
 abstract class BaseCmpHelper<T> where T : Enum<T>, T : BaseCmpEnum {
     private val map: MutableMap<String, Boolean> = mutableMapOf()
 
-    fun containsKey(key: String) : Boolean{
+    fun containsKey(key: String): Boolean {
         return map.containsKey(key)
     }
 
@@ -11,7 +11,7 @@ abstract class BaseCmpHelper<T> where T : Enum<T>, T : BaseCmpEnum {
         return map[enum.getKey()] ?: false
     }
 
-    fun get(key: String) : Boolean {
+    fun get(key: String): Boolean {
         return map[key] ?: false
     }
 
@@ -27,7 +27,7 @@ abstract class BaseCmpHelper<T> where T : Enum<T>, T : BaseCmpEnum {
         map[INITIALIZED] = true
     }
 
-    fun isInitialized() : Boolean {
+    fun isInitialized(): Boolean {
         return map[INITIALIZED] ?: false
     }
 

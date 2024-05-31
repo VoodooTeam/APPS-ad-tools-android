@@ -3,45 +3,25 @@ plugins {
     alias(libs.plugins.jetbrainsKotlinAndroid)
 }
 
+apply(from = "../gradlescripts/android-library.gradle")
+
+val artifactGroupId by extra("io.voodoo.apps")
+val artifactId by extra("ads-privacy")
+val artifactVersion by extra(rootProject.extra.get("SDK_VER"))
+
 android {
-    namespace = "io.voodoo.apps"
-    compileSdk = 34
-
-    defaultConfig {
-        minSdk = 24
-
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-        consumerProguardFiles("consumer-rules.pro")
-    }
-
-    buildTypes {
-        release {
-            isMinifyEnabled = false
-            proguardFiles(
-                getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
-            )
-        }
-    }
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
-    }
-    kotlinOptions {
-        jvmTarget = "1.8"
-    }
+    namespace = "io.voodoo.apps.ads.privacy"
 }
 
 dependencies {
-
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
-    implementation(libs.material)
-    testImplementation(libs.junit)
-    androidTestImplementation(libs.androidx.junit)
-    androidTestImplementation(libs.androidx.espresso.core)
+    implementation(libs.androidx.lifecycle.common.java8)
 
+    //noinspection UseTomlInstead
     implementation("com.sourcepoint.cmplibrary:cmplibrary:7.8.2")
+    //noinspection UseTomlInstead
     implementation("com.google.code.gson:gson:2.11.0")
-    implementation("androidx.lifecycle:lifecycle-common-java8:2.6.2")
 }
+
+apply(from = "../gradlescripts/publisher.gradle")

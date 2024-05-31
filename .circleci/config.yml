@@ -1,0 +1,109 @@
+version: 2.1
+
+orbs:
+  android: circleci/android@2.4.0
+  aws-cli: circleci/aws-cli@4.0
+
+commands:
+
+  prepare_project:
+    steps:
+      - checkout
+      - android/restore-gradle-cache
+      - android/restore-build-cache
+      - run:
+          name: Prepare gradle wrapper
+          command: |
+            sudo chmod +x ./gradlew
+            ./gradlew --version
+
+  validate_release_tag:
+    steps:
+      - run:
+          name: Validate git tag version
+          command: |
+            SDK_VER=$(./gradlew printSdkVersion -q --console=plain)
+            if [ "$CIRCLE_TAG" != "v$SDK_VER" ]; then
+              echo "Git tag does not match SDK version. Aborting release."
+              echo "Tag name: $CIRCLE_TAG"
+              echo "SDK version: $SDK_VER"
+              exit 1
+            fi
+
+  publish_sdk_to_s3:
+    parameters:
+      is_dev:
+        type: boolean
+        default: false
+    steps:
+      - run:
+          name: Publish sdk to maven local
+          command: |
+            ./gradlew publishToMavenLocal
+
+      - run:
+          name: Clean maven local
+          command: |
+            cd ~/.m2/repository/
+            shopt -s extglob
+            rm -rf !(io)
+
+      - aws-cli/setup:
+          role_arn: "${AWS_ROLE_ARN}"
+          role_session_name: "${CIRCLE_PROJECT_REPONAME}"
+      - run:
+          name: Upload sdk to S3
+          command: |
+            S3_PATH="s3://apps-sdk-20240531084238593600000001/android"
+            if [[ << parameters.is_dev >> == true ]]; then
+              S3_PATH="s3://apps-sdk-20240531084238593600000001/android-dev"
+            fi
+            aws s3 sync ~/.m2/repository $S3_PATH
+
+jobs:
+
+  publish_dev_sdk:
+    machine:
+      image: android:edge
+    steps:
+      - prepare_project
+      - publish_sdk_to_s3:
+          is_dev: true
+
+  publish_prod_sdk:
+    machine:
+      image: android:edge
+    steps:
+      - prepare_project
+      - validate_release_tag
+      - publish_sdk_to_s3:
+          is_dev: false
+
+workflows:
+
+  release_sdk_dev:
+    when:
+      matches: { pattern: "^.*?(?:\\.rc|\\.dev)(?:\\d+)?$", value: << pipeline.git.tag >> }
+    jobs:
+      - publish_dev_sdk:
+          context:
+            - APPS_SDK
+          filters:
+            tags:
+              only: /.*/
+            branches:
+              ignore: /.*/
+
+
+  release_sdk_prod:
+    when:
+      matches: { pattern: "^v\\d+\\.\\d+\\.\\d+$", value: << pipeline.git.tag >> }
+    jobs:
+      - publish_prod_sdk:
+          context:
+            - APPS_SDK
+          filters:
+            tags:
+              only: /.*/
+            branches:
+              ignore: /.*/

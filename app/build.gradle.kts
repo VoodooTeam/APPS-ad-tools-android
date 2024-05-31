@@ -2,7 +2,7 @@ plugins {
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.jetbrainsKotlinAndroid)
     alias(libs.plugins.jetbrainsKotlinSerialization)
-    // id("applovin-quality-service")
+    //id("applovin-quality-service")
 }
 
 //applovin {
@@ -47,7 +47,7 @@ android {
         compose = true
     }
     composeOptions {
-        kotlinCompilerExtensionVersion = "1.5.1"
+        kotlinCompilerExtensionVersion = libs.versions.androidx.compose.compiler.get()
     }
     packaging {
         resources {
@@ -59,14 +59,12 @@ android {
 dependencies {
     // Androidx
     implementation(libs.androidx.core.ktx)
+    implementation(libs.androidx.appcompat)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.androidx.lifecycle.runtime.compose)
     implementation(libs.androidx.activity.compose)
-    implementation("androidx.constraintlayout:constraintlayout:2.2.0-alpha13")
-    implementation("androidx.appcompat:appcompat:1.6.1")
-    implementation("androidx.appcompat:appcompat-resources:1.6.1")
-
+    implementation(libs.androidx.constraintlayout)
 
     // Compose
     implementation(platform(libs.androidx.compose.bom))
@@ -82,22 +80,44 @@ dependencies {
     implementation(libs.bundles.retrofit)
 
     // Ads
-    implementation(project(":ads"))
-    implementation("com.applovin:applovin-sdk:12.4.2")
-    implementation("com.github.appharbr:appharbr-android-sdk:2.19.0")
-    implementation("com.applovin.mediation:amazon-tam-adapter:9.9.3.2")
-    implementation("com.amazon.android:aps-sdk:9.9.3")
+    val sdkVersion = rootProject.ext.get("SDK_VER").toString()
+    if (true) {
+        implementation(project(":ads-api"))
+        implementation(project(":ads-applovin"))
+        implementation(project(":ads-applovin-compose"))
+        implementation(project(":ads-applovin-plugin-amazon"))
+    } else {
+        val sdkAmazonPluginVersion = rootProject.ext.get("SDK_AMAZON_PLUGIN_VER").toString()
+        implementation("io.voodoo.apps", "ads-api", sdkVersion)
+        implementation("io.voodoo.apps", "ads-applovin", sdkVersion)
+        implementation("io.voodoo.apps", "ads-applovin-compose", sdkVersion)
+        implementation("io.voodoo.apps", "ads-applovin-plugin-amazon", sdkAmazonPluginVersion)
+    }
 
     // Consent
-    implementation(project(":privacy"))
+    if (true) {
+        implementation(project(":privacy"))
+    } else {
+        implementation("io.voodoo.apps", "ads-privacy", sdkVersion)
+    }
 
     // Test
-    testImplementation(libs.junit)
-    androidTestImplementation(libs.androidx.junit)
-    androidTestImplementation(libs.androidx.espresso.core)
-    androidTestImplementation(platform(libs.androidx.compose.bom))
-    androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
 }
 
+tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
+    kotlinOptions {
+        freeCompilerArgs += "-opt-in=kotlin.RequiresOptIn"
+        freeCompilerArgs += "-opt-in=kotlin.time.ExperimentalTime"
+        freeCompilerArgs += "-opt-in=kotlin.contracts.ExperimentalContracts"
+        freeCompilerArgs += "-opt-in=kotlinx.coroutines.ExperimentalCoroutinesApi"
+
+        // Compose opt-in
+        freeCompilerArgs += "-opt-in=androidx.compose.foundation.ExperimentalFoundationApi"
+        freeCompilerArgs += "-opt-in=androidx.compose.foundation.layout.ExperimentalLayoutApi"
+        freeCompilerArgs += "-opt-in=androidx.compose.ui.ExperimentalComposeUiApi"
+        freeCompilerArgs += "-opt-in=androidx.compose.animation.ExperimentalAnimationApi"
+        freeCompilerArgs += "-opt-in=androidx.compose.material3.ExperimentalMaterial3Api"
+    }
+}
