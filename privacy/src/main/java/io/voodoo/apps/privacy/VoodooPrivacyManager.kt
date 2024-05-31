@@ -1,4 +1,4 @@
-package io.voodoo.app.privacy
+package io.voodoo.apps.privacy
 
 import android.app.Activity
 import android.view.View
@@ -15,16 +15,17 @@ import com.sourcepoint.cmplibrary.model.PMTab
 import com.sourcepoint.cmplibrary.model.exposed.ActionType
 import com.sourcepoint.cmplibrary.model.exposed.SPConsents
 import com.sourcepoint.cmplibrary.model.exposed.SpConfig
-import io.voodoo.app.privacy.config.CmpPurpose
-import io.voodoo.app.privacy.config.CmpPurposeHelper
-import io.voodoo.app.privacy.config.CmpVendorHelper
-import io.voodoo.app.privacy.config.SourcepointConfiguration
-import io.voodoo.app.privacy.model.VoodooPrivacyConsent
+import io.voodoo.apps.privacy.config.CmpPurpose
+import io.voodoo.apps.privacy.config.CmpPurposeHelper
+import io.voodoo.apps.privacy.config.CmpVendorHelper
+import io.voodoo.apps.privacy.config.SourcepointConfiguration
+import io.voodoo.apps.privacy.model.VoodooPrivacyConsent
 import org.json.JSONObject
+
 /**
  *
  */
-class VoodooPrivacyManager (
+class VoodooPrivacyManager(
     lifecycleOwner: LifecycleOwner,
     private val currentActivity: Activity,
     private var autoShowPopup: Boolean = true,
@@ -34,6 +35,7 @@ class VoodooPrivacyManager (
     private var onError: ((Throwable) -> Unit)? = null,
     private var onStatusUpdate: ((ConsentStatus) -> Unit)? = null
 ) : DefaultLifecycleObserver {
+
     init {
         lifecycleOwner.lifecycle.addObserver(this)
     }
@@ -79,7 +81,7 @@ class VoodooPrivacyManager (
         }
     }
 
-    private fun loadMessage(){
+    private fun loadMessage() {
         setConsentStatus(ConsentStatus.LOADING)
         spConsentLib.loadMessage()
     }
@@ -173,7 +175,7 @@ class VoodooPrivacyManager (
         return consentStatus
     }
 
-    private fun processConsent(consent: SPConsents){
+    private fun processConsent(consent: SPConsents) {
         val gdprGrants = consent.gdpr?.consent?.grants ?: mapOf()
         CmpPurposeHelper.setInitialized()
         CmpVendorHelper.setInitialized()
@@ -186,7 +188,7 @@ class VoodooPrivacyManager (
     }
 
     private fun setConsentStatus(status: ConsentStatus) {
-        consentStatus = if(status == ConsentStatus.RECEIVED && !isPrivacyApplies()) {
+        consentStatus = if (status == ConsentStatus.RECEIVED && !isPrivacyApplies()) {
             ConsentStatus.NON_APPLICABLE
         } else
             status
@@ -233,7 +235,7 @@ class VoodooPrivacyManager (
             onConsentReceived?.invoke(getPrivacyConsent())
         }
 
-        override fun onAction(view: View, consentAction: ConsentAction): ConsentAction  {
+        override fun onAction(view: View, consentAction: ConsentAction): ConsentAction {
             if (consentAction.actionType == ActionType.SHOW_OPTIONS && !autoShowPopup) {
                 forceAutoShow = true
             }

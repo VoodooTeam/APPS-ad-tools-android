@@ -80,13 +80,13 @@ dependencies {
     implementation(libs.bundles.retrofit)
 
     // Ads
+    val sdkVersion = rootProject.ext.get("SDK_VER").toString()
     if (true) {
         implementation(project(":ads-api"))
         implementation(project(":ads-applovin"))
         implementation(project(":ads-applovin-compose"))
         implementation(project(":ads-applovin-plugin-amazon"))
     } else {
-        val sdkVersion = rootProject.ext.get("SDK_VER").toString()
         val sdkAmazonPluginVersion = rootProject.ext.get("SDK_AMAZON_PLUGIN_VER").toString()
         implementation("io.voodoo.apps", "ads-api", sdkVersion)
         implementation("io.voodoo.apps", "ads-applovin", sdkVersion)
@@ -95,7 +95,11 @@ dependencies {
     }
 
     // Consent
-    implementation(project(":privacy"))
+    if (true) {
+        implementation(project(":privacy"))
+    } else {
+        implementation("io.voodoo.apps", "ads-privacy", sdkVersion)
+    }
 
     // Test
     debugImplementation(libs.androidx.ui.tooling)

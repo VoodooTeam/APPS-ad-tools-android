@@ -19,10 +19,13 @@ maven {
 // jitpack required for apphrbr, feel free to add an mavenContent/includeGroup clause
 maven { setUrl("https://jitpack.io") }
 
-// For every module using the ads
+// Ads
 implementation("io.voodoo.apps:ads-api:<latest_version>")
 implementation("io.voodoo.apps:ads-applovin:<latest_version>")
 implementation("io.voodoo.apps:ads-applovin-compose:<latest_version>")
+
+// GDPR/Consent flow
+implementation("io.voodoo.apps:ads-privacy:<latest_version>")
 
 // If using amazon network
 implementation("io.voodoo.apps:ads-applovin-plugin-amazon:<latest_version>")

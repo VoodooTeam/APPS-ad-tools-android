@@ -1,4 +1,4 @@
-package io.voodoo.app.privacy.model
+package io.voodoo.apps.privacy.model
 
 data class VoodooPrivacyConsent(
     val adConsent: Boolean,

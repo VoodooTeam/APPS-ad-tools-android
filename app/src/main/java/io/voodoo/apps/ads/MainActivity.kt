@@ -17,13 +17,13 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.applovin.sdk.AppLovinSdk
 import io.voodoo.apps.ads.applovin.compose.model.AdArbitrageurHolder
-import io.voodoo.app.privacy.VoodooPrivacyManager
-import io.voodoo.app.privacy.config.SourcepointConfiguration
-import io.voodoo.app.privacy.model.VoodooPrivacyConsent
 import io.voodoo.apps.ads.feature.ads.AdArbitrageurFactory
 import io.voodoo.apps.ads.feature.ads.AdsInitiliazer
 import io.voodoo.apps.ads.feature.feed.FeedScreen
 import io.voodoo.apps.ads.feature.feed.FeedViewModel
+import io.voodoo.apps.privacy.VoodooPrivacyManager
+import io.voodoo.apps.privacy.config.SourcepointConfiguration
+import io.voodoo.apps.privacy.model.VoodooPrivacyConsent
 
 class MainActivity : ComponentActivity() {
 
@@ -37,7 +37,7 @@ class MainActivity : ComponentActivity() {
             lifecycleOwner = this,
             currentActivity = this,
             autoShowPopup = true,
-            sourcepointConfiguration = SourcepointConfiguration (
+            sourcepointConfiguration = SourcepointConfiguration(
                 accountId = 1909,
                 propertyId = 36309,
                 privacyManagerId = "1142456",
@@ -51,17 +51,6 @@ class MainActivity : ComponentActivity() {
                 onPrivacyError()
             }
         )
-    }
-
-    private fun onPrivacyError(){
-        Toast.makeText(applicationContext, "Privacy loading failed",Toast.LENGTH_SHORT).show()
-    }
-
-    private fun onReceiveConsent(consent: VoodooPrivacyConsent) {
-        if (consent.adConsent || !consent.privacyApplicable) {
-            //Ads can only being initialized when consent is retrieved / when privacy is not applicable
-            AdsInitiliazer().init(this)
-        }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -101,6 +90,18 @@ class MainActivity : ComponentActivity() {
                     }
                 )
             }
+        }
+    }
+
+
+    private fun onPrivacyError() {
+        Toast.makeText(applicationContext, "Privacy loading failed", Toast.LENGTH_SHORT).show()
+    }
+
+    private fun onReceiveConsent(consent: VoodooPrivacyConsent) {
+        if (consent.adConsent || !consent.privacyApplicable) {
+            //Ads can only being initialized when consent is retrieved / when privacy is not applicable
+            AdsInitiliazer().init(this)
         }
     }
 }

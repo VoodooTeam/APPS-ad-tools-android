@@ -1,11 +1,11 @@
-package io.voodoo.app.privacy
+package io.voodoo.apps.privacy
 
 import com.sourcepoint.cmplibrary.model.MessageLanguage
 import java.util.Locale
 
 object VoodooPrivacyLanguageMapper {
     fun getLanguage(): MessageLanguage {
-        val result: MessageLanguage = when(Locale.getDefault().language.lowercase()) {
+        val result: MessageLanguage = when (Locale.getDefault().language.lowercase()) {
             "en" -> MessageLanguage.ENGLISH
             "fr" -> MessageLanguage.FRENCH
             "de" -> MessageLanguage.GERMAN
