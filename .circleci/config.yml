@@ -76,8 +76,6 @@ jobs:
       - validate_release_tag
       - publish_sdk_to_s3:
           is_dev: false
-      - assemble_distribute_sample_app:
-          release_note: 'Release version: << pipeline.git.tag >>'
 
 workflows:
 
