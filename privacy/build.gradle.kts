@@ -43,4 +43,5 @@ dependencies {
 
     implementation("com.sourcepoint.cmplibrary:cmplibrary:7.8.2")
     implementation("com.google.code.gson:gson:2.11.0")
+    implementation("androidx.lifecycle:lifecycle-common-java8:2.6.2")
 }

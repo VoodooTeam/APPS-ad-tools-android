@@ -17,6 +17,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.applovin.sdk.AppLovinSdk
 import io.voodoo.app.privacy.VoodooPrivacyManager
+import io.voodoo.app.privacy.config.SourcepointConfiguration
 import io.voodoo.app.privacy.model.VoodooPrivacyConsent
 import io.voodoo.apps.ads.feature.ads.AdArbitrageurFactory
 import io.voodoo.apps.ads.feature.ads.AdsInitiliazer
@@ -33,8 +34,15 @@ class MainActivity : ComponentActivity() {
 
     private val voodooConsentManager by lazy {
         VoodooPrivacyManager(
+            lifecycleOwner = this,
             currentActivity = this,
             autoShowPopup = true,
+            sourcepointConfiguration = SourcepointConfiguration (
+                accountId = 1909,
+                propertyId = 36309,
+                privacyManagerId = "1142456",
+                propertyName = "voodoo.native.app"
+            ),
             onConsentReceived = {
                 onReceiveConsent(it)
             },
@@ -69,11 +77,6 @@ class MainActivity : ComponentActivity() {
             }
         }
         voodooConsentManager.initializeConsent()
-    }
-
-    override fun onDestroy() {
-        voodooConsentManager.onDestroy()
-        super.onDestroy()
     }
 
     @Composable

@@ -2,6 +2,8 @@ package io.voodoo.app.privacy
 
 import android.app.Activity
 import android.view.View
+import androidx.lifecycle.DefaultLifecycleObserver
+import androidx.lifecycle.LifecycleOwner
 import com.sourcepoint.cmplibrary.NativeMessageController
 import com.sourcepoint.cmplibrary.SpClient
 import com.sourcepoint.cmplibrary.core.nativemessage.MessageStructure
@@ -23,20 +25,26 @@ import org.json.JSONObject
  *
  */
 class VoodooPrivacyManager (
+    lifecycleOwner: LifecycleOwner,
     private val currentActivity: Activity,
     private var autoShowPopup: Boolean = true,
+    private val sourcepointConfiguration: SourcepointConfiguration,
     private var onConsentReceived: ((VoodooPrivacyConsent) -> Unit)? = null,
     private var onUiReady: (() -> Unit)? = null,
     private var onError: ((Throwable) -> Unit)? = null,
     private var onStatusUpdate: ((ConsentStatus) -> Unit)? = null
-) {
+) : DefaultLifecycleObserver {
+    init {
+        lifecycleOwner.lifecycle.addObserver(this)
+    }
+
     private var forceAutoShow = false
     private var consentStatus: ConsentStatus = ConsentStatus.NA
     private var receivedConsent: SPConsents? = null
     private val cmpConfig: SpConfig = config {
-        accountId = SourcepointConfiguration.accountId
-        propertyId = SourcepointConfiguration.propertyId
-        propertyName = SourcepointConfiguration.propertyName
+        accountId = sourcepointConfiguration.accountId
+        propertyId = sourcepointConfiguration.propertyId
+        propertyName = sourcepointConfiguration.propertyName
         messLanguage = VoodooPrivacyLanguageMapper.getLanguage()
         +CampaignType.GDPR
         +CampaignType.CCPA
@@ -83,7 +91,7 @@ class VoodooPrivacyManager (
         forceAutoShow = true
         setConsentStatus(ConsentStatus.LOADING)
         spConsentLib.loadPrivacyManager(
-            SourcepointConfiguration.privacyManagerId,
+            sourcepointConfiguration.privacyManagerId,
             PMTab.PURPOSES,
             CampaignType.GDPR
         )
@@ -96,15 +104,13 @@ class VoodooPrivacyManager (
         loadMessage()
     }
 
-    /**
-     * Need to be called on onDestroy lifecycle of the activity
-     */
-    fun onDestroy() {
+    override fun onDestroy(owner: LifecycleOwner) {
         onConsentReceived = null
         onStatusUpdate = null
         onError = null
         onUiReady = null
         spConsentLib.dispose()
+        super.onDestroy(owner)
     }
 
     /**
