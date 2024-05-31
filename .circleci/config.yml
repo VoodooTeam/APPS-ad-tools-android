@@ -49,8 +49,8 @@ commands:
             rm -rf !(io)
 
       - aws-cli/setup:
-          role_arn: AWS_ROLE_ARN
-          role_session_name: CIRCLE_PROJECT_REPONAME
+          role_arn: "${AWS_ROLE_ARN}"
+          role_session_name: "${CIRCLE_PROJECT_REPONAME}"
           region: "eu-west-1"
       - run:
           name: Upload sdk to S3
@@ -88,7 +88,6 @@ workflows:
     jobs:
       - publish_dev_sdk:
           context:
-            - TOOLS_DEV
             - APPS_SDK
           filters:
             tags:
@@ -103,7 +102,6 @@ workflows:
     jobs:
       - publish_prod_sdk:
           context:
-            - TOOLS_PROD
             - APPS_SDK
           filters:
             tags:
