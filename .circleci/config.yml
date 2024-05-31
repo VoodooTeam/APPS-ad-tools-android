@@ -58,7 +58,7 @@ commands:
             if [[ << parameters.is_dev >> == true ]]; then
               S3_PATH="s3://apps-sdk-20240531084238593600000001/android-dev"
             fi
-            aws s3 sync ~/.m2/repository $S3_PATH --acl public-read
+            aws s3 sync ~/.m2/repository $S3_PATH
 
 jobs:
 
