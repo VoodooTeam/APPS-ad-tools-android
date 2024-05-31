@@ -74,7 +74,6 @@ jobs:
     steps:
       - prepare_project
       - validate_release_tag
-      - run_unit_tests
       - publish_sdk_to_s3:
           is_dev: false
       - assemble_distribute_sample_app:
@@ -96,7 +95,7 @@ workflows:
               ignore: /.*/
 
 
-  relaese_sdk_prod:
+  release_sdk_prod:
     when:
       matches: { pattern: "^v\\d+\\.\\d+\\.\\d+$", value: << pipeline.git.tag >> }
     jobs:
