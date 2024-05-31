@@ -5,6 +5,7 @@ androidx-appCompat = "1.6.1"
 androidx-activity-compose = "1.9.0"
 androidx-constraintLayout = "2.1.4"
 androidx-compose-bom = "2024.05.00"
+androidx-compose-compiler = "1.5.1"
 androidx-core = "1.13.1"
 androidx-lifecycle = "2.8.1"
 retrofit = "2.11.0"
@@ -26,6 +27,7 @@ androidx-constraintlayout = { module = "androidx.constraintlayout:constraintlayo
 
 # Compose
 androidx-compose-bom = { group = "androidx.compose", name = "compose-bom", version.ref = "androidx-compose-bom" }
+androidx-foundation = { group = "androidx.compose.foundation", name = "foundation" }
 androidx-ui = { group = "androidx.compose.ui", name = "ui" }
 androidx-ui-graphics = { group = "androidx.compose.ui", name = "ui-graphics" }
 androidx-ui-tooling = { group = "androidx.compose.ui", name = "ui-tooling" }

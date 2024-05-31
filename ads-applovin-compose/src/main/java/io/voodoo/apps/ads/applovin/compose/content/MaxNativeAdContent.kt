@@ -1,4 +1,4 @@
-package io.voodoo.apps.ads.feature.ads
+package io.voodoo.apps.ads.applovin.compose.content
 
 import android.view.ViewGroup
 import androidx.compose.runtime.Composable

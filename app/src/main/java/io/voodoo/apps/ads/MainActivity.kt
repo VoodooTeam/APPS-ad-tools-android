@@ -15,9 +15,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.applovin.sdk.AppLovinSdk
+import io.voodoo.apps.ads.applovin.compose.model.AdArbitrageurHolder
 import io.voodoo.apps.ads.feature.ads.AdArbitrageurFactory
 import io.voodoo.apps.ads.feature.ads.AdsInitiliazer
-import io.voodoo.apps.ads.feature.feed.FeedAdArbitrageur
 import io.voodoo.apps.ads.feature.feed.FeedScreen
 import io.voodoo.apps.ads.feature.feed.FeedViewModel
 
@@ -58,7 +58,7 @@ class MainActivity : ComponentActivity() {
 
                 FeedScreen(
                     viewModel = feedViewModel,
-                    adArbitrageur = if (adsEnabled) FeedAdArbitrageur(arbitrageur) else null,
+                    adArbitrageur = if (adsEnabled) AdArbitrageurHolder(arbitrageur) else null,
                     onNavigateToMediationDebugger = {
                         AppLovinSdk.getInstance(context.applicationContext).showMediationDebugger()
                     }

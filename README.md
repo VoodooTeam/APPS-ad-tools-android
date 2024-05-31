@@ -19,11 +19,8 @@ maven {
 
 // For every module using the ads
 implementation("io.voodoo.apps:ads-api:<latest_version>")
-
-// For your app module to 
-// * provide the AdClient/AdArbitrageur dependency via a DI framework
-// * initialize the AppLovin/AppHrbr sdk and ad network sdk when custom configuration is necessary (eg: amazon, facebook, ...)
 implementation("io.voodoo.apps:ads-applovin:<latest_version>")
+implementation("io.voodoo.apps:ads-applovin-compose:<latest_version>")
 
 // If using amazon network
 implementation("io.voodoo.apps:ads-applovin-plugin-amazon:<latest_version>")
@@ -45,7 +42,6 @@ The app module is a demo app with a list (`LazyColumn`) of posts like instagram.
   from `MainActivity` after the consent is received)
 * `AdArbitrageurFactory`: `AdClient` + `AdArbitrageur` instantiation
 * `FeedScreen`: main screen, list of post
-* `FeedState`: demo integration of ads in a `LazyList`
 * `FeedAdItem`: composable to display the ad item
 * `layout_feed_ad_item`: native ad layout to emulate a post's design
 
@@ -60,6 +56,8 @@ app.
 * `ads-applovin`: the implementation of the API with applovin SDK dependency
     * apphrbr is included until we find a clean API to extract it in another module like we did for
       amazon's integration
+* `ads-applovin-compose`: provides some useful classes/extensions to use the lib with compose.
+    * `LazyListAdMediator` is a basic integration of the ads into a LazyList (used in sample app)
 * `ads-applovin-plugin-*`: every extension plugin that might be required for a network to be
   integrated (eg: amazon for mrec in `AmazonMRECAdClientPlugin`)
 * TODO `ads-noop`: a dummy implementation of `ads-api` to build your app without ads (eg: for faster

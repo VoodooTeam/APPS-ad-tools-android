@@ -1,4 +1,6 @@
-package io.voodoo.apps.ads.feature.feed
+@file:OptIn(ExperimentalCoroutinesApi::class)
+
+package io.voodoo.apps.ads.applovin.compose.list
 
 import android.util.Log
 import androidx.compose.foundation.lazy.LazyListState
@@ -17,6 +19,8 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import io.voodoo.apps.ads.api.model.Ad
+import io.voodoo.apps.ads.applovin.compose.model.AdArbitrageurHolder
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.conflate
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.filterNotNull
@@ -25,18 +29,21 @@ import kotlinx.coroutines.launch
 import kotlin.math.max
 
 @Composable
-fun rememberFeedState(
+fun rememberLazyListAdMediator(
+    lazyListState: LazyListState?,
+    adArbitrageur: AdArbitrageurHolder?,
     adInterval: Int,
-    adArbitrageur: FeedAdArbitrageur?,
     itemCount: () -> Int,
-): FeedState {
-    return rememberSaveable(saver = FeedState.Saver) {
-        FeedState(
+): LazyListAdMediator {
+    return rememberSaveable(saver = LazyListAdMediator.Saver) {
+        LazyListAdMediator(
+            lazyListState = lazyListState,
             adArbitrageur = adArbitrageur,
             adInterval = adInterval,
             updatedItemCount = itemCount
         )
     }.apply {
+        this.lazyListState = lazyListState
         this.adArbitrageur = adArbitrageur
         this.adInterval = adInterval
         this.itemCount = itemCount
@@ -44,20 +51,23 @@ fun rememberFeedState(
 }
 
 @Stable
-class FeedState(
-    adArbitrageur: FeedAdArbitrageur?,
+class LazyListAdMediator internal constructor(
+    lazyListState: LazyListState?,
+    adArbitrageur: AdArbitrageurHolder?,
     adInterval: Int,
     adIndices: IntArray = intArrayOf(),
-    firstVisibleItemIndex: Int = 0,
-    firstVisibleItemScrollOffset: Int = 0,
     updatedItemCount: () -> Int
 ) {
 
-    val lazyListState = LazyListState(firstVisibleItemIndex, firstVisibleItemScrollOffset)
-    var itemCount by mutableStateOf(updatedItemCount)
-
-    var adInterval by mutableIntStateOf(adInterval)
+    var lazyListState by mutableStateOf(lazyListState)
+        internal set
     var adArbitrageur by mutableStateOf(adArbitrageur)
+        internal set
+    var adInterval by mutableIntStateOf(adInterval)
+        internal set
+
+    internal var itemCount by mutableStateOf(updatedItemCount)
+
     private val adIndices = mutableStateListOf(*adIndices.toTypedArray())
 
     /**
@@ -68,7 +78,7 @@ class FeedState(
 
     suspend fun fetchAdIfNecessary() {
         val arbitrageur = adArbitrageur?.arbitrageur ?: return
-        Log.d("FeedState", "fetchAdIfNecessary")
+        Log.d("LazyListAdMediator", "fetchAdIfNecessary")
 
         // This is a blocking call, only returns when all operations are finished
         arbitrageur.fetchAdIfNecessary()
@@ -81,37 +91,46 @@ class FeedState(
         return index - adIndices.count { it < index }
     }
 
+    /**
+     * Remove all ads from the list.
+     * A good moment to call this is when you refresh the list content.
+     * Adding items doesn't necessarily requires a call,
+     * since you can keep the ads depending on how many items were added.
+     */
     fun clearAdIndices() {
         adIndices.clear()
     }
 
     fun getAdAt(index: Int): Ad? {
         val ad = adArbitrageur?.arbitrageur?.getAd(requestId = index.toString())
-        Log.d("FeedState", "Returning ad $ad at $index")
+        Log.d("LazyListAdMediator", "Returning ad $ad at $index")
         return ad
     }
 
     fun releaseAd(ad: Ad) {
-        Log.d("FeedState", "Release ad $ad")
+        Log.d("LazyListAdMediator", "Release ad $ad")
         adArbitrageur?.arbitrageur?.releaseAd(ad)
     }
 
     fun checkAndInsertAvailableAds() {
         // If we're before the last ad added, we may have scrolled back, since ads will be used
         // for previous indices, don't insert for now
+        val lazyListState = lazyListState ?: return
+        val arbitrageur = adArbitrageur?.arbitrageur ?: return
+
         val firstVisibleItemIndex = lazyListState.firstVisibleItemIndex
         if (
             firstVisibleItemIndex > (adIndices.firstOrNull() ?: Int.MAX_VALUE) &&
             firstVisibleItemIndex < (adIndices.lastOrNull() ?: Int.MIN_VALUE)
         ) {
-            Log.d("FeedState", "checkAndInsertAvailableAds skip")
+            Log.d("LazyListAdMediator", "checkAndInsertAvailableAds skip")
             return
         }
 
-        val availableAdCount = adArbitrageur?.arbitrageur?.getAvailableAdCount() ?: return
+        val availableAdCount = arbitrageur.getAvailableAdCount()
         val insertedNextAdCount = adIndices.count { it > firstVisibleItemIndex }
         val adsToInsert = (availableAdCount - insertedNextAdCount).coerceAtLeast(0)
-        Log.d("FeedState", "checkAndInsertAvailableAds insert $adsToInsert ads")
+        Log.d("LazyListAdMediator", "checkAndInsertAvailableAds insert $adsToInsert ads")
 
         repeat(adsToInsert) {
             insertAdIndex()
@@ -120,7 +139,7 @@ class FeedState(
 
     private fun insertAdIndex() {
         val lastRenderedItem =
-            lazyListState.layoutInfo.visibleItemsInfo.maxByOrNull { it.index }?.index ?: 0
+            lazyListState?.layoutInfo?.visibleItemsInfo?.maxByOrNull { it.index }?.index ?: 0
         val totalItemCount = totalItemCount
         val index = max(
             (lastRenderedItem + 1).coerceAtMost(totalItemCount),
@@ -132,7 +151,7 @@ class FeedState(
             return
         }
 
-        Log.d("FeedState", "insert ad at $index")
+        Log.d("LazyListAdMediator", "insert ad at $index")
         adIndices.add(index)
     }
 
@@ -147,24 +166,21 @@ class FeedState(
         /**
          * To keep current page and current page offset saved
          */
-        val Saver: Saver<FeedState, *> = listSaver(
+        val Saver: Saver<LazyListAdMediator, *> = listSaver(
             save = {
                 listOf(
                     it.adInterval,
                     it.adIndices.toIntArray(),
-                    it.lazyListState.firstVisibleItemIndex,
-                    it.lazyListState.firstVisibleItemScrollOffset,
                     it.itemCount(),
                 )
             },
             restore = {
-                FeedState(
+                LazyListAdMediator(
+                    lazyListState = null,
                     adArbitrageur = null,
                     adInterval = it[0] as Int,
                     adIndices = it[1] as IntArray,
-                    firstVisibleItemIndex = it[2] as Int,
-                    firstVisibleItemScrollOffset = it[3] as Int,
-                    updatedItemCount = { it[4] as Int }
+                    updatedItemCount = { it[2] as Int }
                 )
             }
         )
@@ -172,15 +188,16 @@ class FeedState(
 }
 
 @Composable
-fun FeedState.DefaultScrollAdBehaviorEffect() {
+fun LazyListAdMediator.DefaultScrollAdBehaviorEffect() {
     val coroutineScope = rememberCoroutineScope()
 
     LaunchedEffect(this) {
         snapshotFlow { adArbitrageur }
             .flatMapLatest {
-                snapshotFlow { lazyListState.firstVisibleItemIndex }
+                snapshotFlow { lazyListState?.firstVisibleItemIndex }
                     .conflate()
             }
+            .filterNotNull()
             .collect {
                 // fetchAdIfNecessary will block until all launched fetch operations are finished
                 // we don't want to block the collection because one ad client could be slow
@@ -201,7 +218,7 @@ fun FeedState.DefaultScrollAdBehaviorEffect() {
 }
 
 @Composable
-inline fun FeedState.AdFetchResultEffect(
+inline fun LazyListAdMediator.AdFetchResultEffect(
     crossinline body: suspend () -> Unit,
 ) {
     LaunchedEffect(this) {

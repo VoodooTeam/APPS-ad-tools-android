@@ -14,8 +14,8 @@ import androidx.compose.ui.unit.dp
 import com.applovin.mediation.nativeAds.MaxNativeAdViewBinder
 import io.voodoo.apps.ads.R
 import io.voodoo.apps.ads.api.model.Ad
-import io.voodoo.apps.ads.feature.ads.MRECAdContent
-import io.voodoo.apps.ads.feature.ads.MaxNativeAdContent
+import io.voodoo.apps.ads.applovin.compose.content.MRECAdContent
+import io.voodoo.apps.ads.applovin.compose.content.MaxNativeAdContent
 import io.voodoo.apps.ads.feature.feed.FeedUiState
 
 @Composable

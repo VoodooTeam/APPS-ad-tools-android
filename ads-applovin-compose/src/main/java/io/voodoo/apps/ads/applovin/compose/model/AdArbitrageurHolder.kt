@@ -1,14 +1,14 @@
-package io.voodoo.apps.ads.feature.feed
+package io.voodoo.apps.ads.applovin.compose.model
 
 import androidx.compose.runtime.Immutable
 import io.voodoo.apps.ads.api.AdArbitrageur
 
 // wrapper for compose stability
 @Immutable
-class FeedAdArbitrageur(val arbitrageur: AdArbitrageur) {
+class AdArbitrageurHolder(val arbitrageur: AdArbitrageur) {
 
     override fun equals(other: Any?): Boolean {
-        return this === other || (other is FeedAdArbitrageur && other.arbitrageur === arbitrageur)
+        return this === other || (other is AdArbitrageurHolder && other.arbitrageur === arbitrageur)
     }
 
     override fun hashCode(): Int {

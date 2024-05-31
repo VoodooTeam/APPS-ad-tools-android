@@ -14,7 +14,6 @@ android {
 }
 
 dependencies {
-    val appLovinVersion = rootProject.extra.get("APPLOVIN")
     val amazonAdapterVersion = rootProject.extra.get("AMAZON_ADAPTER")
     val amazonVersion = amazonAdapterVersion.toString().substringBeforeLast('.')
 
