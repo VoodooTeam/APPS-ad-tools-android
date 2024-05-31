@@ -9,6 +9,8 @@ For any question regarding the integration, slack me @Yann Badoual
 
 [Changelog](https://github.com/VoodooTeam/APPS-ad-tools-android/releases)
 
+repositories
+
 ```groovy
 maven {
     setUrl("https://apps-sdk.voodoo-tech.io/android/")
@@ -18,7 +20,11 @@ maven {
 }
 // jitpack required for apphrbr, feel free to add an mavenContent/includeGroup clause
 maven { setUrl("https://jitpack.io") }
+```
 
+dependencies
+
+```groovy
 // Ads
 implementation("io.voodoo.apps:ads-api:<latest_version>")
 implementation("io.voodoo.apps:ads-applovin:<latest_version>")
