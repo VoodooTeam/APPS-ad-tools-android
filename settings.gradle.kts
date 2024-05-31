@@ -34,4 +34,6 @@ dependencyResolutionManagement {
 
 rootProject.name = "Ads tools"
 include(":app")
-include(":ads")
+include(":ads-api")
+include(":ads-applovin")
+include(":ads-applovin-plugin-amazon")

@@ -1,4 +1,4 @@
-package io.voodoo.apps.ads.applovin.mrec.plugin
+package io.voodoo.apps.ads.applovin.plugin.amazon
 
 import android.view.View
 import com.amazon.device.ads.AdError

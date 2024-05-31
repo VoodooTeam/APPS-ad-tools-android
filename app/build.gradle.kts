@@ -9,8 +9,6 @@ plugins {
 //    apiKey = "«ad-review-key»"
 //}
 
-val buildLocalSDK = false
-
 android {
     namespace = "io.voodoo.apps.ads"
     compileSdk = 34
@@ -83,15 +81,9 @@ dependencies {
     implementation(libs.bundles.retrofit)
 
     // Ads
-    if (buildLocalSDK) {
-        implementation(project(":ads"))
-    } else {
-        implementation("io.voodoo.apps:ads:0.0.1")
-    }
-    implementation("com.applovin:applovin-sdk:12.4.2")
-    implementation("com.github.appharbr:appharbr-android-sdk:2.19.0")
-    implementation("com.applovin.mediation:amazon-tam-adapter:9.9.3.2")
-    implementation("com.amazon.android:aps-sdk:9.9.3")
+    implementation(project(":ads-api"))
+    implementation(project(":ads-applovin"))
+    implementation(project(":ads-applovin-plugin-amazon"))
 
     // Test
     testImplementation(libs.junit)
