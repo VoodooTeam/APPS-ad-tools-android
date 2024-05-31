@@ -94,6 +94,9 @@ dependencies {
         implementation("io.voodoo.apps", "ads-applovin-plugin-amazon", sdkAmazonPluginVersion)
     }
 
+    // Consent
+    implementation(project(":privacy"))
+
     // Test
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)

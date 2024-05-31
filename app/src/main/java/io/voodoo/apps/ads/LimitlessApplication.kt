@@ -7,6 +7,5 @@ class LimitlessApplication : Application() {
 
     override fun onCreate() {
         super.onCreate()
-        AdsInitiliazer().init(this)
     }
 }
