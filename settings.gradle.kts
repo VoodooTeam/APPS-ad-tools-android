@@ -23,3 +23,4 @@ dependencyResolutionManagement {
 rootProject.name = "Ads tools"
 include(":app")
 include(":ads")
+include(":privacy")
