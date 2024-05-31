@@ -51,7 +51,6 @@ commands:
       - aws-cli/setup:
           role_arn: "${AWS_ROLE_ARN}"
           role_session_name: "${CIRCLE_PROJECT_REPONAME}"
-          region: "eu-west-1"
       - run:
           name: Upload sdk to S3
           command: |
