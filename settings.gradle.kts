@@ -28,6 +28,18 @@ dependencyResolutionManagement {
                 includeGroup("io.voodoo.apps")
             }
         }
+        maven {
+            url = uri("https://apps-sdk.voodoo-tech.io/android/")
+            mavenContent {
+                includeGroup("io.voodoo.apps")
+            }
+        }
+        maven {
+            url = uri("https://apps-sdk.voodoo-tech.io/android-dev/")
+            mavenContent {
+                includeGroup("io.voodoo.apps")
+            }
+        }
         maven { setUrl("https://jitpack.io") }
     }
 }

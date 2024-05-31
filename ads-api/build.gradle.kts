@@ -14,8 +14,8 @@ android {
 }
 
 dependencies {
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.1")
-    compileOnly("androidx.annotation:annotation:1.8.0")
+    implementation(libs.kotlin.coroutines)
+    compileOnly(libs.androidx.appcompat)
 }
 
 apply(from = "../gradlescripts/publisher.gradle")

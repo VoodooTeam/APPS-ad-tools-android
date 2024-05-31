@@ -14,11 +14,11 @@ android {
 }
 
 dependencies {
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.1")
-
     implementation(project(":ads-api"))
-    api("com.applovin:applovin-sdk:12.5.0")
-    api("com.github.appharbr:appharbr-android-sdk:2.19.3")
+    //noinspection UseTomlInstead
+    api("com.applovin:applovin-sdk:${rootProject.extra.get("APPLOVIN")}")
+    //noinspection UseTomlInstead
+    api("com.github.appharbr:appharbr-android-sdk:${rootProject.extra.get("APPHRBR")}")
 }
 
 apply(from = "../gradlescripts/publisher.gradle")

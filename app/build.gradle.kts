@@ -59,13 +59,12 @@ android {
 dependencies {
     // Androidx
     implementation(libs.androidx.core.ktx)
+    implementation(libs.androidx.appcompat)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.androidx.lifecycle.runtime.compose)
     implementation(libs.androidx.activity.compose)
-    implementation("androidx.constraintlayout:constraintlayout:2.2.0-alpha13")
-    implementation("androidx.appcompat:appcompat:1.6.1")
-    implementation("androidx.appcompat:appcompat-resources:1.6.1")
+    implementation(libs.androidx.constraintlayout)
 
     // Compose
     implementation(platform(libs.androidx.compose.bom))
@@ -81,16 +80,19 @@ dependencies {
     implementation(libs.bundles.retrofit)
 
     // Ads
-    implementation(project(":ads-api"))
-    implementation(project(":ads-applovin"))
-    implementation(project(":ads-applovin-plugin-amazon"))
+    if (true) {
+        implementation(project(":ads-api"))
+        implementation(project(":ads-applovin"))
+        implementation(project(":ads-applovin-plugin-amazon"))
+    } else {
+        val sdkVersion = rootProject.ext.get("SDK_VER").toString()
+        val sdkAmazonPluginVersion = rootProject.ext.get("SDK_AMAZON_PLUGIN_VER").toString()
+        implementation("io.voodoo.apps", "ads-api", sdkVersion)
+        implementation("io.voodoo.apps", "ads-applovin", sdkVersion)
+        implementation("io.voodoo.apps", "ads-applovin-plugin-amazon", sdkAmazonPluginVersion)
+    }
 
     // Test
-    testImplementation(libs.junit)
-    androidTestImplementation(libs.androidx.junit)
-    androidTestImplementation(libs.androidx.espresso.core)
-    androidTestImplementation(platform(libs.androidx.compose.bom))
-    androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
 }
