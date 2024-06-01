@@ -97,7 +97,7 @@ workflows:
 
   release_sdk_prod:
     when:
-      matches: { pattern: "^v\\d+\\.\\d+\\.\\d+$", value: << pipeline.git.tag >> }
+      matches: { pattern: "^v\\d+\\.\\d+\\.\\d+\\.\\d+$", value: << pipeline.git.tag >> }
     jobs:
       - publish_prod_sdk:
           context:
