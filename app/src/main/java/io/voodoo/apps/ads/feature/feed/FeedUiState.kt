@@ -10,25 +10,6 @@ sealed interface FeedUiState {
     data object Error : FeedUiState
 
     data class Content(
-        val items: ImmutableList<ContentItem>
-    ) : FeedUiState {
-
-        @Immutable
-        sealed interface ContentItem {
-
-            val id: String
-
-            @Immutable
-            data class Item(val item: FeedItemUiState) : ContentItem {
-                override val id: String
-                    get() = item.id
-            }
-
-            @Immutable
-            data class Ad(val ad: io.voodoo.apps.ads.api.model.Ad?) : ContentItem {
-                override val id: String
-                    get() = ad?.id?.id.orEmpty()
-            }
-        }
-    }
+        val items: ImmutableList<FeedItemUiState>
+    ) : FeedUiState
 }

@@ -15,31 +15,26 @@ import io.voodoo.apps.ads.R
 import io.voodoo.apps.ads.api.model.Ad
 import io.voodoo.apps.ads.compose.content.MRECAdContent
 import io.voodoo.apps.ads.compose.content.NativeAdContent
-import io.voodoo.apps.ads.feature.feed.FeedUiState
+import io.voodoo.apps.ads.compose.model.AdHolder
 
 @Composable
 fun FeedAdItem(
-    ad: FeedUiState.Content.ContentItem.Ad,
+    ad: AdHolder,
     modifier: Modifier = Modifier
 ) {
-    when (ad.ad) {
+    when (val actualAd = ad.ad) {
         is Ad.MREC -> {
             FeedMRECAdItem(
-                ad = ad.ad,
+                ad = actualAd,
                 modifier = modifier
             )
         }
 
         is Ad.Native -> {
             FeedNativeAdItem(
-                ad = ad.ad,
+                ad = actualAd,
                 modifier = modifier
             )
-        }
-
-        null -> {
-            // Edge-case that can happen when no ads are available to display (even old ones)
-            // because it was destroyed or blocked
         }
     }
 }

@@ -87,7 +87,7 @@ class LazyListAdMediator internal constructor(
     fun hasAdAt(index: Int): Boolean = index in adIndices
 
     /** @return the real index in the original dataset (without the ads) from the lazylist index */
-    fun getRealIndex(index: Int): Int {
+    fun getItemIndex(index: Int): Int {
         return index - adIndices.count { it < index }
     }
 
