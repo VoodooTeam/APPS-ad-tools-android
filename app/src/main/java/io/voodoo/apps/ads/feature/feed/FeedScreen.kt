@@ -21,10 +21,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.voodoo.apps.ads.MockData
-import io.voodoo.apps.ads.applovin.compose.list.DefaultScrollAdBehaviorEffect
-import io.voodoo.apps.ads.applovin.compose.list.LazyListAdMediator
-import io.voodoo.apps.ads.applovin.compose.list.rememberLazyListAdMediator
-import io.voodoo.apps.ads.applovin.compose.model.AdArbitrageurHolder
+import io.voodoo.apps.ads.compose.lazylist.DefaultScrollAdBehaviorEffect
+import io.voodoo.apps.ads.compose.lazylist.LazyListAdMediator
+import io.voodoo.apps.ads.compose.lazylist.rememberLazyListAdMediator
+import io.voodoo.apps.ads.compose.model.AdArbitrageurHolder
 import io.voodoo.apps.ads.feature.feed.component.FeedAdItem
 import io.voodoo.apps.ads.feature.feed.component.FeedErrorState
 import io.voodoo.apps.ads.feature.feed.component.FeedItem

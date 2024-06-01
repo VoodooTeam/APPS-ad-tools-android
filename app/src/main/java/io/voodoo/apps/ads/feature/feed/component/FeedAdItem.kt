@@ -11,11 +11,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
-import com.applovin.mediation.nativeAds.MaxNativeAdViewBinder
 import io.voodoo.apps.ads.R
 import io.voodoo.apps.ads.api.model.Ad
-import io.voodoo.apps.ads.applovin.compose.content.MRECAdContent
-import io.voodoo.apps.ads.applovin.compose.content.MaxNativeAdContent
+import io.voodoo.apps.ads.compose.content.MRECAdContent
+import io.voodoo.apps.ads.compose.content.NativeAdContent
 import io.voodoo.apps.ads.feature.feed.FeedUiState
 
 @Composable
@@ -83,20 +82,8 @@ fun FeedNativeAdItem(
     ad: Ad.Native,
     modifier: Modifier = Modifier
 ) {
-    MaxNativeAdContent(
+    NativeAdContent(
         modifier = modifier,
         ad = ad,
-        binderProvider = {
-            MaxNativeAdViewBinder.Builder(R.layout.layout_feed_ad_item)
-                .setIconImageViewId(R.id.icon_image_view)
-                .setTitleTextViewId(R.id.title_text_view)
-                .setBodyTextViewId(R.id.body_text_view)
-                .setStarRatingContentViewGroupId(R.id.star_rating_view)
-                .setAdvertiserTextViewId(R.id.advertiser_textView)
-                .setMediaContentViewGroupId(R.id.media_view_container)
-                .setOptionsContentViewGroupId(R.id.ad_options_view)
-                .setCallToActionButtonId(R.id.cta_button)
-                .build()
-        }
     )
 }

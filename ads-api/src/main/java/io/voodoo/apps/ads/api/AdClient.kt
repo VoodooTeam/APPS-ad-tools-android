@@ -138,6 +138,7 @@ abstract class BaseAdClient<ActualType : PublicType, PublicType : Ad>(
 
     override fun releaseAd(ad: Ad) {
         synchronized(loadedAds) {
+            ad.release()
             ad.unlock()
             ensureBufferSize()
         }

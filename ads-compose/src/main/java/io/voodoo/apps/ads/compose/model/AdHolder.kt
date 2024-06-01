@@ -1,4 +1,4 @@
-package io.voodoo.apps.ads.applovin.compose.model
+package io.voodoo.apps.ads.compose.model
 
 import androidx.compose.runtime.Immutable
 import io.voodoo.apps.ads.api.model.Ad

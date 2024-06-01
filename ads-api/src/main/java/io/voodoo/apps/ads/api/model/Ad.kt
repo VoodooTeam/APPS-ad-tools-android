@@ -16,7 +16,8 @@ sealed class Ad {
 
     fun canBeServed() = !isBlocked && !isExpired
 
-    abstract fun render(view: View)
+    abstract fun render(parent: View)
+    open fun release() {}
 
     protected fun markAsRendered() {
         rendered = true

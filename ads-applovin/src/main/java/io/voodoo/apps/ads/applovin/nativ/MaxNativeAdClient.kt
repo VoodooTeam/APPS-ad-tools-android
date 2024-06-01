@@ -29,6 +29,7 @@ class MaxNativeAdClient(
     config: AdClient.Config,
     private val context: Context,
     appLovinSdk: AppLovinSdk = AppLovinSdk.getInstance(context),
+    adViewFactory: MaxNativeAdViewFactory,
     private val loadingListener: AdLoadingListener? = null,
     private val revenueListener: AdRevenueListener? = null,
     private val moderationListener: AdModerationListener? = null,
@@ -44,6 +45,7 @@ class MaxNativeAdClient(
         appLovinSdk,
         context.applicationContext
     )
+    private val adViewPool = MaxNativeAdViewPool(adViewFactory)
 
     init {
         require(appLovinSdk.isInitialized) { "AppLovin instance not initialized" }
@@ -51,7 +53,7 @@ class MaxNativeAdClient(
         loader.setNativeAdListener(listener)
         loader.setRevenueListener { ad ->
             val adWrapper = findAdOrNull { it.ad === ad }
-                ?: MaxNativeAdWrapper(ad, loader)
+                ?: MaxNativeAdWrapper(ad, loader, adViewPool)
 
             revenueListener?.onAdRevenuePaid(adWrapper)
         }
@@ -82,6 +84,7 @@ class MaxNativeAdClient(
                             val adWrapper = MaxNativeAdWrapper(
                                 ad = ad,
                                 loader = loader,
+                                viewPool = adViewPool,
                                 moderationResult = if (AppHarbr.isInitialized()) {
                                     ad.getNativeAdModerationResult()
                                 } else {

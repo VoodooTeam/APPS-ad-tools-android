@@ -25,10 +25,14 @@ maven { setUrl("https://jitpack.io") }
 dependencies
 
 ```groovy
-// Ads
+// Ads basic api and compose utilities, no dependencies to applovin
+// All your modules can use this lightweight artifacts
 implementation("io.voodoo.apps:ads-api:<latest_version>")
+implementation("io.voodoo.apps:ads-compose:<latest_version>")
+
+// The actual implementation of the ads-api module, your app module needs it to initialize
+// AppLovin and AppHrbr SDK, as well as provide AdClient/AdArbitrageur to your modules via DI
 implementation("io.voodoo.apps:ads-applovin:<latest_version>")
-implementation("io.voodoo.apps:ads-applovin-compose:<latest_version>")
 
 // GDPR/Consent flow
 implementation("io.voodoo.apps:ads-privacy:<latest_version>")

@@ -1,6 +1,6 @@
 @file:OptIn(ExperimentalCoroutinesApi::class)
 
-package io.voodoo.apps.ads.applovin.compose.list
+package io.voodoo.apps.ads.compose.lazylist
 
 import android.util.Log
 import androidx.compose.foundation.lazy.LazyListState
@@ -19,7 +19,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import io.voodoo.apps.ads.api.model.Ad
-import io.voodoo.apps.ads.applovin.compose.model.AdArbitrageurHolder
+import io.voodoo.apps.ads.compose.model.AdArbitrageurHolder
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.conflate
 import kotlinx.coroutines.flow.filter

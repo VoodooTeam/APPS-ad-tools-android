@@ -16,7 +16,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.applovin.sdk.AppLovinSdk
-import io.voodoo.apps.ads.applovin.compose.model.AdArbitrageurHolder
+import io.voodoo.apps.ads.compose.model.AdArbitrageurHolder
 import io.voodoo.apps.ads.feature.ads.AdArbitrageurFactory
 import io.voodoo.apps.ads.feature.ads.AdsInitiliazer
 import io.voodoo.apps.ads.feature.feed.FeedScreen

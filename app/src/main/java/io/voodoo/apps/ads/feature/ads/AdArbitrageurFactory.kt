@@ -32,6 +32,7 @@ class AdArbitrageurFactory(private val context: Context) {
                 adUnit = MockData.NATIVE_AD_UNIT
             ),
             context = context,
+            adViewFactory = MaxNativeAdViewFactory(),
             loadingListener = object : AdLoadingListener {
                 override fun onAdLoadingStarted(type: Ad.Type) {
                     // no-op

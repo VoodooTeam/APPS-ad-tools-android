@@ -31,11 +31,9 @@ class MaxMRECAdWrapper internal constructor(
         analyticsInfo = ad.buildAnalyticsInfo(moderationResult)
     }
 
-    override fun render(view: View) {
-        (this.view.parent as? ViewGroup)?.removeView(this.view)
-
-        require(view is ViewGroup)
-        view.addView(this.view)
+    override fun render(parent: View) {
+        require(parent is ViewGroup) { "parent is not a ViewGroup" }
+        parent.addView(this.view)
         markAsRendered()
     }
 }

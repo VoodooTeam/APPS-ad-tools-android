@@ -84,13 +84,13 @@ dependencies {
     if (true) {
         implementation(project(":ads-api"))
         implementation(project(":ads-applovin"))
-        implementation(project(":ads-applovin-compose"))
+        implementation(project(":ads-compose"))
         implementation(project(":ads-applovin-plugin-amazon"))
     } else {
         val sdkAmazonPluginVersion = rootProject.ext.get("SDK_AMAZON_PLUGIN_VER").toString()
         implementation("io.voodoo.apps", "ads-api", sdkVersion)
         implementation("io.voodoo.apps", "ads-applovin", sdkVersion)
-        implementation("io.voodoo.apps", "ads-applovin-compose", sdkVersion)
+        implementation("io.voodoo.apps", "ads-compose", sdkVersion)
         implementation("io.voodoo.apps", "ads-applovin-plugin-amazon", sdkAmazonPluginVersion)
     }
 

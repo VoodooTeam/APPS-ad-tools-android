@@ -6,11 +6,11 @@ plugins {
 apply(from = "../gradlescripts/android-library.gradle")
 
 val artifactGroupId by extra("io.voodoo.apps")
-val artifactId by extra("ads-applovin-compose")
+val artifactId by extra("ads-compose")
 val artifactVersion by extra(rootProject.extra.get("SDK_VER"))
 
 android {
-    namespace = "io.voodoo.apps.ads.applovin.compose"
+    namespace = "io.voodoo.apps.ads.compose"
 
     buildFeatures {
         compose = true
@@ -22,7 +22,6 @@ android {
 
 dependencies {
     compileOnly(project(":ads-api"))
-    compileOnly(project(":ads-applovin"))
 
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.foundation)

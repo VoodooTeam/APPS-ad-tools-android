@@ -1,4 +1,4 @@
-package io.voodoo.apps.ads.applovin.compose.content
+package io.voodoo.apps.ads.compose.content
 
 import android.view.ViewGroup.LayoutParams
 import android.widget.FrameLayout
