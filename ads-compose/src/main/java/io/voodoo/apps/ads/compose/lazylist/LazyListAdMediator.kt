@@ -22,6 +22,7 @@ import io.voodoo.apps.ads.api.model.Ad
 import io.voodoo.apps.ads.compose.model.AdArbitrageurHolder
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.conflate
+import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flatMapLatest
@@ -59,6 +60,8 @@ class LazyListAdMediator internal constructor(
         internal set
     var adArbitrageur by mutableStateOf(adArbitrageur)
         internal set
+
+    /** how many actual items between two ads */
     var adInterval by mutableIntStateOf(adInterval)
         internal set
 
@@ -140,11 +143,12 @@ class LazyListAdMediator internal constructor(
         val totalItemCount = totalItemCount
         val index = max(
             (lastRenderedItem + 1).coerceAtMost(totalItemCount),
-            (adIndices.lastOrNull() ?: -1) + adInterval + 1
+            adIndices.lastOrNull()?.plus(adInterval + 1) ?: Int.MIN_VALUE
         )
 
-        if (index > totalItemCount) {
+        if (index !in 1..totalItemCount) {
             // We can't display the ad
+            Log.d("LazyListAdMediator", "can't insert ad at $index")
             return
         }
 
@@ -189,7 +193,7 @@ fun LazyListAdMediator.DefaultScrollAdBehaviorEffect() {
     LaunchedEffect(this) {
         snapshotFlow { adArbitrageur }
             .flatMapLatest {
-                snapshotFlow { lazyListState?.firstVisibleItemIndex }
+                snapshotFlow { lazyListState?.firstVisibleItemIndex to itemCount }
                     .conflate()
             }
             .filterNotNull()
@@ -199,6 +203,7 @@ fun LazyListAdMediator.DefaultScrollAdBehaviorEffect() {
                 // while the other responsive, and we should keep serving and loading ads regardless
                 coroutineScope.launch {
                     fetchAdIfNecessary()
+                    checkAndInsertAvailableAds()
                 }
 
                 // Because ads are not always added in adIndices when loaded
@@ -218,8 +223,7 @@ inline fun LazyListAdMediator.AdFetchResultEffect(
 ) {
     LaunchedEffect(this) {
         snapshotFlow { adArbitrageur?.arbitrageur }
-            .filterNotNull()
-            .flatMapLatest { it.getAdFetchResults() }
+            .flatMapLatest { it?.getAdFetchResults() ?: emptyFlow() }
             .filter { it.isSuccess }
             .collect {
                 body()
