@@ -13,6 +13,7 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.Saver
 import androidx.compose.runtime.saveable.listSaver
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -76,12 +77,12 @@ class LazyListAdMediator internal constructor(
      */
     val totalItemCount by derivedStateOf { computeTotalItemCount() }
 
-    suspend fun fetchAdIfNecessary() {
+    suspend fun fetchAdIfNecessary(localExtraProvider: () -> Array<Pair<String, Any>>) {
         val arbitrageur = adArbitrageur?.arbitrageur ?: return
         Log.d("LazyListAdMediator", "fetchAdIfNecessary")
 
         // This is a blocking call, only returns when all operations are finished
-        arbitrageur.fetchAdIfNecessary()
+        arbitrageur.fetchAdIfNecessary(*localExtraProvider())
     }
 
     fun hasAdAt(index: Int): Boolean = index in adIndices
@@ -187,8 +188,11 @@ class LazyListAdMediator internal constructor(
 }
 
 @Composable
-fun LazyListAdMediator.DefaultScrollAdBehaviorEffect() {
+fun LazyListAdMediator.DefaultScrollAdBehaviorEffect(
+    localExtraProvider: () -> Array<Pair<String, Any>> = { emptyArray() }
+) {
     val coroutineScope = rememberCoroutineScope()
+    val currentLocalExtraProvider by rememberUpdatedState(localExtraProvider)
 
     LaunchedEffect(this) {
         snapshotFlow { adArbitrageur }
@@ -202,7 +206,7 @@ fun LazyListAdMediator.DefaultScrollAdBehaviorEffect() {
                 // we don't want to block the collection because one ad client could be slow
                 // while the other responsive, and we should keep serving and loading ads regardless
                 coroutineScope.launch {
-                    fetchAdIfNecessary()
+                    fetchAdIfNecessary(currentLocalExtraProvider)
                     checkAndInsertAvailableAds()
                 }
 

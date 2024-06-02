@@ -154,4 +154,15 @@ here https://artifacts.applovin.com/android/com/applovin/quality/AppLovinQuality
 setExtraParameter("test_mode_network", "ADMOB_BIDDING")
 ```
 
-* If loading ads starts to get slow or you get a lot of no-fill, try to reset your advertising ID 
+* If loading ads starts to get slow or you get a lot of no-fill, try to reset your advertising ID
+
+## Network specific
+
+Some networks might require passing extra info when fetching an ad. This can be done via the
+localExtra array. When using `LazyListAdMediator` (and `DefaultScrollAdBehaviorEffect`) you can pass
+a `localExtraProvider` to build this array when a request will be made.
+
+#### Bigo
+
+* Bigo requires extra parameters when fetching an ad,
+  see https://www.bigossp.com/guide/sdk/android/mediation/maxAdapter#5-load-and-show-an-ad

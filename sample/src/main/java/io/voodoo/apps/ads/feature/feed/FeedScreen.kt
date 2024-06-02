@@ -25,6 +25,7 @@ import io.voodoo.apps.ads.feature.feed.component.FeedAdItem
 import io.voodoo.apps.ads.feature.feed.component.FeedErrorState
 import io.voodoo.apps.ads.feature.feed.component.FeedItem
 import io.voodoo.apps.ads.feature.feed.component.FeedTopAppBar
+import java.util.concurrent.TimeUnit
 
 @Composable
 fun FeedScreen(
@@ -87,7 +88,16 @@ private fun FeedScreenContent(
     adMediator: LazyListAdMediator,
     modifier: Modifier = Modifier,
 ) {
-    adMediator.DefaultScrollAdBehaviorEffect()
+    adMediator.DefaultScrollAdBehaviorEffect(
+        localExtraProvider = {
+            // Provide extra if needed (see readme)
+            arrayOf(
+                "bigoads_age" to 32,
+                "bigoads_gender" to 2, // gender male
+                "bigoads_activated_time" to TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis())
+            )
+        }
+    )
 
     LazyColumn(
         state = listState,
