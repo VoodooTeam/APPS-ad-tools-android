@@ -20,6 +20,7 @@ import io.voodoo.apps.ads.compose.model.AdHolder
  */
 inline fun LazyListScope.items(
     adMediator: LazyListAdMediator,
+    count: Int,
     noinline adKey: ((lazyListIndex: Int) -> Any)? = null,
     noinline key: ((lazyListIndex: Int, itemIndex: Int) -> Any)? = null,
     noinline adContentType: ((lazyListIndex: Int) -> Any)? = null,
@@ -27,6 +28,7 @@ inline fun LazyListScope.items(
     crossinline adContent: @Composable LazyItemScope.(lazyListIndex: Int, ad: AdHolder) -> Unit,
     crossinline itemContent: @Composable LazyItemScope.(lazyListIndex: Int, itemIndex: Int) -> Unit
 ) {
+    adMediator.itemCount = count
     items(
         count = adMediator.totalItemCount,
         // Don't provide key/contentType by default, because LazyListAdMediator.adIndices
@@ -92,6 +94,7 @@ inline fun <T> LazyListScope.items(
 ) {
     items(
         adMediator = adMediator,
+        count = items.size,
         adKey = adKey,
         key = if (key != null) {
             { _, itemIndex ->
@@ -139,6 +142,7 @@ inline fun <T> LazyListScope.itemsIndexed(
 ) {
     items(
         adMediator = adMediator,
+        count = items.size,
         adKey = adKey,
         key = if (key != null) {
             { lazyListIndex, itemIndex ->

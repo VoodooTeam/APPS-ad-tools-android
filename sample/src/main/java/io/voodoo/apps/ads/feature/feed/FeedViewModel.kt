@@ -10,9 +10,11 @@ import io.voodoo.apps.ads.feature.feed.component.FeedItemUiState
 import io.voodoo.apps.ads.feature.unsplash.UnsplashClient
 import io.voodoo.apps.ads.feature.unsplash.UnsplashPhoto
 import kotlinx.collections.immutable.toImmutableList
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlin.time.Duration.Companion.seconds
 
 class FeedViewModel(
     private val unsplashClient: UnsplashClient
@@ -38,11 +40,18 @@ class FeedViewModel(
 
             try {
                 val content = unsplashClient.getContent(query)
-                val items = content.map { it.toFeedItem() }
 
-                _uiState.value = FeedUiState.Content(
-                    items = items.toImmutableList()
-                )
+                // Chunk content and add with delay to emulate load more
+                // and make sure size update works correctly
+                val contentChunks = content.chunked(5)
+                repeat(contentChunks.size) { index ->
+                    val items = contentChunks.take(index).flatten().map { it.toFeedItem() }
+
+                    _uiState.value = FeedUiState.Content(
+                        items = items.toImmutableList()
+                    )
+                    delay(5.seconds)
+                }
             } catch (e: Exception) {
                 Log.e("Limitless", "Failed to get content", e)
                 _uiState.value = FeedUiState.Error

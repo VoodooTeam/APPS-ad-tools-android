@@ -33,20 +33,17 @@ fun rememberLazyListAdMediator(
     lazyListState: LazyListState?,
     adArbitrageur: AdArbitrageurHolder?,
     adInterval: Int,
-    itemCount: () -> Int,
 ): LazyListAdMediator {
     return rememberSaveable(saver = LazyListAdMediator.Saver) {
         LazyListAdMediator(
             lazyListState = lazyListState,
             adArbitrageur = adArbitrageur,
             adInterval = adInterval,
-            updatedItemCount = itemCount
         )
     }.apply {
         this.lazyListState = lazyListState
         this.adArbitrageur = adArbitrageur
         this.adInterval = adInterval
-        this.itemCount = itemCount
     }
 }
 
@@ -56,7 +53,6 @@ class LazyListAdMediator internal constructor(
     adArbitrageur: AdArbitrageurHolder?,
     adInterval: Int,
     adIndices: IntArray = intArrayOf(),
-    updatedItemCount: () -> Int
 ) {
 
     var lazyListState by mutableStateOf(lazyListState)
@@ -66,7 +62,8 @@ class LazyListAdMediator internal constructor(
     var adInterval by mutableIntStateOf(adInterval)
         internal set
 
-    internal var itemCount by mutableStateOf(updatedItemCount)
+    /** number of actual items (without the ads) */
+    var itemCount by mutableIntStateOf(0)
 
     private val adIndices = mutableStateListOf(*adIndices.toTypedArray())
 
@@ -156,7 +153,7 @@ class LazyListAdMediator internal constructor(
     }
 
     private fun computeTotalItemCount(): Int {
-        return (itemCount() + adIndices.size)
+        return (itemCount + adIndices.size)
             // Remove all ads if actual content changed and we have ads outside the dataset
             // Note: this is just a nice-to-have, you should call clearAdIndices() manually when content changes
             .also { if ((adIndices.lastOrNull() ?: Int.MIN_VALUE) > it) clearAdIndices() }
@@ -171,7 +168,6 @@ class LazyListAdMediator internal constructor(
                 listOf(
                     it.adInterval,
                     it.adIndices.toIntArray(),
-                    it.itemCount(),
                 )
             },
             restore = {
@@ -180,7 +176,6 @@ class LazyListAdMediator internal constructor(
                     adArbitrageur = null,
                     adInterval = it[0] as Int,
                     adIndices = it[1] as IntArray,
-                    updatedItemCount = { it[2] as Int }
                 )
             }
         )

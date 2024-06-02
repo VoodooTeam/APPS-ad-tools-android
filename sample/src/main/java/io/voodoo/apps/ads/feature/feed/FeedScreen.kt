@@ -10,9 +10,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -36,14 +34,11 @@ fun FeedScreen(
     modifier: Modifier = Modifier
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    val itemCount =
-        remember { derivedStateOf { (uiState as? FeedUiState.Content)?.items?.size ?: 0 } }
     val listState = rememberLazyListState()
-    val lazyListAdMediator = rememberLazyListAdMediator(
+    val adMediator = rememberLazyListAdMediator(
         lazyListState = listState,
         adArbitrageur = adArbitrageur,
         adInterval = 3,
-        itemCount = itemCount::value
     )
 
     Scaffold(
@@ -77,7 +72,7 @@ fun FeedScreen(
                     FeedScreenContent(
                         content = currentUiState,
                         listState = listState,
-                        adMediator = lazyListAdMediator,
+                        adMediator = adMediator,
                     )
                 }
             }
