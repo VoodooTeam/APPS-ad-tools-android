@@ -2,22 +2,19 @@ package io.voodoo.apps.ads.feature.ads
 
 import android.app.Activity
 import android.content.Context
-import android.os.Handler
-import android.os.Looper
-import android.util.Log
-import android.widget.Toast
 import io.voodoo.apps.ads.MockData
 import io.voodoo.apps.ads.api.AdArbitrageur
 import io.voodoo.apps.ads.api.AdClient
-import io.voodoo.apps.ads.api.listener.AdLoadingListener
-import io.voodoo.apps.ads.api.listener.AdRevenueListener
 import io.voodoo.apps.ads.api.model.Ad
 import io.voodoo.apps.ads.applovin.mrec.MaxMRECAdClient
 import io.voodoo.apps.ads.applovin.nativ.MaxNativeAdClient
 
 class AdArbitrageurFactory(private val context: Context) {
 
-    private val handler = Handler(Looper.getMainLooper())
+    private val adTracker = AdTracker(
+        nativeAdUnit = MockData.NATIVE_AD_UNIT,
+        mrecAdUnit = MockData.MREC_AD_UNIT
+    )
 
     fun create(activity: Activity): AdArbitrageur {
         return AdArbitrageur(
@@ -35,24 +32,9 @@ class AdArbitrageurFactory(private val context: Context) {
             adViewFactory = MaxNativeAdViewFactory(),
             // Provide extras via here if more convenient than the UI
             localExtrasProvider = null,
-            loadingListener = object : AdLoadingListener {
-                override fun onAdLoadingStarted(type: Ad.Type) {
-                    // no-op
-                }
-
-                override fun onAdLoadingFailed(type: Ad.Type, exception: Exception) {
-                    showInfo("NATIVE load failed")
-                }
-
-                override fun onAdLoadingFinished(ad: Ad) {
-                    showInfo("NATIVE load success")
-                }
-            },
-            revenueListener = object : AdRevenueListener {
-                override fun onAdRevenuePaid(ad: Ad) {
-                    Log.e("Limitless", "NATIVE ad paid")
-                }
-            }
+            loadingListener = adTracker,
+            revenueListener = adTracker,
+            moderationListener = adTracker,
         )
     }
 
@@ -65,28 +47,9 @@ class AdArbitrageurFactory(private val context: Context) {
             // Provide extras via here if more convenient than the UI
             localExtrasProvider = null,
             // plugins = listOf(AmazonMRECAdClientPlugin(MockData.AMAZON_SLOT_ID)),
-            loadingListener = object : AdLoadingListener {
-                override fun onAdLoadingStarted(type: Ad.Type) {
-                    // no-op
-                }
-
-                override fun onAdLoadingFailed(type: Ad.Type, exception: Exception) {
-                    showInfo("MREC load failed")
-                }
-
-                override fun onAdLoadingFinished(ad: Ad) {
-                    showInfo("MREC load success")
-                }
-            },
-            revenueListener = object : AdRevenueListener {
-                override fun onAdRevenuePaid(ad: Ad) {
-                    Log.e("Limitless", "MREC ad paid")
-                }
-            }
+            loadingListener = adTracker,
+            revenueListener = adTracker,
+            moderationListener = adTracker,
         ).apply { init(activity) }
-    }
-
-    private fun showInfo(text: String) {
-        handler.post { Toast.makeText(context, text, Toast.LENGTH_SHORT).show() }
     }
 }
