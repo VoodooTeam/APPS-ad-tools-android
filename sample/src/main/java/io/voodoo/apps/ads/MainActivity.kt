@@ -40,7 +40,8 @@ class MainActivity : ComponentActivity() {
             sourcepointConfiguration = SourcepointConfiguration(
                 accountId = 1909,
                 propertyId = 36309,
-                privacyManagerId = "1142456",
+                gdprPrivacyManagerId = "1142456",
+                usMspsPrivacyManagerId = "1143800",
                 propertyName = "voodoo.native.app"
             ),
             onConsentReceived = {
@@ -87,6 +88,9 @@ class MainActivity : ComponentActivity() {
                     adArbitrageur = if (adsEnabled) AdArbitrageurHolder(arbitrageur) else null,
                     onNavigateToMediationDebugger = {
                         AppLovinSdk.getInstance(context.applicationContext).showMediationDebugger()
+                    },
+                    onNavigateToPrivacyEdit = {
+                        voodooConsentManager.changePrivacyConsent()
                     }
                 )
             }
@@ -101,7 +105,7 @@ class MainActivity : ComponentActivity() {
     private fun onReceiveConsent(consent: VoodooPrivacyConsent) {
         if (consent.adConsent || !consent.privacyApplicable) {
             //Ads can only being initialized when consent is retrieved / when privacy is not applicable
-            AdsInitiliazer().init(this)
+            AdsInitiliazer().init(this, consent.doNotSellDataEnabled)
         }
     }
 }

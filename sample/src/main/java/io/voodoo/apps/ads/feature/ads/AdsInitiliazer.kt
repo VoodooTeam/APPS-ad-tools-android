@@ -20,7 +20,7 @@ import kotlinx.coroutines.flow.asStateFlow
 
 class AdsInitiliazer {
 
-    fun init(context: Context) {
+    fun init(context: Context, doNotSellDataEnabled: Boolean) {
         // Amazon config
         AdRegistration.getInstance(MockData.AMAZON_APP_KEY, context)
         AdRegistration.setAdNetworkInfo(DTBAdNetworkInfo(DTBAdNetwork.MAX))
@@ -51,7 +51,7 @@ class AdsInitiliazer {
 
         // SDK shouldn't be initialized if we don't have user's consent
         AppLovinPrivacySettings.setHasUserConsent(true, context)
-        AppLovinPrivacySettings.setDoNotSell(false, context)
+        AppLovinPrivacySettings.setDoNotSell(doNotSellDataEnabled, context)
         AppLovinPrivacySettings.setIsAgeRestrictedUser(false, context)
     }
 

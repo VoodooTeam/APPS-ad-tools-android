@@ -7,6 +7,7 @@ import androidx.lifecycle.LifecycleOwner
 import com.sourcepoint.cmplibrary.NativeMessageController
 import com.sourcepoint.cmplibrary.SpClient
 import com.sourcepoint.cmplibrary.core.nativemessage.MessageStructure
+import com.sourcepoint.cmplibrary.creation.ConfigOption
 import com.sourcepoint.cmplibrary.creation.config
 import com.sourcepoint.cmplibrary.creation.delegate.spConsentLibLazy
 import com.sourcepoint.cmplibrary.exception.CampaignType
@@ -40,6 +41,7 @@ class VoodooPrivacyManager(
         lifecycleOwner.lifecycle.addObserver(this)
     }
 
+    private var doNotSellDataEnabled = false
     private var forceAutoShow = false
     private var consentStatus: ConsentStatus = ConsentStatus.NA
     private var receivedConsent: SPConsents? = null
@@ -49,7 +51,7 @@ class VoodooPrivacyManager(
         propertyName = sourcepointConfiguration.propertyName
         messLanguage = VoodooPrivacyLanguageMapper.getLanguage()
         +CampaignType.GDPR
-        +CampaignType.CCPA
+        +CampaignType.USNAT to setOf(ConfigOption.TRANSITION_CCPA_AUTH)
     }
 
     private val spConsentLib by spConsentLibLazy {
@@ -89,14 +91,22 @@ class VoodooPrivacyManager(
     /**
      * Show consent edit settings
      */
-    fun forceShowReConsent() {
+    fun changePrivacyConsent() {
         forceAutoShow = true
         setConsentStatus(ConsentStatus.LOADING)
-        spConsentLib.loadPrivacyManager(
-            sourcepointConfiguration.privacyManagerId,
-            PMTab.PURPOSES,
-            CampaignType.GDPR
-        )
+        if(isUsNatApplicable()) {
+            spConsentLib.loadPrivacyManager(
+                sourcepointConfiguration.usMspsPrivacyManagerId,
+                PMTab.PURPOSES,
+                CampaignType.USNAT
+            )
+        } else {
+            spConsentLib.loadPrivacyManager(
+                sourcepointConfiguration.gdprPrivacyManagerId,
+                PMTab.PURPOSES,
+                CampaignType.GDPR,
+            )
+        }
     }
 
     /**
@@ -151,6 +161,7 @@ class VoodooPrivacyManager(
                     CmpPurposeHelper.get(CmpPurpose.MEASURE_CONTENT_PERFORMANCE) &&
                     CmpPurposeHelper.get(CmpPurpose.DEVELOP_AND_IMPROVE_SERVICE) &&
                     CmpPurposeHelper.get(CmpPurpose.GATHER_AUDIENCE_STATISTICS),
+            doNotSellDataEnabled = doNotSellDataEnabled,
             privacyApplicable = isPrivacyApplies()
         )
     }
@@ -176,6 +187,12 @@ class VoodooPrivacyManager(
     }
 
     private fun processConsent(consent: SPConsents) {
+        //The SDK will set consentedToAny as True if user allow us to sell / share their data
+        //It will return false if user tick the Do Not Sell / Share my data
+        if (consent.usNat?.consent?.statuses?.consentedToAny == false){
+            doNotSellDataEnabled = true
+        }
+
         val gdprGrants = consent.gdpr?.consent?.grants ?: mapOf()
         CmpPurposeHelper.setInitialized()
         CmpVendorHelper.setInitialized()
