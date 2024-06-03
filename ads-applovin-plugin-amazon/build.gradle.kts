@@ -24,7 +24,7 @@ dependencies {
     //noinspection UseTomlInstead
     implementation("com.applovin.mediation:amazon-tam-adapter:$amazonAdapterVersion")
     //noinspection UseTomlInstead
-    implementation("com.amazon.android:aps-sdk:$amazonVersion")
+    api("com.amazon.android:aps-sdk:$amazonVersion")
 }
 
 apply(from = "../gradlescripts/publisher.gradle")

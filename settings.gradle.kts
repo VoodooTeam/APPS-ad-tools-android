@@ -10,7 +10,7 @@ pluginManagement {
         mavenCentral()
         gradlePluginPortal()
         maven {
-            url = uri("https://artifacts.applovin.com/android")
+            setUrl("https://artifacts.applovin.com/android")
             mavenContent {
                 includeGroup("com.applovin.quality")
             }
@@ -23,6 +23,7 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
+        maven { setUrl("https://jitpack.io") }
         mavenLocal {
             mavenContent {
                 includeGroup("io.voodoo.apps")
@@ -40,7 +41,33 @@ dependencyResolutionManagement {
                 includeGroup("io.voodoo.apps")
             }
         }
-        maven { setUrl("https://jitpack.io") }
+        maven {
+            setUrl("https://android-sdk.is.com")
+            content { includeGroup("com.ironsource.sdk") }
+        }
+        maven {
+            setUrl("https://maven.ogury.co")
+            content { includeGroupByRegex("co\\.ogury.*") }
+        }
+        maven {
+            setUrl("https://dl-maven-android.mintegral.com/repository/mbridge_android_sdk_oversea")
+            content { includeGroup("com.mbridge.msdk.oversea") }
+        }
+        maven {
+            setUrl("https://artifactory.bidmachine.io/bidmachine")
+            content {
+                includeGroupByRegex("io\\.bidmachine.*")
+                includeGroup("com.explorestack")
+            }
+        }
+        maven {
+            setUrl("https://artifact.bytedance.com/repository/pangle")
+            content { includeGroup("com.pangle.global") }
+        }
+        maven {
+            setUrl("https://cboost.jfrog.io/artifactory/chartboost-ads/")
+            content { includeGroup("com.chartboost") }
+        }
     }
 }
 

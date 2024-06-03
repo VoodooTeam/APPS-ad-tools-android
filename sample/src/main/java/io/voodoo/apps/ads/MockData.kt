@@ -7,7 +7,8 @@ object MockData {
     const val MREC_AD_UNIT = "467e71e9b06ce005"
     const val NATIVE_AD_UNIT = "79281d8a9f9fc2a9"
     const val MODERATION_SDK_KEY = "TODOTODOTODOTODOTODOTODOTODOTODOTODO"
-    const val AMAZON_SLOT_ID = ""
+    const val AMAZON_APP_KEY = "9c954b45-1c8f-4163-b9a4-25824ce48062"
+    const val AMAZON_SLOT_ID = "4cea3013-d8bb-48c5-92b2-ca5229698b1f"
 
     const val QUERY = "namba"
     const val PROFILE_PICTURE =

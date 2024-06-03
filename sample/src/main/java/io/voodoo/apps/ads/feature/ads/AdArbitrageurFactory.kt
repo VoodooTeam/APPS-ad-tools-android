@@ -8,6 +8,7 @@ import io.voodoo.apps.ads.api.AdClient
 import io.voodoo.apps.ads.api.model.Ad
 import io.voodoo.apps.ads.applovin.mrec.MaxMRECAdClient
 import io.voodoo.apps.ads.applovin.nativ.MaxNativeAdClient
+import io.voodoo.apps.ads.applovin.plugin.amazon.AmazonMRECAdClientPlugin
 
 class AdArbitrageurFactory(private val context: Context) {
 
@@ -46,7 +47,7 @@ class AdArbitrageurFactory(private val context: Context) {
             ),
             // Provide extras via here if more convenient than the UI
             localExtrasProvider = null,
-            // plugins = listOf(AmazonMRECAdClientPlugin(MockData.AMAZON_SLOT_ID)),
+            plugins = listOf(AmazonMRECAdClientPlugin(MockData.AMAZON_SLOT_ID)),
             loadingListener = adTracker,
             revenueListener = adTracker,
             moderationListener = adTracker,

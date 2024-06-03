@@ -2,6 +2,10 @@ package io.voodoo.apps.ads.feature.ads
 
 import android.content.Context
 import android.util.Log
+import com.amazon.device.ads.AdRegistration
+import com.amazon.device.ads.DTBAdNetwork
+import com.amazon.device.ads.DTBAdNetworkInfo
+import com.amazon.device.ads.MRAIDPolicy
 import com.appharbr.sdk.configuration.AHSdkConfiguration
 import com.appharbr.sdk.engine.AppHarbr
 import com.appharbr.sdk.engine.InitializationFailureReason
@@ -18,16 +22,16 @@ class AdsInitiliazer {
 
     fun init(context: Context) {
         // Amazon config
-        // AdRegistration.getInstance(adsConfigProvider.get().amazon.appKey, context)
-        // AdRegistration.setAdNetworkInfo(DTBAdNetworkInfo(DTBAdNetwork.MAX))
-        // AdRegistration.setMRAIDSupportedVersions(arrayOf("1.0", "2.0", "3.0"))
-        // AdRegistration.setMRAIDPolicy(MRAIDPolicy.CUSTOM)
+        AdRegistration.getInstance(MockData.AMAZON_APP_KEY, context)
+        AdRegistration.setAdNetworkInfo(DTBAdNetworkInfo(DTBAdNetwork.MAX))
+        AdRegistration.setMRAIDSupportedVersions(arrayOf("1.0", "2.0", "3.0"))
+        AdRegistration.setMRAIDPolicy(MRAIDPolicy.CUSTOM)
 
         val config =
             AppLovinSdkInitializationConfiguration.builder(MockData.APPLOVIN_SDK_KEY, context)
                 .setMediationProvider(AppLovinMediationProvider.MAX)
                 .setAdUnitIds(listOf(MockData.NATIVE_AD_UNIT, MockData.MREC_AD_UNIT))
-                .setTestDeviceAdvertisingIds(listOf("a6e26802-9759-4801-b8b6-10ca1ad1abe1"))
+                // .setTestDeviceAdvertisingIds(listOf("a6e26802-9759-4801-b8b6-10ca1ad1abe1"))
                 .build()
 
         AppLovinSdk.getInstance(context).apply {
