@@ -165,7 +165,9 @@ class LazyListAdMediator internal constructor(
             lazyListState?.layoutInfo?.visibleItemsInfo?.maxByOrNull { it.index }?.index ?: 0
         val totalItemCount = totalItemCount
         val index = max(
-            (lastRenderedItem + 1).coerceAtMost(totalItemCount),
+            (lastRenderedItem + 1)
+                .coerceAtLeast(adInterval)
+                .coerceAtMost(totalItemCount),
             latestAdIndex?.plus(adInterval + 1) ?: Int.MIN_VALUE
         )
 
@@ -175,7 +177,7 @@ class LazyListAdMediator internal constructor(
             return
         }
 
-        Log.d("LazyListAdMediator", "insert ad at $index")
+        Log.d("LazyListAdMediator", "insert ad at $index (totalItemCount $totalItemCount)")
         adIndices.add(index)
     }
 
