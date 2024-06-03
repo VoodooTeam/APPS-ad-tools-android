@@ -65,6 +65,8 @@ instagram.
   (called from `MainActivity` after the consent is given)
 * [AdArbitrageurFactory](sample/src/main/java/io/voodoo/apps/ads/feature/ads/AdArbitrageurFactory.kt):
   `AdClient` + `AdArbitrageur` instantiation
+* [AdTracker](sample/src/main/java/io/voodoo/apps/ads/feature/ads/AdTracker.kt):
+  Base tracking implementation that you probably need to implement
 * [FeedScreen](sample/src/main/java/io/voodoo/apps/ads/feature/feed/FeedScreen.kt): main screen,
   list of post
 * [FeedAdItem](sample/src/main/java/io/voodoo/apps/ads/feature/feed/component/FeedAdItem.kt):
