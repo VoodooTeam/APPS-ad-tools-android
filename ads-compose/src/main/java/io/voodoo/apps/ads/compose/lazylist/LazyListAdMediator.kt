@@ -70,6 +70,7 @@ class LazyListAdMediator internal constructor(
     var itemCount by mutableIntStateOf(0)
 
     private val adIndices = mutableStateListOf(*adIndices.toTypedArray())
+    private val latestAdIndex get() = adIndices.lastOrNull()
 
     /**
      * the actual item count + the ad count,
@@ -85,11 +86,32 @@ class LazyListAdMediator internal constructor(
         arbitrageur.fetchAdIfNecessary(*localExtrasProvider())
     }
 
-    fun hasAdAt(index: Int): Boolean = index in adIndices
+    fun hasAdAt(index: Int): Boolean {
+        // index in adIndices but for sorted array
+        adIndices.forEach { adIndex ->
+            when {
+                adIndex == index -> return true
+                adIndex > index -> return false
+            }
+        }
+
+        return false
+    }
+
+    fun getAdCountUntil(indexExclusive: Int): Int {
+        // adIndices.count { it < index } but for sorted array
+        if (adIndices.isEmpty()) return 0
+        var count = 0
+        for (adIndex in adIndices) {
+            if (adIndex >= indexExclusive) break
+            count++
+        }
+        return count
+    }
 
     /** @return the real index in the original dataset (without the ads) from the lazylist index */
     fun getItemIndex(index: Int): Int {
-        return index - adIndices.count { it < index }
+        return index - getAdCountUntil(index)
     }
 
     /**
@@ -122,7 +144,7 @@ class LazyListAdMediator internal constructor(
         val firstVisibleItemIndex = lazyListState.firstVisibleItemIndex
         if (
             firstVisibleItemIndex > (adIndices.firstOrNull() ?: Int.MAX_VALUE) &&
-            firstVisibleItemIndex < (adIndices.lastOrNull() ?: Int.MIN_VALUE)
+            firstVisibleItemIndex < (latestAdIndex ?: Int.MIN_VALUE)
         ) {
             Log.d("LazyListAdMediator", "checkAndInsertAvailableAds skip")
             return
@@ -144,7 +166,7 @@ class LazyListAdMediator internal constructor(
         val totalItemCount = totalItemCount
         val index = max(
             (lastRenderedItem + 1).coerceAtMost(totalItemCount),
-            adIndices.lastOrNull()?.plus(adInterval + 1) ?: Int.MIN_VALUE
+            latestAdIndex?.plus(adInterval + 1) ?: Int.MIN_VALUE
         )
 
         if (index !in 1..totalItemCount) {
@@ -161,7 +183,7 @@ class LazyListAdMediator internal constructor(
         return (itemCount + adIndices.size)
             // Remove all ads if actual content changed and we have ads outside the dataset
             // Note: this is just a nice-to-have, you should call clearAdIndices() manually when content changes
-            .also { if ((adIndices.lastOrNull() ?: Int.MIN_VALUE) > it) clearAdIndices() }
+            .also { if ((latestAdIndex ?: Int.MIN_VALUE) > it) clearAdIndices() }
     }
 
     companion object {
