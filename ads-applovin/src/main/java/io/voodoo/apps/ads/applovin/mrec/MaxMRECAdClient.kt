@@ -19,6 +19,7 @@ import com.applovin.mediation.ads.MaxAdView
 import com.applovin.sdk.AppLovinSdkUtils
 import io.voodoo.apps.ads.api.AdClient
 import io.voodoo.apps.ads.api.BaseAdClient
+import io.voodoo.apps.ads.api.LocalExtrasProvider
 import io.voodoo.apps.ads.api.listener.AdLoadingListener
 import io.voodoo.apps.ads.api.listener.AdModerationListener
 import io.voodoo.apps.ads.api.listener.AdRevenueListener
@@ -36,6 +37,7 @@ import kotlin.coroutines.resumeWithException
 class MaxMRECAdClient(
     config: AdClient.Config,
     private val plugins: List<MRECAdClientPlugin> = emptyList(),
+    private val localExtrasProvider: LocalExtrasProvider? = null,
     private val loadingListener: AdLoadingListener? = null,
     private val revenueListener: AdRevenueListener? = null,
     private val moderationListener: AdModerationListener? = null,
@@ -75,7 +77,7 @@ class MaxMRECAdClient(
     }
 
     /** see https://developers.applovin.com/en/android/ad-formats/banner-mrec-ads/ */
-    override suspend fun fetchAd(vararg localKeyValues: Pair<String, Any>): MaxMRECAdWrapper {
+    override suspend fun fetchAd(vararg localExtras: Pair<String, Any>): MaxMRECAdWrapper {
         val context = activity
         require(context != null) { "client was not initialized (missing init(activity) call?)" }
         loadingListener?.onAdLoadingStarted(type)
@@ -117,7 +119,10 @@ class MaxMRECAdClient(
 
                     Log.i("MaxMRECAdClient", "fetchAd")
                     listener.add(callback)
-                    localKeyValues.forEach { (key, value) ->
+                    localExtrasProvider?.getLocalExtras()?.forEach { (key, value) ->
+                        view.setLocalExtraParameter(key, value)
+                    }
+                    localExtras.forEach { (key, value) ->
                         view.setLocalExtraParameter(key, value)
                     }
                     view.loadAd()

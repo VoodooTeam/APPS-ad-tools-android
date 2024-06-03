@@ -77,12 +77,12 @@ class LazyListAdMediator internal constructor(
      */
     val totalItemCount by derivedStateOf { computeTotalItemCount() }
 
-    suspend fun fetchAdIfNecessary(localExtraProvider: () -> Array<Pair<String, Any>>) {
+    suspend fun fetchAdIfNecessary(localExtrasProvider: () -> Array<Pair<String, Any>>) {
         val arbitrageur = adArbitrageur?.arbitrageur ?: return
         Log.d("LazyListAdMediator", "fetchAdIfNecessary")
 
         // This is a blocking call, only returns when all operations are finished
-        arbitrageur.fetchAdIfNecessary(*localExtraProvider())
+        arbitrageur.fetchAdIfNecessary(*localExtrasProvider())
     }
 
     fun hasAdAt(index: Int): Boolean = index in adIndices
@@ -189,10 +189,10 @@ class LazyListAdMediator internal constructor(
 
 @Composable
 fun LazyListAdMediator.DefaultScrollAdBehaviorEffect(
-    localExtraProvider: () -> Array<Pair<String, Any>> = { emptyArray() }
+    localExtrasProvider: () -> Array<Pair<String, Any>> = { emptyArray() }
 ) {
     val coroutineScope = rememberCoroutineScope()
-    val currentLocalExtraProvider by rememberUpdatedState(localExtraProvider)
+    val currentLocalExtraProvider by rememberUpdatedState(localExtrasProvider)
 
     LaunchedEffect(this) {
         snapshotFlow { adArbitrageur }

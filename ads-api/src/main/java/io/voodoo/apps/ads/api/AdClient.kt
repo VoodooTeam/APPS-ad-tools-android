@@ -51,7 +51,7 @@ interface AdClient<T : Ad> : Closeable {
      * Note: there's no limit to the number of ads that can be loaded,
      * if you call this 10 times, it'll load 10 different ads.
      */
-    suspend fun fetchAd(vararg localKeyValues: Pair<String, Any>): T
+    suspend fun fetchAd(vararg localExtras: Pair<String, Any>): T
 
     data class Config(
         val servedAdsBufferSize: Int,

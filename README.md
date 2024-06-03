@@ -158,9 +158,14 @@ setExtraParameter("test_mode_network", "ADMOB_BIDDING")
 
 ## Network specific
 
-Some networks might require passing extra info when fetching an ad. This can be done via the
-localExtra array. When using `LazyListAdMediator` (and `DefaultScrollAdBehaviorEffect`) you can pass
-a `localExtraProvider` to build this array when a request will be made.
+Some networks might require passing extra info when fetching an ad.
+This can be done via the `localExtras`:
+
+* When using `LazyListAdMediator` (and `DefaultScrollAdBehaviorEffect`) you can pass
+  a `localExtrasProvider` to build this array when a request will be made.
+* You can directly pass a `LocalExtrasProvider` instance to
+  your `MaxNativeAdClient`/`MaxMRECAdClient` if it's more convenient than forwarding parameters to
+  your ui
 
 #### Bigo
 

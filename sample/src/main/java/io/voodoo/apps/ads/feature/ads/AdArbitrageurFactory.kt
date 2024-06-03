@@ -33,6 +33,8 @@ class AdArbitrageurFactory(private val context: Context) {
             ),
             context = context,
             adViewFactory = MaxNativeAdViewFactory(),
+            // Provide extras via here if more convenient than the UI
+            localExtrasProvider = null,
             loadingListener = object : AdLoadingListener {
                 override fun onAdLoadingStarted(type: Ad.Type) {
                     // no-op
@@ -60,6 +62,8 @@ class AdArbitrageurFactory(private val context: Context) {
                 servedAdsBufferSize = 3,
                 adUnit = MockData.MREC_AD_UNIT
             ),
+            // Provide extras via here if more convenient than the UI
+            localExtrasProvider = null,
             // plugins = listOf(AmazonMRECAdClientPlugin(MockData.AMAZON_SLOT_ID)),
             loadingListener = object : AdLoadingListener {
                 override fun onAdLoadingStarted(type: Ad.Type) {

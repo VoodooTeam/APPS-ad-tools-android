@@ -89,7 +89,7 @@ private fun FeedScreenContent(
     modifier: Modifier = Modifier,
 ) {
     adMediator.DefaultScrollAdBehaviorEffect(
-        localExtraProvider = {
+        localExtrasProvider = {
             // Provide extra if needed (see readme)
             arrayOf(
                 "bigoads_age" to 32,

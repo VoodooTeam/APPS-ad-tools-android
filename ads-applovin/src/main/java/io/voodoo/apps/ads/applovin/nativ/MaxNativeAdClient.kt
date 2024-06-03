@@ -13,6 +13,7 @@ import com.applovin.mediation.nativeAds.MaxNativeAdView
 import com.applovin.sdk.AppLovinSdk
 import io.voodoo.apps.ads.api.AdClient
 import io.voodoo.apps.ads.api.BaseAdClient
+import io.voodoo.apps.ads.api.LocalExtrasProvider
 import io.voodoo.apps.ads.api.listener.AdLoadingListener
 import io.voodoo.apps.ads.api.listener.AdModerationListener
 import io.voodoo.apps.ads.api.listener.AdRevenueListener
@@ -30,6 +31,7 @@ class MaxNativeAdClient(
     private val context: Context,
     appLovinSdk: AppLovinSdk = AppLovinSdk.getInstance(context),
     adViewFactory: MaxNativeAdViewFactory,
+    private val localExtrasProvider: LocalExtrasProvider? = null,
     private val loadingListener: AdLoadingListener? = null,
     private val revenueListener: AdRevenueListener? = null,
     private val moderationListener: AdModerationListener? = null,
@@ -69,7 +71,7 @@ class MaxNativeAdClient(
     }
 
     /** see https://developers.applovin.com/en/android/ad-formats/native-ads#templates */
-    override suspend fun fetchAd(vararg localKeyValues: Pair<String, Any>): MaxNativeAdWrapper {
+    override suspend fun fetchAd(vararg localExtras: Pair<String, Any>): MaxNativeAdWrapper {
         loadingListener?.onAdLoadingStarted(type)
         // Nothing to re-use, but still pop to maintain consistency across clients
         getReusableAd()
@@ -112,7 +114,10 @@ class MaxNativeAdClient(
 
                     Log.i("MaxNativeAdClient", "fetchAd")
                     listener.add(callback)
-                    localKeyValues.forEach { (key, value) ->
+                    localExtrasProvider?.getLocalExtras()?.forEach { (key, value) ->
+                        loader.setLocalExtraParameter(key, value)
+                    }
+                    localExtras.forEach { (key, value) ->
                         loader.setLocalExtraParameter(key, value)
                     }
                     loader.loadAd()

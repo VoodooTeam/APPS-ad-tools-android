@@ -114,7 +114,7 @@ class AdArbitrageur(
      * @return a mapping for each client in the result being the result if a call was made, or null otherwise.
      */
     suspend fun fetchAdIfNecessary(
-        vararg localKeyValues: Pair<String, Any>
+        vararg localExtras: Pair<String, Any>
     ): List<Result<Ad>?> = supervisorScope {
         clients
             .map { client ->
@@ -125,7 +125,7 @@ class AdArbitrageur(
                         // lock to prevent simultaneous requests
                         if (mutex.tryLock()) {
                             try {
-                                runCatching { client.fetchAd(*localKeyValues) }
+                                runCatching { client.fetchAd(*localExtras) }
                                     .also { adFetchResults.emit(it) }
                             } finally {
                                 mutex.unlock()
