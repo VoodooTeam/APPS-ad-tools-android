@@ -102,8 +102,14 @@ of `LazyListScope.items` that takes a `adMediator: LazyListAdMediator` parameter
       amazon's integration
 * `ads-applovin-plugin-*`: every extension plugin that might be required for a network to be
   integrated (eg: amazon for mrec in `AmazonMRECAdClientPlugin`)
-* TODO `ads-noop`: a dummy implementation of `ads-api` to build your app without ads (eg: for faster
-  debug build)
+* `ads-no-op`: a dummy implementation of `ads-api` to build your app without ads (eg: for faster
+  debug build).
+    * the objective is to remplace `ads-applovin` module
+    * note that this module doesn't provide a dummy implementation of `MaxNativeAdClient` (or mrec).
+      Instead it just gives you a dummy AdClient implementation that will never return an ad
+    * if you want to use this, you'll need to create two modules in your app, one to provide the
+      actual clients to your arbitrageur/code, and one to provide the mock. Then you can import one
+      or the other depending on what you want to build.
 
 ## Integration steps
 
