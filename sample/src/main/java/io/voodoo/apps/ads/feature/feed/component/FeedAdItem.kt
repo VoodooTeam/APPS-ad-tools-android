@@ -54,10 +54,10 @@ fun FeedMRECAdItem(
             )
         },
         title = {
-            Text("Sponsored")
+            Text("Time for an add")
         },
         subtitle = {
-            Text("Thank you for seeing this ad from our partner")
+            Text("Sponsored")
         },
         actions = {
             // ReportActionMenu(onReportClick = {})
