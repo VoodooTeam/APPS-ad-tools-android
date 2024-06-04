@@ -8,6 +8,7 @@ import com.applovin.mediation.MaxAd
 import com.applovin.mediation.nativeAds.MaxNativeAdLoader
 import com.applovin.mediation.nativeAds.MaxNativeAdView
 import io.voodoo.apps.ads.api.model.Ad
+import io.voodoo.apps.ads.applovin.util.MaxDummyAd
 import io.voodoo.apps.ads.applovin.util.buildAnalyticsInfo
 import io.voodoo.apps.ads.applovin.util.id
 import io.voodoo.apps.ads.applovin.util.removeFromParent
@@ -30,6 +31,10 @@ class MaxNativeAdWrapper internal constructor(
 
     internal var view: MaxNativeAdView? = null
         private set
+
+    override fun canBeServed(): Boolean {
+        return super.canBeServed() && ad !is MaxDummyAd
+    }
 
     override fun render(parent: View) {
         require(parent is ViewGroup) { "parent is not a ViewGroup" }

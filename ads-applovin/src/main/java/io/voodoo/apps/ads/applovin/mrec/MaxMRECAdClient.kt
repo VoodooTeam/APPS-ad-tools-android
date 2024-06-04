@@ -28,6 +28,7 @@ import io.voodoo.apps.ads.api.mrec.MRECAdClientPlugin
 import io.voodoo.apps.ads.applovin.exception.MaxAdLoadException
 import io.voodoo.apps.ads.applovin.listener.DefaultMaxAdViewAdListener
 import io.voodoo.apps.ads.applovin.listener.MultiMaxAdViewAdListener
+import io.voodoo.apps.ads.applovin.util.MaxDummyAd
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
@@ -135,6 +136,14 @@ class MaxMRECAdClient(
                 Log.e("MaxMRECAdClient", "Failed to load ad", e)
                 runPlugin { it.onAdLoadException(view, e) }
                 loadingListener?.onAdLoadingFailed(type, e)
+
+                // Add to pool with a MaxDummyAd to re-use the same view next call
+                val ad = MaxMRECAdWrapper(
+                    ad = MaxDummyAd(adUnit = config.adUnit, format = MaxAdFormat.MREC),
+                    view = view
+                )
+                addLoadedAd(ad)
+
                 throw e
             }
         }

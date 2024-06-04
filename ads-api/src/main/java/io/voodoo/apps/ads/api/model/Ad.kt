@@ -14,7 +14,7 @@ sealed class Ad {
     var rendered: Boolean = false
         private set
 
-    fun canBeServed() = !isBlocked && !isExpired
+    open fun canBeServed() = !isBlocked && !isExpired
 
     abstract fun render(parent: View)
     open fun release() {}
