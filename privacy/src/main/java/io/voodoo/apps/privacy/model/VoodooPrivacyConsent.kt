@@ -4,5 +4,5 @@ data class VoodooPrivacyConsent(
     val adConsent: Boolean,
     val analyticsConsent: Boolean,
     val doNotSellDataEnabled: Boolean,
-    val privacyApplicable: Boolean
+    val gdprApplicable: Boolean
 )

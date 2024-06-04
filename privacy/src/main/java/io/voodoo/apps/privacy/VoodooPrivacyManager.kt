@@ -1,6 +1,7 @@
 package io.voodoo.apps.privacy
 
 import android.app.Activity
+import android.util.Log
 import android.view.View
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
@@ -92,21 +93,31 @@ class VoodooPrivacyManager(
      * Show consent edit settings
      */
     fun changePrivacyConsent() {
-        forceAutoShow = true
-        setConsentStatus(ConsentStatus.LOADING)
-        if (isUsNatApplicable()) {
-            spConsentLib.loadPrivacyManager(
-                sourcepointConfiguration.usMspsPrivacyManagerId,
-                PMTab.PURPOSES,
-                CampaignType.USNAT
-            )
-        } else {
-            spConsentLib.loadPrivacyManager(
-                sourcepointConfiguration.gdprPrivacyManagerId,
-                PMTab.PURPOSES,
-                CampaignType.GDPR,
-            )
+        if(!isFirstMessageLoaded()) {
+            Log.w("PrivacyManager", "Privacy -- first message is not loaded yet")
+            return
         }
+
+        if(isPrivacyApplies()) {
+            forceAutoShow = true
+            setConsentStatus(ConsentStatus.LOADING)
+            if (isUsNatApplicable()) {
+                spConsentLib.loadPrivacyManager(
+                    sourcepointConfiguration.usMspsPrivacyManagerId,
+                    PMTab.PURPOSES,
+                    CampaignType.USNAT
+                )
+            } else {
+                spConsentLib.loadPrivacyManager(
+                    sourcepointConfiguration.gdprPrivacyManagerId,
+                    PMTab.PURPOSES,
+                    CampaignType.GDPR,
+                )
+            }
+        } else {
+            Log.w("PrivacyManager", "Privacy -- not available in your country")
+        }
+
     }
 
     /**
@@ -162,10 +173,13 @@ class VoodooPrivacyManager(
                     CmpPurposeHelper.get(CmpPurpose.DEVELOP_AND_IMPROVE_SERVICE) &&
                     CmpPurposeHelper.get(CmpPurpose.GATHER_AUDIENCE_STATISTICS),
             doNotSellDataEnabled = doNotSellDataEnabled,
-            privacyApplicable = isPrivacyApplies()
+            gdprApplicable = isGdprApplicable()
         )
     }
 
+    fun isFirstMessageLoaded(): Boolean {
+        return receivedConsent != null
+    }
     fun isPrivacyApplies(): Boolean {
         return isGdprApplicable() || isUsNatApplicable() || isCcpaApplicable()
     }
@@ -187,9 +201,9 @@ class VoodooPrivacyManager(
     }
 
     private fun processConsent(consent: SPConsents) {
-        //The SDK will set consentedToAny as True if user allow us to sell / share their data
+        //The SDK will set consentedToAll as True if user allow us to sell / share their data
         //It will return false if user tick the Do Not Sell / Share my data
-        if (consent.usNat?.consent?.statuses?.consentedToAny == false) {
+        if (consent.usNat?.consent?.statuses?.consentedToAll == false) {
             doNotSellDataEnabled = true
         }
 
