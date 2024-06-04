@@ -21,8 +21,8 @@ class AmazonMRECAdClientPlugin(
         if (!AdRegistration.isInitialized()) return
         require(adView is MaxAdView)
 
-        if (adView.getTag(TAG_AMAZON_AD) == true) return
-        adView.setTag(TAG_AMAZON_AD, true)
+        if (adView.getTag(R.id.tag_amazon_ad_loaded) == true) return
+        adView.setTag(R.id.tag_amazon_ad_loaded, true)
 
         val amazonLoader = DTBAdRequest().also {
             it.setSizes(DTBAdSize(300, 250, amazonSlotId))
@@ -49,9 +49,5 @@ class AmazonMRECAdClientPlugin(
 
     override suspend fun onAdLoaded(adView: View, ad: Ad.MREC) {
         // no-op
-    }
-
-    companion object {
-        private val TAG_AMAZON_AD = View.generateViewId()
     }
 }

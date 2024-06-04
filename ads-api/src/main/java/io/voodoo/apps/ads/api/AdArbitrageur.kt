@@ -142,17 +142,4 @@ class AdArbitrageur(
             }
             .awaitAll()
     }
-
-//    private suspend fun List<Deferred<Result<Ad>>>.awaitFirstSuccess(): Boolean {
-//        do {
-//            val filtered = filterNot { it.isCompleted && it.getCompleted().isFailure }
-//            if (filtered.isEmpty()) return false
-//
-//            val result = select {
-//                filtered.forEach { deferred -> deferred.onAwait { it } }
-//            }
-//
-//            if (result.isSuccess) return true
-//        } while (true)
-//    }
 }

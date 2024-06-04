@@ -90,7 +90,7 @@ class MaxMRECAdClient(
 
         val ad = withContext(Dispatchers.IO) {
             try {
-                plugins.forEach { it.onPreLoadAd(view) }
+                runPlugin { it.onPreLoadAd(view) }
 
                 // Wrap ad loading into a coroutine
                 suspendCancellableCoroutine<MaxMRECAdWrapper> {
@@ -133,13 +133,13 @@ class MaxMRECAdClient(
                 }
             } catch (e: MaxAdLoadException) {
                 Log.e("MaxMRECAdClient", "Failed to load ad", e)
-                plugins.forEach { it.onAdLoadException(view, e) }
+                runPlugin { it.onAdLoadException(view, e) }
                 loadingListener?.onAdLoadingFailed(type, e)
                 throw e
             }
         }
 
-        plugins.forEach { it.onAdLoaded(view, ad) }
+        runPlugin { it.onAdLoaded(view, ad) }
         Log.i("MaxMRECAdClient", "fetchAd success")
         loadingListener?.onAdLoadingFinished(ad)
         addLoadedAd(ad)
@@ -190,5 +190,16 @@ class MaxMRECAdClient(
         }
         ad.updateModerationResult(moderationResult)
         moderationListener?.onAdBlocked(ad)
+    }
+
+    private inline fun runPlugin(body: (MRECAdClientPlugin) -> Unit) {
+        plugins.forEach {
+            // try/catch plugin to not crash if an error occurs
+            try {
+                body(it)
+            } catch (e: Exception) {
+                Log.e("MaxMRECAdClient", "Failed to run plugin", e)
+            }
+        }
     }
 }
