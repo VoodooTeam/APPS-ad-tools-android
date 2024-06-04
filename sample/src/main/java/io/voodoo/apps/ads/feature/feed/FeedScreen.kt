@@ -48,8 +48,9 @@ fun FeedScreen(
         topBar = {
             FeedTopAppBar(
                 profilePictureUrl = MockData.PROFILE_PICTURE,
-                onProfilePictureClick = onNavigateToMediationDebugger,
-                onPrivacyEditClick = onNavigateToPrivacyEdit
+                onPrivacyEditClick = onNavigateToPrivacyEdit,
+                onMediationDebuggerClick = onNavigateToMediationDebugger,
+                onProfilePictureClick = {},
             )
         }
     ) { paddingValues ->

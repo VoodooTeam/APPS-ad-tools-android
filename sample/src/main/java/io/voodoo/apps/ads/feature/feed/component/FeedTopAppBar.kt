@@ -17,8 +17,9 @@ import coil.compose.AsyncImage
 @Composable
 fun FeedTopAppBar(
     profilePictureUrl: String,
-    onProfilePictureClick: () -> Unit,
     onPrivacyEditClick: () -> Unit,
+    onMediationDebuggerClick: () -> Unit,
+    onProfilePictureClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     CenterAlignedTopAppBar(
@@ -30,18 +31,27 @@ fun FeedTopAppBar(
             )
         },
         actions = {
+            IconButton(onClick = onPrivacyEditClick) {
+                Icon(Icons.Filled.Lock, contentDescription = "Privacy")
+            }
+
+            IconButton(onClick = onMediationDebuggerClick) {
+                AsyncImage(
+                    model = "https://play-lh.googleusercontent.com/8oVK1GwHBC6jfIt6HCrz_m7V1hSuR9TjzjZbQK7DOM-deJ3dYSfivqAIZaYMxFGD",
+                    contentDescription = "Mediation debugger",
+                    contentScale = ContentScale.Crop,
+                )
+            }
+
             IconButton(
                 onClick = onProfilePictureClick
             ) {
                 AsyncImage(
                     model = profilePictureUrl,
-                    contentDescription = null,
+                    contentDescription = "profile",
                     contentScale = ContentScale.Crop,
                     modifier = Modifier.clip(CircleShape)
                 )
-            }
-            IconButton(onClick = onPrivacyEditClick) {
-                Icon(Icons.Filled.Lock, contentDescription = "Privacy")
             }
         }
     )
