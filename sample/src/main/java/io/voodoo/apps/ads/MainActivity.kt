@@ -102,7 +102,9 @@ class MainActivity : ComponentActivity() {
 
 
     private fun onPrivacyError() {
-        Toast.makeText(applicationContext, "Privacy loading failed", Toast.LENGTH_SHORT).show()
+        runOnUiThread {
+            Toast.makeText(applicationContext, "Privacy loading failed", Toast.LENGTH_SHORT).show()
+        }
     }
 
     private fun onReceiveConsent(consent: VoodooPrivacyConsent) {
