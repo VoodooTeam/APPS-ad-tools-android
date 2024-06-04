@@ -106,7 +106,7 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun onReceiveConsent(consent: VoodooPrivacyConsent) {
-        if (consent.adConsent || !consent.privacyApplicable) {
+        if (consent.adConsent || !consent.gdprApplicable) {
             //Ads can only being initialized when consent is retrieved / when privacy is not applicable
             lifecycleScope.launch(Dispatchers.Default) {
                 AdsInitiliazer().init(this@MainActivity, consent.doNotSellDataEnabled)
