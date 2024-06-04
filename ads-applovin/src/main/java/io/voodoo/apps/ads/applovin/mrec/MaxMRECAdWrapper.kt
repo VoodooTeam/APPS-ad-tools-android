@@ -9,6 +9,7 @@ import com.applovin.mediation.ads.MaxAdView
 import io.voodoo.apps.ads.api.model.Ad
 import io.voodoo.apps.ads.applovin.util.buildAnalyticsInfo
 import io.voodoo.apps.ads.applovin.util.id
+import io.voodoo.apps.ads.applovin.util.removeFromParent
 
 class MaxMRECAdWrapper internal constructor(
     internal val ad: MaxAd,
@@ -32,8 +33,15 @@ class MaxMRECAdWrapper internal constructor(
     }
 
     override fun render(parent: View) {
+        // Shouldn't be necessary, but addView will crash if it's still attached
+        this.view.removeFromParent()
+
         require(parent is ViewGroup) { "parent is not a ViewGroup" }
         parent.addView(this.view)
         markAsRendered()
+    }
+
+    override fun release() {
+        view.removeFromParent()
     }
 }

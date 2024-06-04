@@ -70,7 +70,9 @@ fun FeedItem(
                 model = item.picture,
                 contentDescription = null,
                 contentScale = ContentScale.Crop,
-                modifier = Modifier.clip(RoundedCornerShape(16.dp))
+                modifier = Modifier
+                    .aspectRatio(3 / 4f)
+                    .clip(RoundedCornerShape(16.dp))
             )
         }
     )
@@ -117,7 +119,6 @@ fun FeedItem(
 
         // Content
         Box(
-            modifier = Modifier.aspectRatio(3 / 4f),
             propagateMinConstraints = true,
         ) {
             content()

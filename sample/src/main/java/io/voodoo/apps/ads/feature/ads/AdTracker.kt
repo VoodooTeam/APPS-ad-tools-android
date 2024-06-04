@@ -34,13 +34,13 @@ class AdTracker(
     }
 
     private fun track(eventName: String, adType: Ad.Type, analyticsInfo: Ad.AnalyticsInfo?) {
-        Log.i("AdTracker", "track($eventName): (adUnit: ${adType.adUnit}")
+        Log.i("AdTracker", "track($eventName): (adUnit: ${adType.adUnit})")
         // TODO: track via firebase analytics, mixpanel, segment, ...
         // Additional info available in analyticsInfo when ad is loaded
     }
 
     private fun startTimedEvent(eventName: String) {
-        Log.i("AdTracker", "startTimedEvent($eventName")
+        Log.i("AdTracker", "startTimedEvent($eventName)")
         // TODO: call `tracker.timed` on mixpanel
     }
 
