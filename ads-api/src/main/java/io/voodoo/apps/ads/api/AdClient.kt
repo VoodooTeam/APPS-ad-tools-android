@@ -54,7 +54,10 @@ interface AdClient<T : Ad> : Closeable {
     suspend fun fetchAd(vararg localExtras: Pair<String, Any>): T
 
     data class Config(
-        val servedAdsBufferSize: Int,
+        /**
+         * Controls how many ads will be kept in memory to re-display/be re-used to fetch new ads.
+         */
+        val adCacheSize: Int,
         val adUnit: String,
     )
 }
@@ -63,12 +66,12 @@ abstract class BaseAdClient<ActualType : PublicType, PublicType : Ad>(
     protected val config: AdClient.Config,
 ) : AdClient<PublicType> {
 
-    private val loadedAds = ArrayList<ActualType>(config.servedAdsBufferSize + 1)
+    private val loadedAds = ArrayList<ActualType>(config.adCacheSize + 1)
     private val adIdByRequestIdMap = mutableMapOf<String, Ad.Id>()
     private val lockedAdIdList = mutableSetOf<Ad.Id>()
 
     init {
-        require(config.servedAdsBufferSize >= 0) { "servedAdBufferCount must be >= 0" }
+        require(config.adCacheSize >= 0) { "adCacheSize must be >= 0" }
     }
 
     @CallSuper
@@ -153,7 +156,9 @@ abstract class BaseAdClient<ActualType : PublicType, PublicType : Ad>(
     protected fun getReusableAd(): ActualType? {
         return synchronized(loadedAds) {
             val servedAds = loadedAds.filter { !it.isAvailable() && !it.isLocked() }
-            val ad = servedAds.dropLast(config.servedAdsBufferSize).firstOrNull()
+            val ad = servedAds
+                .dropLast((config.adCacheSize - 1).coerceAtLeast(0))
+                .firstOrNull()
 
             if (ad != null) {
                 loadedAds.remove(ad)
@@ -164,19 +169,23 @@ abstract class BaseAdClient<ActualType : PublicType, PublicType : Ad>(
         }
     }
 
-    protected fun addLoadedAd(ad: ActualType) {
+    protected fun addLoadedAd(ad: ActualType, isAlreadyServed: Boolean = false) {
         synchronized(loadedAds) {
-            loadedAds.add(ad)
+            if (isAlreadyServed) {
+                loadedAds.add(0, ad)
+            } else {
+                loadedAds.add(ad)
+            }
         }
     }
 
     private fun ensureBufferSize() {
         synchronized(loadedAds) {
             // Special case, make sure to keep at least once ad to be re-used for improved perf
-            if (config.servedAdsBufferSize == 0 && loadedAds.size == 1) return
+            if (loadedAds.size == 1) return
 
             val servedAds = loadedAds.filter { !it.isAvailable() && !it.isLocked() }
-            val adsToDestroy = servedAds.dropLast(config.servedAdsBufferSize)
+            val adsToDestroy = servedAds.dropLast(config.adCacheSize)
 
             Log.d("AdClient", "Destroying ${adsToDestroy.size} ads")
             loadedAds.removeAll(adsToDestroy.toSet())

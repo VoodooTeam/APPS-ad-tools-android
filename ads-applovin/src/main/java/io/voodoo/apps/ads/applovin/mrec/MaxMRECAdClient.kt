@@ -83,7 +83,8 @@ class MaxMRECAdClient(
         require(context != null) { "client was not initialized (missing init(activity) call?)" }
         loadingListener?.onAdLoadingStarted(type)
 
-        val view = getOrCreateView(context).apply {
+        val reusedAd = getReusableAd()
+        val view = reusedAd?.view ?: createView(context).apply {
             // see https://developers.applovin.com/en/android/ad-formats/banner-mrec-ads#stopping-and-starting-auto-refresh
             setExtraParameter("allow_pause_auto_refresh_immediately", "true")
             stopAutoRefresh()
@@ -137,12 +138,13 @@ class MaxMRECAdClient(
                 runPlugin { it.onAdLoadException(view, e) }
                 loadingListener?.onAdLoadingFailed(type, e)
 
-                // Add to pool with a MaxDummyAd to re-use the same view next call
-                val ad = MaxMRECAdWrapper(
+                // Keep reused ad instead of destroying it
+                // If none, add to pool with a MaxDummyAd to re-use the same view next call
+                val ad = reusedAd ?: MaxMRECAdWrapper(
                     ad = MaxDummyAd(adUnit = config.adUnit, format = MaxAdFormat.MREC),
                     view = view
                 )
-                addLoadedAd(ad)
+                addLoadedAd(ad, isAlreadyServed = reusedAd != null)
 
                 throw e
             }
@@ -155,11 +157,8 @@ class MaxMRECAdClient(
         return ad
     }
 
-    private suspend fun getOrCreateView(activity: Activity): MaxAdView {
+    private suspend fun createView(activity: Activity): MaxAdView {
         return withContext(Dispatchers.Main.immediate) {
-            val previousView = getReusableAd()?.view
-            if (previousView != null) return@withContext previousView
-
             MaxAdView(config.adUnit, MaxAdFormat.MREC, activity).apply {
                 val widthPx = AppLovinSdkUtils.dpToPx(activity, 300)
                 val heightPx = AppLovinSdkUtils.dpToPx(activity, 250)

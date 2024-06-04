@@ -15,6 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.lifecycleScope
 import com.applovin.sdk.AppLovinSdk
 import io.voodoo.apps.ads.compose.model.AdArbitrageurHolder
 import io.voodoo.apps.ads.feature.ads.AdArbitrageurFactory
@@ -24,6 +25,8 @@ import io.voodoo.apps.ads.feature.feed.FeedViewModel
 import io.voodoo.apps.privacy.VoodooPrivacyManager
 import io.voodoo.apps.privacy.config.SourcepointConfiguration
 import io.voodoo.apps.privacy.model.VoodooPrivacyConsent
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
 
@@ -105,7 +108,9 @@ class MainActivity : ComponentActivity() {
     private fun onReceiveConsent(consent: VoodooPrivacyConsent) {
         if (consent.adConsent || !consent.privacyApplicable) {
             //Ads can only being initialized when consent is retrieved / when privacy is not applicable
-            AdsInitiliazer().init(this, consent.doNotSellDataEnabled)
+            lifecycleScope.launch(Dispatchers.Default) {
+                AdsInitiliazer().init(this@MainActivity, consent.doNotSellDataEnabled)
+            }
         }
     }
 }

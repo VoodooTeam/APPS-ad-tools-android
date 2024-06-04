@@ -73,8 +73,8 @@ class MaxNativeAdClient(
     /** see https://developers.applovin.com/en/android/ad-formats/native-ads#templates */
     override suspend fun fetchAd(vararg localExtras: Pair<String, Any>): MaxNativeAdWrapper {
         loadingListener?.onAdLoadingStarted(type)
-        // Nothing to re-use, but still pop to maintain consistency across clients
-        getReusableAd()
+
+        val reusedAd = getReusableAd()
 
         val ad = withContext(Dispatchers.IO) {
             try {
@@ -129,6 +129,10 @@ class MaxNativeAdClient(
             } catch (e: MaxAdLoadException) {
                 Log.e("MaxNativeAdClient", "Failed to load ad", e)
                 loadingListener?.onAdLoadingFailed(type, e)
+
+                // Keep reused ad instead of destroying it
+                reusedAd?.let { addLoadedAd(it, isAlreadyServed = true) }
+
                 throw e
             }
         }

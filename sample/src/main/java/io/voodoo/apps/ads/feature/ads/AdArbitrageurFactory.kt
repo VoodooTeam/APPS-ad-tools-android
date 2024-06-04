@@ -26,7 +26,7 @@ class AdArbitrageurFactory(private val context: Context) {
     private fun createNativeClient(): AdClient<Ad.Native> {
         return MaxNativeAdClient(
             config = AdClient.Config(
-                servedAdsBufferSize = 3,
+                adCacheSize = 3,
                 adUnit = MockData.NATIVE_AD_UNIT
             ),
             context = context,
@@ -42,7 +42,7 @@ class AdArbitrageurFactory(private val context: Context) {
     private fun createMRECClient(activity: Activity): AdClient<Ad.MREC> {
         return MaxMRECAdClient(
             config = AdClient.Config(
-                servedAdsBufferSize = 3,
+                adCacheSize = 3,
                 adUnit = MockData.MREC_AD_UNIT
             ),
             // Provide extras via here if more convenient than the UI
