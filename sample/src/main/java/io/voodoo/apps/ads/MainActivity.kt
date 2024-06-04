@@ -51,6 +51,7 @@ class MainActivity : ComponentActivity() {
                 onReceiveConsent(it)
             },
             onError = {
+                //Might be executed from background thread
                 it.printStackTrace()
                 onPrivacyError()
             }
