@@ -94,7 +94,7 @@ class VoodooPrivacyManager(
     fun changePrivacyConsent() {
         forceAutoShow = true
         setConsentStatus(ConsentStatus.LOADING)
-        if(isUsNatApplicable()) {
+        if (isUsNatApplicable()) {
             spConsentLib.loadPrivacyManager(
                 sourcepointConfiguration.usMspsPrivacyManagerId,
                 PMTab.PURPOSES,
@@ -189,7 +189,7 @@ class VoodooPrivacyManager(
     private fun processConsent(consent: SPConsents) {
         //The SDK will set consentedToAny as True if user allow us to sell / share their data
         //It will return false if user tick the Do Not Sell / Share my data
-        if (consent.usNat?.consent?.statuses?.consentedToAny == false){
+        if (consent.usNat?.consent?.statuses?.consentedToAny == false) {
             doNotSellDataEnabled = true
         }
 
