@@ -14,6 +14,7 @@ import com.applovin.sdk.AppLovinMediationProvider
 import com.applovin.sdk.AppLovinPrivacySettings
 import com.applovin.sdk.AppLovinSdk
 import com.applovin.sdk.AppLovinSdkInitializationConfiguration
+import com.facebook.ads.AdSettings
 import io.voodoo.apps.ads.MockData
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -26,6 +27,9 @@ class AdsInitiliazer {
         AdRegistration.setAdNetworkInfo(DTBAdNetworkInfo(DTBAdNetwork.MAX))
         AdRegistration.setMRAIDSupportedVersions(arrayOf("1.0", "2.0", "3.0"))
         AdRegistration.setMRAIDPolicy(MRAIDPolicy.CUSTOM)
+
+        // Facebook/Meta config
+        AdSettings.setDataProcessingOptions(arrayOf())
 
         val config =
             AppLovinSdkInitializationConfiguration.builder(MockData.APPLOVIN_SDK_KEY, context)

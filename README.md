@@ -173,3 +173,18 @@ This can be done via the `localExtras`:
 
 * Bigo requires extra parameters when fetching an ad,
   see https://www.bigossp.com/guide/sdk/android/mediation/maxAdapter#5-load-and-show-an-ad
+
+#### Amazon
+
+```kotlin
+AdRegistration.getInstance(AMAZON_APP_KEY, context)
+AdRegistration.setAdNetworkInfo(DTBAdNetworkInfo(DTBAdNetwork.MAX))
+AdRegistration.setMRAIDSupportedVersions(arrayOf("1.0", "2.0", "3.0"))
+AdRegistration.setMRAIDPolicy(MRAIDPolicy.CUSTOM)
+```
+
+#### Facebook/Meta
+
+```kotlin
+AdSettings.setDataProcessingOptions(arrayOf())
+```
