@@ -1,4 +1,4 @@
-package io.voodoo.apps.ads.feature.ads
+package io.voodoo.apps.ads.feature.ads.nativ
 
 import android.content.Context
 import android.view.ViewGroup

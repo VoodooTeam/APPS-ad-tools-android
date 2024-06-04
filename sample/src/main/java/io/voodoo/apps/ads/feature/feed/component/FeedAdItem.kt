@@ -60,7 +60,7 @@ fun FeedMRECAdItem(
             Text("Thank you for seeing this ad from our partner")
         },
         actions = {
-            ReportActionMenu(onReportClick = {})
+            // ReportActionMenu(onReportClick = {})
         },
         content = {
             Box(
