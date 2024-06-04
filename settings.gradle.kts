@@ -75,6 +75,7 @@ rootProject.name = "Ads tools"
 include(":sample")
 
 include(":ads-api")
+include(":ads-no-op")
 include(":ads-applovin")
 include(":ads-applovin-plugin-amazon")
 include(":ads-compose")
