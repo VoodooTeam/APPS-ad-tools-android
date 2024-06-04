@@ -48,6 +48,8 @@ class MaxNativeAdViewFactory : MaxNativeAdViewFactory {
         }
     }
 
+    // TODO: implement animation in bg_feed_ad_button.xml and txt_feed_ad_button.xml
+    //   to crossfade colors
     private fun MaxNativeAdView.updateState(visible: Boolean) {
         if (visible) {
             postDelayed(3_000) {
