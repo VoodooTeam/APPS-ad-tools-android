@@ -22,18 +22,18 @@ class AdTracker(
     }
 
     override fun onAdLoadingFinished(ad: Ad) {
-        track(AD_LOADING_FINISHED, ad.type, ad.analyticsInfo)
+        track(AD_LOADING_FINISHED, ad.type, ad.info)
     }
 
     override fun onAdBlocked(ad: Ad) {
-        track(AD_LOADING_BLOCKED, ad.type, ad.analyticsInfo)
+        track(AD_LOADING_BLOCKED, ad.type, ad.info)
     }
 
     override fun onAdRevenuePaid(ad: Ad) {
-        track(AD_WATCHED, ad.type, ad.analyticsInfo)
+        track(AD_WATCHED, ad.type, ad.info)
     }
 
-    private fun track(eventName: String, adType: Ad.Type, analyticsInfo: Ad.AnalyticsInfo?) {
+    private fun track(eventName: String, adType: Ad.Type, info: Ad.Info?) {
         Log.i("AdTracker", "track($eventName): (adUnit: ${adType.adUnit})")
         // TODO: track via firebase analytics, mixpanel, segment, ...
         // Additional info available in analyticsInfo when ad is loaded

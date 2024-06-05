@@ -6,9 +6,10 @@ sealed class Ad {
 
     abstract val id: Id
     abstract val type: Type
-    abstract val analyticsInfo: AnalyticsInfo
+    abstract val info: Info
+    abstract val moderationResult: ModerationResult?
 
-    abstract val isBlocked: Boolean
+    val isBlocked: Boolean get() = moderationResult == ModerationResult.BLOCKED
     abstract val isExpired: Boolean
 
     var rendered: Boolean = false
@@ -25,7 +26,8 @@ sealed class Ad {
 
     // Inner class
 
-    data class AnalyticsInfo(
+    data class Info(
+        val adUnit: String,
         val network: String,
         val revenue: Double,
         val cohortId: String?,
@@ -33,8 +35,14 @@ sealed class Ad {
         val placement: String?,
         val reviewCreativeId: String?,
         val formatLabel: String?,
-        val moderationResult: String?
     )
+
+    enum class ModerationResult(val analyticsValue: String) {
+        UNKNOWN("unknown"),
+        VERIFIED("verified"),
+        BLOCKED("blocked"),
+        REPORTED("reported")
+    }
 
     @JvmInline
     value class Id(val id: String)

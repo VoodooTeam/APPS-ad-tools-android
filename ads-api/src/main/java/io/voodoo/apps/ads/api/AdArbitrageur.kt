@@ -66,7 +66,7 @@ class AdArbitrageur(
      *
      * @return in order of priority:
      * - Previously served ad if a call was already made with the same [requestId] and if the ad is still in memory
-     * - The most profitable ad ([Ad.AnalyticsInfo.revenue]) that's available (not already displayed)
+     * - The most profitable ad ([Ad.Info.revenue]) that's available (not already displayed)
      * - Any ad that was already displayed but is still in memory and not used by another component
      */
     fun getAd(requestId: String): Ad? {
@@ -83,7 +83,7 @@ class AdArbitrageur(
             val ads = clients.mapNotNull { client ->
                 client to (client.getAvailableAd(requestId) ?: return@mapNotNull null)
             }
-            val bestAd = ads.maxByOrNull { (_, ad) -> ad.analyticsInfo.revenue }
+            val bestAd = ads.maxByOrNull { (_, ad) -> ad.info.revenue }
 
             // Release non-retained ad (since render was not called, it won't be destroyed)
             ads.forEach { (client, ad) ->

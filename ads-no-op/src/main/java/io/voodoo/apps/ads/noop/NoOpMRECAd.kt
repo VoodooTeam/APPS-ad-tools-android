@@ -8,7 +8,11 @@ class NoOpMRECAd(
     override val id: Id = Id(UUID.randomUUID().toString()),
 ) : Ad.MREC() {
 
-    override val analyticsInfo: AnalyticsInfo = AnalyticsInfo(
+    override val moderationResult: ModerationResult
+        get() = ModerationResult.UNKNOWN
+
+    override val info: Info = Info(
+        adUnit = "",
         network = "",
         revenue = 0.0,
         cohortId = null,
@@ -16,10 +20,7 @@ class NoOpMRECAd(
         placement = null,
         reviewCreativeId = null,
         formatLabel = null,
-        moderationResult = null
     )
-    override val isBlocked: Boolean
-        get() = false
     override val isExpired: Boolean
         get() = false
 

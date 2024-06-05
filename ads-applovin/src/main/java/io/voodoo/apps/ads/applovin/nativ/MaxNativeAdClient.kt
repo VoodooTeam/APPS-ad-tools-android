@@ -91,7 +91,7 @@ class MaxNativeAdClient(
                                 ad = ad,
                                 loader = loader,
                                 viewPool = adViewPool,
-                                moderationResult = if (AppHarbr.isInitialized()) {
+                                apphrbrModerationResult = if (AppHarbr.isInitialized()) {
                                     ad.getNativeAdModerationResult()
                                 } else {
                                     null

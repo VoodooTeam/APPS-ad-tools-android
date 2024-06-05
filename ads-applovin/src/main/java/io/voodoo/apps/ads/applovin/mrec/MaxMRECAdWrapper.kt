@@ -3,14 +3,14 @@ package io.voodoo.apps.ads.applovin.mrec
 import android.view.View
 import android.view.ViewGroup
 import com.appharbr.sdk.engine.AdResult
-import com.appharbr.sdk.engine.AdStateResult
 import com.applovin.mediation.MaxAd
 import com.applovin.mediation.ads.MaxAdView
 import io.voodoo.apps.ads.api.model.Ad
 import io.voodoo.apps.ads.applovin.util.MaxDummyAd
-import io.voodoo.apps.ads.applovin.util.buildAnalyticsInfo
+import io.voodoo.apps.ads.applovin.util.buildInfo
 import io.voodoo.apps.ads.applovin.util.id
 import io.voodoo.apps.ads.applovin.util.removeFromParent
+import io.voodoo.apps.ads.applovin.util.toModerationResult
 
 class MaxMRECAdWrapper internal constructor(
     val ad: MaxAd,
@@ -18,23 +18,17 @@ class MaxMRECAdWrapper internal constructor(
 ) : Ad.MREC() {
 
     override val id: Id = ad.id
+    override val info: Info = ad.buildInfo()
 
-    override var analyticsInfo: AnalyticsInfo = ad.buildAnalyticsInfo(null)
-        internal set
-    internal var moderationResult: AdResult? = null
+    internal var apphrbrModerationResult: AdResult? = null
+    override val moderationResult: ModerationResult?
+        get() = apphrbrModerationResult?.adStateResult?.toModerationResult()
 
     override val isExpired: Boolean
         get() = false
-    override val isBlocked: Boolean
-        get() = moderationResult?.adStateResult == AdStateResult.BLOCKED
 
     override fun canBeServed(): Boolean {
         return super.canBeServed() && ad !is MaxDummyAd
-    }
-
-    fun updateModerationResult(moderationResult: AdResult) {
-        this.moderationResult = moderationResult
-        analyticsInfo = ad.buildAnalyticsInfo(moderationResult)
     }
 
     override fun render(parent: View) {

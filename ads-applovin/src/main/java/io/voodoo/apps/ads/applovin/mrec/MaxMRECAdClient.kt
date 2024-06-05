@@ -183,12 +183,12 @@ class MaxMRECAdClient(
         val ad = findAdOrNull { it.view === view } ?: return
 
         // Ad was already moderated, drop event
-        if (ad.moderationResult != null) return
+        if (ad.apphrbrModerationResult != null) return
 
         val moderationResult = AdResult(AdStateResult.BLOCKED).apply {
             blockReasons.addAll(reasons)
         }
-        ad.updateModerationResult(moderationResult)
+        ad.apphrbrModerationResult = moderationResult
         moderationListener?.onAdBlocked(ad)
     }
 
