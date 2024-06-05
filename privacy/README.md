@@ -92,7 +92,7 @@ The SDK will call this callback in this 3 scenarios below:
   * `analyticsConsent` : Depend on what the user enter in the dialog
   * `doNotSellDataEnabled` : false
   * `gdprApplicable` : true
-* User is in US region and in the state of California, Colorado, Connecticut, Utah and Virginia . It will initially return `doNotSellDataEnabled` as **false** but user can change it to **true** if the user change the consent (calling `voodooConsentManager.changePrivacyConsent()`)
+* User is in US region and in the state of California, Colorado, Connecticut, Utah and Virginia . It will initially return `doNotSellDataEnabled` as **false** but user can change it to **true** if the user change the consent (calling `voodooConsentManager.changePrivacyConsent()`). Don't forget to pass the `doNotSellDataEnabled` to other 3rd party SDK that can receive the parameter.
   * `adConsent` : false
   * `analyticsConsent` : false
   * `doNotSellDataEnabled` : Depend on what the user set
