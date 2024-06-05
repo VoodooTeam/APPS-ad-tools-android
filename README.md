@@ -7,7 +7,7 @@ For any question/bug/feature request regarding the integration, slack me **@Yann
 
 [Changelog](https://github.com/VoodooTeam/APPS-ad-tools-android/releases)
 
-## Download
+## Installation
 
 #### Add the following maven repositories to resolve the artifacts
 
@@ -131,6 +131,10 @@ of `LazyListScope.items` that takes a `adMediator: LazyListAdMediator` parameter
       the user's GDPR consents for ads
 * Create an `MaxNativeAdClient` and/or `MaxMRECAdClient` and/or `AdArbitrageurFactory` and start
   loading/displaying ads following the example in the sample app
+
+Don't forget to close your `AdArbitrageur`/`AdClient` when you're done to free resources. By default
+if the activity provided to the clients is a `LifecycleOwner`, the client will close itself when the
+activity is destroyed.
 
 To display the ad properly in your app, check the demo app (see README Demo app section)
 

@@ -33,7 +33,7 @@ class MainActivity : ComponentActivity() {
     private val feedViewModel: FeedViewModel by viewModels { FeedViewModel.Factory }
 
     // This is bound to the activity, and shouldn't be leaked outside the activity scope
-    private val arbitrageur by lazy { AdArbitrageurFactory(application).create(this) }
+    private val arbitrageur by lazy { AdArbitrageurFactory().create(this) }
 
     private val voodooConsentManager by lazy {
         VoodooPrivacyManager(
@@ -91,10 +91,14 @@ class MainActivity : ComponentActivity() {
                     viewModel = feedViewModel,
                     adArbitrageur = if (adsEnabled) AdArbitrageurHolder(arbitrageur) else null,
                     onNavigateToMediationDebugger = {
-                        AppLovinSdk.getInstance(context.applicationContext).showMediationDebugger()
+                        AppLovinSdk.getInstance(context.applicationContext)
+                            .showMediationDebugger()
                     },
                     onNavigateToPrivacyEdit = {
                         voodooConsentManager.changePrivacyConsent()
+                    },
+                    onNavigateToProfileClick = {
+                        // no-op
                     }
                 )
             }

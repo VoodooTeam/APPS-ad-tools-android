@@ -37,6 +37,7 @@ import kotlin.coroutines.resumeWithException
 
 class MaxMRECAdClient(
     config: AdClient.Config,
+    private val activity: Activity,
     private val plugins: List<MRECAdClientPlugin> = emptyList(),
     private val localExtrasProvider: LocalExtrasProvider? = null,
     private val loadingListener: AdLoadingListener? = null,
@@ -52,22 +53,13 @@ class MaxMRECAdClient(
 
     private val listener = MultiMaxAdViewAdListener()
 
-    private var activity: Activity? = null
-
     init {
         adViewListener?.let(listener::add)
         appharbrListener = AHListener { view, _, _, reasons ->
             markAdAsBlocked(view as MaxAdView, reasons)
         }
-    }
 
-    fun init(activity: Activity) {
-        this.activity = activity
-    }
-
-    override fun close() {
-        super.close()
-        activity = null
+        (activity as? LifecycleOwner)?.lifecycle?.let(::registerToLifecycle)
     }
 
     override fun destroyAd(ad: MaxMRECAdWrapper) {
@@ -80,7 +72,6 @@ class MaxMRECAdClient(
     /** see https://developers.applovin.com/en/android/ad-formats/banner-mrec-ads/ */
     override suspend fun fetchAd(vararg localExtras: Pair<String, Any>): MaxMRECAdWrapper {
         val context = activity
-        require(context != null) { "client was not initialized (missing init(activity) call?)" }
         loadingListener?.onAdLoadingStarted(type)
 
         val reusedAd = getReusableAd()

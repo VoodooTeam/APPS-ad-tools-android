@@ -1,5 +1,8 @@
 package io.voodoo.apps.ads.api
 
+import androidx.annotation.MainThread
+import androidx.lifecycle.Lifecycle
+import io.voodoo.apps.ads.api.lifecycle.CloseOnDestroyLifecycleObserver
 import io.voodoo.apps.ads.api.model.Ad
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -9,11 +12,13 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.supervisorScope
 import kotlinx.coroutines.sync.Mutex
+import java.io.Closeable
 
+// TODO: check if we can factorize some AdClient api in a common interface (registerToLifecycle, availableAdCount, ...)
 class AdArbitrageur(
     clients: List<AdClient<*>>,
     private val requiredAvailableAdCount: Int = 1
-) {
+) : Closeable {
 
     private val clients = clients.toList()
     private val mutexByClientMap = clients.associateWith { Mutex() }
@@ -25,6 +30,15 @@ class AdArbitrageur(
         extraBufferCapacity = 8,
         onBufferOverflow = BufferOverflow.DROP_OLDEST
     )
+
+    private var lifecycleObserver: CloseOnDestroyLifecycleObserver? = null
+
+    @MainThread
+    fun registerToLifecycle(lifecycle: Lifecycle) {
+        lifecycleObserver?.removeFromLifecycle()
+        lifecycleObserver = CloseOnDestroyLifecycleObserver(lifecycle, this)
+            .also { lifecycle.addObserver(it) }
+    }
 
     /**
      * @return a flow that'll emit every client's [AdClient.fetchAd] results
@@ -141,5 +155,9 @@ class AdArbitrageur(
                 }
             }
             .awaitAll()
+    }
+
+    override fun close() {
+        clients.forEach { it.close() }
     }
 }

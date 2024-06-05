@@ -2,6 +2,9 @@ package io.voodoo.apps.ads.api
 
 import android.util.Log
 import androidx.annotation.CallSuper
+import androidx.annotation.MainThread
+import androidx.lifecycle.Lifecycle
+import io.voodoo.apps.ads.api.lifecycle.CloseOnDestroyLifecycleObserver
 import io.voodoo.apps.ads.api.model.Ad
 import java.io.Closeable
 
@@ -60,6 +63,8 @@ interface AdClient<T : Ad> : Closeable {
         val adCacheSize: Int,
         val adUnit: String,
     )
+
+
 }
 
 abstract class BaseAdClient<ActualType : PublicType, PublicType : Ad>(
@@ -70,12 +75,15 @@ abstract class BaseAdClient<ActualType : PublicType, PublicType : Ad>(
     private val adIdByRequestIdMap = mutableMapOf<String, Ad.Id>()
     private val lockedAdIdList = mutableSetOf<Ad.Id>()
 
+    private var lifecycleObserver: CloseOnDestroyLifecycleObserver? = null
+
     init {
         require(config.adCacheSize >= 0) { "adCacheSize must be >= 0" }
     }
 
     @CallSuper
     override fun close() {
+        Log.w("AdClient", "close()")
         synchronized(loadedAds) {
             loadedAds.forEach(::destroyAd)
             loadedAds.clear()
@@ -83,6 +91,13 @@ abstract class BaseAdClient<ActualType : PublicType, PublicType : Ad>(
             adIdByRequestIdMap.clear()
             lockedAdIdList.clear()
         }
+    }
+
+    @MainThread
+    fun registerToLifecycle(lifecycle: Lifecycle) {
+        lifecycleObserver?.removeFromLifecycle()
+        lifecycleObserver = CloseOnDestroyLifecycleObserver(lifecycle, this)
+            .also { lifecycle.addObserver(it) }
     }
 
     protected abstract fun destroyAd(ad: ActualType)

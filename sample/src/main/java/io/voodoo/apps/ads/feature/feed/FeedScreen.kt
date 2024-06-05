@@ -33,6 +33,7 @@ fun FeedScreen(
     adArbitrageur: AdArbitrageurHolder?,
     onNavigateToMediationDebugger: () -> Unit,
     onNavigateToPrivacyEdit: () -> Unit,
+    onNavigateToProfileClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -50,7 +51,7 @@ fun FeedScreen(
                 profilePictureUrl = MockData.PROFILE_PICTURE,
                 onPrivacyEditClick = onNavigateToPrivacyEdit,
                 onMediationDebuggerClick = onNavigateToMediationDebugger,
-                onProfilePictureClick = {},
+                onProfilePictureClick = onNavigateToProfileClick,
             )
         }
     ) { paddingValues ->

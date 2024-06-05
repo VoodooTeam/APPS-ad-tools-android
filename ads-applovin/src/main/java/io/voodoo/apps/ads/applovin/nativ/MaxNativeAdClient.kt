@@ -1,7 +1,8 @@
 package io.voodoo.apps.ads.applovin.nativ
 
-import android.content.Context
+import android.app.Activity
 import android.util.Log
+import androidx.lifecycle.LifecycleOwner
 import com.appharbr.sdk.engine.AdResult
 import com.appharbr.sdk.engine.AdSdk
 import com.appharbr.sdk.engine.AppHarbr
@@ -28,8 +29,8 @@ import kotlin.coroutines.resumeWithException
 
 class MaxNativeAdClient(
     config: AdClient.Config,
-    private val context: Context,
-    appLovinSdk: AppLovinSdk = AppLovinSdk.getInstance(context),
+    private val activity: Activity,
+    appLovinSdk: AppLovinSdk = AppLovinSdk.getInstance(activity.applicationContext),
     adViewFactory: MaxNativeAdViewFactory,
     private val localExtrasProvider: LocalExtrasProvider? = null,
     private val loadingListener: AdLoadingListener? = null,
@@ -45,7 +46,7 @@ class MaxNativeAdClient(
     private val loader = MaxNativeAdLoader(
         config.adUnit,
         appLovinSdk,
-        context.applicationContext
+        activity.applicationContext
     )
     private val adViewPool = MaxNativeAdViewPool(adViewFactory)
 
@@ -59,6 +60,8 @@ class MaxNativeAdClient(
 
             revenueListener?.onAdRevenuePaid(adWrapper)
         }
+
+        (activity as? LifecycleOwner)?.lifecycle?.let(::registerToLifecycle)
     }
 
     override fun close() {

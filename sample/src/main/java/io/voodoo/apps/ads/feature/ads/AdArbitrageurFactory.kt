@@ -1,7 +1,7 @@
 package io.voodoo.apps.ads.feature.ads
 
 import android.app.Activity
-import android.content.Context
+import androidx.activity.ComponentActivity
 import io.voodoo.apps.ads.MockData
 import io.voodoo.apps.ads.api.AdArbitrageur
 import io.voodoo.apps.ads.api.AdClient
@@ -11,26 +11,26 @@ import io.voodoo.apps.ads.applovin.nativ.MaxNativeAdClient
 import io.voodoo.apps.ads.applovin.plugin.amazon.AmazonMRECAdClientPlugin
 import io.voodoo.apps.ads.feature.ads.nativ.MaxNativeAdViewFactory
 
-class AdArbitrageurFactory(private val context: Context) {
+class AdArbitrageurFactory {
 
     private val adTracker = AdTracker(
         nativeAdUnit = MockData.NATIVE_AD_UNIT,
         mrecAdUnit = MockData.MREC_AD_UNIT
     )
 
-    fun create(activity: Activity): AdArbitrageur {
+    fun create(activity: ComponentActivity): AdArbitrageur {
         return AdArbitrageur(
-            clients = listOf(createNativeClient(), createMRECClient(activity))
-        )
+            clients = listOf(createNativeClient(activity), createMRECClient(activity))
+        ).also { it.registerToLifecycle(activity.lifecycle) }
     }
 
-    private fun createNativeClient(): AdClient<Ad.Native> {
+    private fun createNativeClient(activity: Activity): AdClient<Ad.Native> {
         return MaxNativeAdClient(
             config = AdClient.Config(
                 adCacheSize = 3,
                 adUnit = MockData.NATIVE_AD_UNIT
             ),
-            context = context,
+            activity = activity,
             adViewFactory = MaxNativeAdViewFactory(),
             // Provide extras via here if more convenient than the UI
             localExtrasProvider = null,
@@ -46,12 +46,13 @@ class AdArbitrageurFactory(private val context: Context) {
                 adCacheSize = 3,
                 adUnit = MockData.MREC_AD_UNIT
             ),
+            activity = activity,
             // Provide extras via here if more convenient than the UI
             localExtrasProvider = null,
             plugins = listOf(AmazonMRECAdClientPlugin(MockData.AMAZON_SLOT_ID)),
             loadingListener = adTracker,
             revenueListener = adTracker,
             moderationListener = adTracker,
-        ).apply { init(activity) }
+        )
     }
 }
