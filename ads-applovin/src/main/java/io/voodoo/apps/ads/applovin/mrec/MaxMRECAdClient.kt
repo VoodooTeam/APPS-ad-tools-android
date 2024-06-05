@@ -39,7 +39,7 @@ class MaxMRECAdClient(
     config: AdClient.Config,
     private val activity: Activity,
     private val plugins: List<MRECAdClientPlugin> = emptyList(),
-    private val localExtrasProvider: LocalExtrasProvider? = null,
+    private val localExtrasProviders: List<LocalExtrasProvider> = emptyList(),
     private val loadingListener: AdLoadingListener? = null,
     private val revenueListener: AdRevenueListener? = null,
     private val moderationListener: AdModerationListener? = null,
@@ -81,18 +81,19 @@ class MaxMRECAdClient(
             stopAutoRefresh()
         }
 
+        val providersExtras = localExtrasProviders.flatMap { it.getLocalExtras() }
         val ad = withContext(Dispatchers.IO) {
             try {
                 runPlugin { it.onPreLoadAd(view) }
 
                 // Wrap ad loading into a coroutine
-                suspendCancellableCoroutine<MaxMRECAdWrapper> {
+                suspendCancellableCoroutine<MaxMRECAdWrapper> { continuation ->
                     val callback = object : DefaultMaxAdViewAdListener() {
                         override fun onAdLoaded(ad: MaxAd) {
                             listener.remove(this)
                             val adWrapper = MaxMRECAdWrapper(ad = ad, view = view)
                             try {
-                                it.resume(adWrapper)
+                                continuation.resume(adWrapper)
                             } catch (e: Exception) {
                                 // Avoid crashes if callback is called multiple times
                                 Log.e("MaxMRECAdClient", "Failed to notify fetchAd", e)
@@ -102,7 +103,7 @@ class MaxMRECAdClient(
                         override fun onAdLoadFailed(adUnitId: String, error: MaxError) {
                             listener.remove(this)
                             try {
-                                it.resumeWithException(MaxAdLoadException(error))
+                                continuation.resumeWithException(MaxAdLoadException(error))
                             } catch (e: Exception) {
                                 // Avoid crashes if callback is called multiple times
                                 Log.e("MaxMRECAdClient", "Failed to notify fetchAd error", e)
@@ -112,7 +113,7 @@ class MaxMRECAdClient(
 
                     Log.i("MaxMRECAdClient", "fetchAd")
                     listener.add(callback)
-                    localExtrasProvider?.getLocalExtras()?.forEach { (key, value) ->
+                    providersExtras.forEach { (key, value) ->
                         view.setLocalExtraParameter(key, value)
                     }
                     localExtras.forEach { (key, value) ->
@@ -120,7 +121,7 @@ class MaxMRECAdClient(
                     }
                     view.loadAd()
 
-                    it.invokeOnCancellation {
+                    continuation.invokeOnCancellation {
                         listener.remove(callback)
                     }
                 }

@@ -33,7 +33,7 @@ class AdArbitrageurFactory {
             activity = activity,
             adViewFactory = MaxNativeAdViewFactory(),
             // Provide extras via here if more convenient than the UI
-            localExtrasProvider = null,
+            localExtrasProviders = emptyList(),
             loadingListener = adTracker,
             revenueListener = adTracker,
             moderationListener = adTracker,
@@ -47,9 +47,9 @@ class AdArbitrageurFactory {
                 adUnit = MockData.MREC_AD_UNIT
             ),
             activity = activity,
-            // Provide extras via here if more convenient than the UI
-            localExtrasProvider = null,
             plugins = listOf(AmazonMRECAdClientPlugin(MockData.AMAZON_SLOT_ID)),
+            // Provide extras via here if more convenient than the UI
+            localExtrasProviders = emptyList(),
             loadingListener = adTracker,
             revenueListener = adTracker,
             moderationListener = adTracker,

@@ -13,7 +13,7 @@ import io.voodoo.apps.ads.applovin.util.id
 import io.voodoo.apps.ads.applovin.util.removeFromParent
 
 class MaxMRECAdWrapper internal constructor(
-    internal val ad: MaxAd,
+    val ad: MaxAd,
     internal val view: MaxAdView,
 ) : Ad.MREC() {
 

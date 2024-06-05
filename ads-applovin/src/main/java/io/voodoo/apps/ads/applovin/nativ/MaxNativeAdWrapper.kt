@@ -14,7 +14,7 @@ import io.voodoo.apps.ads.applovin.util.id
 import io.voodoo.apps.ads.applovin.util.removeFromParent
 
 class MaxNativeAdWrapper internal constructor(
-    internal val ad: MaxAd,
+    val ad: MaxAd,
     internal val loader: MaxNativeAdLoader,
     internal val viewPool: MaxNativeAdViewPool,
     internal val moderationResult: AdResult? = null,

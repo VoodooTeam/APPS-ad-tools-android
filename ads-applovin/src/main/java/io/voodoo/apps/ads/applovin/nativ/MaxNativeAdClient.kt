@@ -32,7 +32,7 @@ class MaxNativeAdClient(
     private val activity: Activity,
     appLovinSdk: AppLovinSdk = AppLovinSdk.getInstance(activity.applicationContext),
     adViewFactory: MaxNativeAdViewFactory,
-    private val localExtrasProvider: LocalExtrasProvider? = null,
+    private val localExtrasProviders: List<LocalExtrasProvider> = emptyList(),
     private val loadingListener: AdLoadingListener? = null,
     private val revenueListener: AdRevenueListener? = null,
     private val moderationListener: AdModerationListener? = null,
@@ -79,10 +79,11 @@ class MaxNativeAdClient(
 
         val reusedAd = getReusableAd()
 
+        val providersExtras = localExtrasProviders.flatMap { it.getLocalExtras() }
         val ad = withContext(Dispatchers.IO) {
             try {
                 // Wrap ad loading into a coroutine
-                suspendCancellableCoroutine<MaxNativeAdWrapper> {
+                suspendCancellableCoroutine<MaxNativeAdWrapper> { continuation ->
                     val callback = object : MaxNativeAdListener() {
                         override fun onNativeAdLoaded(view: MaxNativeAdView?, ad: MaxAd) {
                             listener.remove(this)
@@ -97,7 +98,7 @@ class MaxNativeAdClient(
                                 }
                             )
                             try {
-                                it.resume(adWrapper)
+                                continuation.resume(adWrapper)
                             } catch (e: Exception) {
                                 // Avoid crashes if callback is called multiple times
                                 Log.e("MaxNativeAdClient", "Failed to notify fetchAd", e)
@@ -107,7 +108,7 @@ class MaxNativeAdClient(
                         override fun onNativeAdLoadFailed(adUnitId: String, error: MaxError) {
                             listener.remove(this)
                             try {
-                                it.resumeWithException(MaxAdLoadException(error))
+                                continuation.resumeWithException(MaxAdLoadException(error))
                             } catch (e: Exception) {
                                 // Avoid crashes if callback is called multiple times
                                 Log.e("MaxNativeAdClient", "Failed to notify fetchAd error", e)
@@ -117,7 +118,7 @@ class MaxNativeAdClient(
 
                     Log.i("MaxNativeAdClient", "fetchAd")
                     listener.add(callback)
-                    localExtrasProvider?.getLocalExtras()?.forEach { (key, value) ->
+                    providersExtras.forEach { (key, value) ->
                         loader.setLocalExtraParameter(key, value)
                     }
                     localExtras.forEach { (key, value) ->
@@ -125,7 +126,7 @@ class MaxNativeAdClient(
                     }
                     loader.loadAd()
 
-                    it.invokeOnCancellation {
+                    continuation.invokeOnCancellation {
                         listener.remove(callback)
                     }
                 }
