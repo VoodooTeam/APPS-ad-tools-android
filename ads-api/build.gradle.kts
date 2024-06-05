@@ -15,7 +15,7 @@ android {
 
 dependencies {
     implementation(libs.kotlin.coroutines)
-    compileOnly(libs.androidx.appcompat)
+    compileOnly(libs.androidx.core.ktx)
 }
 
 apply(from = "../gradlescripts/publisher.gradle")

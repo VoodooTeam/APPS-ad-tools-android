@@ -4,28 +4,16 @@ orbs:
   android: circleci/android@2.4.0
   aws-cli: circleci/aws-cli@4.0
 
-references:
-
-  gradle_cache_key: &gradle_cache_key
-    key: gradle-{{ checksum "gradle/libs.versions.toml" }}
-
 commands:
 
   prepare_project:
     steps:
       - checkout
-      - android/restore-gradle-cache
-      - android/restore-build-cache
       - run:
           name: Prepare gradle wrapper
           command: |
             sudo chmod +x ./gradlew
             ./gradlew --version
-
-  clean_project:
-    steps:
-      - android/save-gradle-cache
-      - android/save-build-cache
 
   validate_release_tag:
     steps:
@@ -79,7 +67,6 @@ jobs:
       - prepare_project
       - publish_sdk_to_s3:
           is_dev: true
-      - clean_project
 
   publish_prod_sdk:
     machine:
@@ -89,7 +76,6 @@ jobs:
       - validate_release_tag
       - publish_sdk_to_s3:
           is_dev: false
-      - clean_project
 
 workflows:
 
