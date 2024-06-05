@@ -1,0 +1,21 @@
+apply plugin: 'maven-publish'
+
+publishing {
+    publications {
+        release(MavenPublication) {
+            groupId = "${artifactGroupId}"
+            artifactId = "${artifactId}"
+            version = "${artifactVersion}"
+
+            afterEvaluate {
+                from components.release
+            }
+        }
+    }
+    repositories {
+        maven {
+            name = 'myrepo'
+            url = "${project.layout.buildDirectory}/repo"
+        }
+    }
+}
