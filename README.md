@@ -7,6 +7,8 @@ For any question/bug/feature request regarding the integration, slack me **@Yann
 
 [Changelog](https://github.com/VoodooTeam/APPS-ad-tools-android/releases)
 
+[Privacy-Module](https://github.com/VoodooTeam/APPS-ad-tools-android/blob/feature/privacy-docs/privacy/README.md)
+
 ## Installation
 
 #### Add the following maven repositories to resolve the artifacts
