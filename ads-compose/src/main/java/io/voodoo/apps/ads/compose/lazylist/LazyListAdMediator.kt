@@ -83,7 +83,7 @@ class LazyListAdMediator internal constructor(
         Log.d("LazyListAdMediator", "fetchAdIfNecessary")
 
         // This is a blocking call, only returns when all operations are finished
-        arbitrageur.fetchAdIfNecessary(*localExtrasProvider())
+        arbitrageur.fetchAdIfNecessary(localExtrasProvider)
     }
 
     fun hasAdAt(index: Int): Boolean {

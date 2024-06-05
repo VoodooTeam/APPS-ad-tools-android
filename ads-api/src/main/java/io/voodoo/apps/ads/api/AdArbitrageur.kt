@@ -128,8 +128,10 @@ class AdArbitrageur(
      * @return a mapping for each client in the result being the result if a call was made, or null otherwise.
      */
     suspend fun fetchAdIfNecessary(
-        vararg localExtras: Pair<String, Any>
+        localExtrasProvider: () -> Array<Pair<String, Any>>
     ): List<Result<Ad>?> = supervisorScope {
+        val localExtras by lazy(LazyThreadSafetyMode.PUBLICATION) { localExtrasProvider() }
+
         clients
             .map { client ->
                 async {
