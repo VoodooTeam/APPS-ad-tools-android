@@ -93,6 +93,8 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:background="@color/bg_feed_ad_button"
+            android:drawableEnd="@drawable/baseline_keyboard_arrow_right_24"
+            android:drawableTint="@color/txt_feed_ad_button"
             android:paddingHorizontal="16dp"
             android:textAlignment="viewStart"
             android:textAllCaps="false"
