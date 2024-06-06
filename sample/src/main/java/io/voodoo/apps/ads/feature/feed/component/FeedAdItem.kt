@@ -37,6 +37,8 @@ fun FeedAdItem(
                 modifier = modifier
             )
         }
+
+        else -> throw IllegalArgumentException("Unsupported adType ${ad.ad.type}")
     }
 }
 
