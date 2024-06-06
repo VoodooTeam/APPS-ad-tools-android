@@ -65,7 +65,7 @@ instagram.
 * AppLovin SDK + Apphrbr (moderation) initialization
   in [AdsInitializer](sample/src/main/java/io/voodoo/apps/ads/feature/ads/AdsInitiliazer.kt) class
   (called from `MainActivity` after the consent is given)
-* [AdArbitrageurFactory](sample/src/main/java/io/voodoo/apps/ads/feature/ads/AdArbitrageurFactory.kt):
+* [FeedAdArbitrageurFactory](sample/src/main/java/io/voodoo/apps/ads/feature/ads/FeedAdArbitrageurFactory.kt):
   `AdClient` + `AdArbitrageur` instantiation
 * [AdTracker](sample/src/main/java/io/voodoo/apps/ads/feature/ads/AdTracker.kt):
   Base tracking implementation that you probably need to implement
@@ -131,7 +131,7 @@ of `LazyListScope.items` that takes a `adMediator: LazyListAdMediator` parameter
   demo app in `AdsInitiliazer`
     * Note: before initializing applovin/apphrbr and instanciating any clients, wait until you have
       the user's GDPR consents for ads
-* Create an `MaxNativeAdClient` and/or `MaxMRECAdClient` and/or `AdArbitrageurFactory` and start
+* Create an `MaxNativeAdClient` and/or `MaxMRECAdClient` and/or `AdArbitrageur` and start
   loading/displaying ads following the example in the sample app
 
 Don't forget to close your `AdArbitrageur`/`AdClient` when you're done to free resources. By default

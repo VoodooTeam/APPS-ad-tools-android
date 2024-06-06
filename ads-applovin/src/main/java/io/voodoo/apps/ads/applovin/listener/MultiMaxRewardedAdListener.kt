@@ -1,20 +1,21 @@
 package io.voodoo.apps.ads.applovin.listener
 
 import com.applovin.mediation.MaxAd
-import com.applovin.mediation.MaxAdViewAdListener
 import com.applovin.mediation.MaxError
+import com.applovin.mediation.MaxReward
+import com.applovin.mediation.MaxRewardedAdListener
 import java.util.concurrent.CopyOnWriteArraySet
 
-internal class MultiMaxAdViewAdListener : MaxAdViewAdListener {
+internal class MultiMaxRewardedAdListener : MaxRewardedAdListener {
 
     // TODO: check the implementation, we're re-creating the backing list for every request (because we add a listener)
-    private val delegates = CopyOnWriteArraySet<MaxAdViewAdListener>()
+    private val delegates = CopyOnWriteArraySet<MaxRewardedAdListener>()
 
-    fun add(listener: MaxAdViewAdListener) {
+    fun add(listener: MaxRewardedAdListener) {
         delegates.add(listener)
     }
 
-    fun remove(listener: MaxAdViewAdListener) {
+    fun remove(listener: MaxRewardedAdListener) {
         delegates.remove(listener)
     }
 
@@ -42,11 +43,17 @@ internal class MultiMaxAdViewAdListener : MaxAdViewAdListener {
         delegates.forEach { it.onAdDisplayFailed(ad, error) }
     }
 
-    override fun onAdExpanded(ad: MaxAd) {
-        delegates.forEach { it.onAdExpanded(ad) }
+    @Deprecated("")
+    override fun onRewardedVideoStarted(ad: MaxAd) {
+        delegates.forEach { it.onRewardedVideoStarted(ad) }
     }
 
-    override fun onAdCollapsed(ad: MaxAd) {
-        delegates.forEach { it.onAdCollapsed(ad) }
+    @Deprecated("")
+    override fun onRewardedVideoCompleted(ad: MaxAd) {
+        delegates.forEach { it.onRewardedVideoCompleted(ad) }
+    }
+
+    override fun onUserRewarded(ad: MaxAd, reward: MaxReward) {
+        delegates.forEach { it.onUserRewarded(ad, reward) }
     }
 }

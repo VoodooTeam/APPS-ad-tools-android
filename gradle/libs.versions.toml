@@ -8,6 +8,7 @@ androidx-compose-bom = "2024.05.00"
 androidx-compose-compiler = "1.5.1"
 androidx-core = "1.13.1"
 androidx-lifecycle = "2.8.1"
+androidx-navigation = "2.7.7"
 retrofit = "2.11.0"
 
 [libraries]
@@ -34,6 +35,7 @@ androidx-compose-ui-graphics = { group = "androidx.compose.ui", name = "ui-graph
 androidx-compose-ui-tooling = { group = "androidx.compose.ui", name = "ui-tooling" }
 androidx-compose-ui-tooling-preview = { group = "androidx.compose.ui", name = "ui-tooling-preview" }
 androidx-compose-ui-test-manifest = { group = "androidx.compose.ui", name = "ui-test-manifest" }
+androidx-navigation-compose = { module = "androidx.navigation:navigation-compose", version.ref = "androidx-navigation" }
 androidx-material3 = { group = "androidx.compose.material3", name = "material3" }
 
 # Misc for demo app

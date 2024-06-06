@@ -25,7 +25,7 @@ inline fun LazyListScope.items(
     noinline key: ((lazyListIndex: Int, itemIndex: Int) -> Any)? = null,
     noinline adContentType: ((lazyListIndex: Int) -> Any)? = null,
     noinline contentType: ((lazyListIndex: Int, itemIndex: Int) -> Any)? = null,
-    crossinline adContent: @Composable LazyItemScope.(lazyListIndex: Int, ad: AdHolder) -> Unit,
+    crossinline adContent: @Composable LazyItemScope.(lazyListIndex: Int, ad: AdHolder<*>) -> Unit,
     crossinline itemContent: @Composable LazyItemScope.(lazyListIndex: Int, itemIndex: Int) -> Unit
 ) {
     adMediator.itemCount = count
@@ -89,7 +89,7 @@ inline fun <T> LazyListScope.items(
     noinline key: ((item: T) -> Any)? = null,
     noinline adContentType: ((lazyListIndex: Int) -> Any)? = null,
     noinline contentType: ((item: T) -> Any)? = null,
-    crossinline adContent: @Composable LazyItemScope.(lazyListIndex: Int, ad: AdHolder) -> Unit,
+    crossinline adContent: @Composable LazyItemScope.(lazyListIndex: Int, ad: AdHolder<*>) -> Unit,
     crossinline itemContent: @Composable LazyItemScope.(item: T) -> Unit
 ) {
     items(
@@ -137,7 +137,7 @@ inline fun <T> LazyListScope.itemsIndexed(
     noinline key: ((lazyListIndex: Int, itemIndex: Int, item: T) -> Any)? = null,
     noinline adContentType: ((lazyListIndex: Int) -> Any)? = null,
     noinline contentType: ((lazyListIndex: Int, itemIndex: Int, item: T) -> Any)? = null,
-    crossinline adContent: @Composable LazyItemScope.(lazyListIndex: Int, ad: AdHolder) -> Unit,
+    crossinline adContent: @Composable LazyItemScope.(lazyListIndex: Int, ad: AdHolder<*>) -> Unit,
     crossinline itemContent: @Composable LazyItemScope.(lazyListIndex: Int, itemIndex: Int, item: T) -> Unit
 ) {
     items(

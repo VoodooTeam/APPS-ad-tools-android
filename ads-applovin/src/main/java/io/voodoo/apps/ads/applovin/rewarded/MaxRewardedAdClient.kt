@@ -13,14 +13,15 @@ import io.voodoo.apps.ads.api.BaseAdClient
 import io.voodoo.apps.ads.api.LocalExtrasProvider
 import io.voodoo.apps.ads.api.model.Ad
 import io.voodoo.apps.ads.applovin.exception.MaxAdLoadException
-import io.voodoo.apps.ads.applovin.listener.DefaultMaxAdViewAdListener
-import io.voodoo.apps.ads.applovin.listener.MultiMaxAdViewAdListener
+import io.voodoo.apps.ads.applovin.listener.DefaultMaxRewardedAdListener
+import io.voodoo.apps.ads.applovin.listener.MultiMaxRewardedAdListener
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 
+@ExperimentalStdlibApi
 class MaxRewardedAdClient(
     config: AdClient.Config,
     private val activity: Activity,
@@ -39,12 +40,14 @@ class MaxRewardedAdClient(
     private val plugins = plugins.toList()
     private val localExtrasProviders = localExtrasProviders.toList()
 
-    private val maxAdViewListener = MultiMaxAdViewAdListener()
+    private val maxRewardedAdListener = MultiMaxRewardedAdListener()
 
     init {
         require(config.adCacheSize == 1) {
             "Invalid adCacheSize. Only one rewarded ad can be loaded at a time. adCacheSize must be == 1."
         }
+
+        loader.setListener(maxRewardedAdListener)
 
         (activity as? LifecycleOwner)?.lifecycle?.let(::registerToLifecycle)
     }
@@ -74,9 +77,9 @@ class MaxRewardedAdClient(
 
                 // Wrap ad loading into a coroutine
                 suspendCancellableCoroutine<MaxRewardedAdWrapper> { continuation ->
-                    val callback = object : DefaultMaxAdViewAdListener() {
+                    val callback = object : DefaultMaxRewardedAdListener() {
                         override fun onAdLoaded(ad: MaxAd) {
-                            maxAdViewListener.remove(this)
+                            maxRewardedAdListener.remove(this)
                             val adWrapper = MaxRewardedAdWrapper(ad = ad, loader = loader)
                             try {
                                 continuation.resume(adWrapper)
@@ -87,7 +90,7 @@ class MaxRewardedAdClient(
                         }
 
                         override fun onAdLoadFailed(adUnitId: String, error: MaxError) {
-                            maxAdViewListener.remove(this)
+                            maxRewardedAdListener.remove(this)
                             try {
                                 continuation.resumeWithException(MaxAdLoadException(error))
                             } catch (e: Exception) {
@@ -98,7 +101,7 @@ class MaxRewardedAdClient(
                     }
 
                     Log.i("MaxRewardedAdClient", "fetchAd")
-                    maxAdViewListener.add(callback)
+                    maxRewardedAdListener.add(callback)
                     providersExtras.forEach { (key, value) ->
                         loader.setLocalExtraParameter(key, value)
                     }
@@ -108,7 +111,7 @@ class MaxRewardedAdClient(
                     loader.loadAd()
 
                     continuation.invokeOnCancellation {
-                        maxAdViewListener.remove(callback)
+                        maxRewardedAdListener.remove(callback)
                     }
                 }
             } catch (e: MaxAdLoadException) {

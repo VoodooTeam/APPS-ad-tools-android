@@ -20,7 +20,7 @@ import io.voodoo.apps.ads.compose.model.AdHolder
 
 @Composable
 fun FeedAdItem(
-    ad: AdHolder,
+    ad: AdHolder<*>,
     modifier: Modifier = Modifier
 ) {
     when (val actualAd = ad.ad) {
