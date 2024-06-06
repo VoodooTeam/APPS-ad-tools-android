@@ -8,6 +8,7 @@ import java.util.concurrent.CopyOnWriteArraySet
 
 internal class MultiMaxNativeAdListener : MaxNativeAdListener() {
 
+    // TODO: check the implementation, we're re-creating the backing list for every request (because we add a listener)
     private val delegates = CopyOnWriteArraySet<MaxNativeAdListener>()
 
     fun add(listener: MaxNativeAdListener) {

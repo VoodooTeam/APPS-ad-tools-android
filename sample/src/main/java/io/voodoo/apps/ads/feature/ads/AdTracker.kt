@@ -49,6 +49,7 @@ class AdTracker(
             return when (this) {
                 Ad.Type.NATIVE -> nativeAdUnit
                 Ad.Type.MREC -> mrecAdUnit
+                else -> throw IllegalArgumentException("Unsupported adType $this")
             }
         }
 

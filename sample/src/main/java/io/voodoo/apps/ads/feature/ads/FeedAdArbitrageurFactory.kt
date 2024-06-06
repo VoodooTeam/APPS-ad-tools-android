@@ -11,7 +11,7 @@ import io.voodoo.apps.ads.applovin.nativ.MaxNativeAdClient
 import io.voodoo.apps.ads.applovin.plugin.amazon.AmazonMRECAdClientPlugin
 import io.voodoo.apps.ads.feature.ads.nativ.MaxNativeAdViewFactory
 
-class AdArbitrageurFactory {
+class FeedAdArbitrageurFactory {
 
     private val adTracker = AdTracker(
         nativeAdUnit = MockData.NATIVE_AD_UNIT,

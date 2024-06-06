@@ -20,7 +20,7 @@ import io.voodoo.apps.ads.compose.model.AdHolder
 
 @Composable
 fun FeedAdItem(
-    ad: AdHolder,
+    ad: AdHolder<*>,
     modifier: Modifier = Modifier
 ) {
     when (val actualAd = ad.ad) {
@@ -37,6 +37,8 @@ fun FeedAdItem(
                 modifier = modifier
             )
         }
+
+        else -> throw IllegalArgumentException("Unsupported adType ${ad.ad.type}")
     }
 }
 
