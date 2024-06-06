@@ -2,6 +2,7 @@ package io.voodoo.apps.ads.api
 
 import android.util.Log
 import androidx.annotation.CallSuper
+import androidx.annotation.IntRange
 import androidx.annotation.MainThread
 import androidx.lifecycle.Lifecycle
 import io.voodoo.apps.ads.api.lifecycle.CloseOnDestroyLifecycleObserver
@@ -64,8 +65,9 @@ interface AdClient<T : Ad> : Closeable, AdListenerHolder {
     data class Config(
         /**
          * Controls how many ads will be kept in memory to re-display/be re-used to fetch new ads.
+         * If there's enough ads in memory, the most ancien one will be recycled for the next fetch call.
          */
-        val adCacheSize: Int,
+        @IntRange(from = 1) val adCacheSize: Int,
         val adUnit: String,
     )
 }
@@ -74,7 +76,7 @@ abstract class BaseAdClient<ActualType : PublicType, PublicType : Ad>(
     protected val config: AdClient.Config,
 ) : AdClient<PublicType> {
 
-    private val loadedAds = ArrayList<ActualType>(config.adCacheSize + 1)
+    private val loadedAds = ArrayList<ActualType>(config.adCacheSize)
     private val adIdByRequestIdMap = mutableMapOf<String, Ad.Id>()
     private val lockedAdIdList = mutableSetOf<Ad.Id>()
 
@@ -85,7 +87,7 @@ abstract class BaseAdClient<ActualType : PublicType, PublicType : Ad>(
     protected val adRevenueListeners = CopyOnWriteArraySet<AdRevenueListener>()
 
     init {
-        require(config.adCacheSize >= 0) { "adCacheSize must be >= 0" }
+        require(config.adCacheSize > 0) { "adCacheSize must be > 0" }
     }
 
     @CallSuper
@@ -202,14 +204,12 @@ abstract class BaseAdClient<ActualType : PublicType, PublicType : Ad>(
     protected fun getReusableAd(): ActualType? {
         return synchronized(loadedAds) {
             val servedAds = loadedAds.filter { !it.isAvailable() && !it.isLocked() }
-            val ad = servedAds
-                .dropLast((config.adCacheSize - 1).coerceAtLeast(0))
-                .firstOrNull()
+            // Since we want to keep N ads in memory, we don't re-use if we have less than that
+            if (servedAds.size < config.adCacheSize) return null
+            val ad = servedAds.firstOrNull() ?: return null
 
-            if (ad != null) {
-                loadedAds.remove(ad)
-                removeRequestIdMapping(listOf(ad.id))
-            }
+            loadedAds.remove(ad)
+            removeRequestIdMapping(listOf(ad.id))
 
             ad
         }

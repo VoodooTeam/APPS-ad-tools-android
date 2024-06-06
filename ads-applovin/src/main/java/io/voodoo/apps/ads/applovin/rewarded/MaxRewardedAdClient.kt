@@ -12,7 +12,6 @@ import io.voodoo.apps.ads.api.AdClient
 import io.voodoo.apps.ads.api.BaseAdClient
 import io.voodoo.apps.ads.api.LocalExtrasProvider
 import io.voodoo.apps.ads.api.model.Ad
-import io.voodoo.apps.ads.api.rewarded.RewardedAdClientPlugin
 import io.voodoo.apps.ads.applovin.exception.MaxAdLoadException
 import io.voodoo.apps.ads.applovin.listener.DefaultMaxAdViewAdListener
 import io.voodoo.apps.ads.applovin.listener.MultiMaxAdViewAdListener
@@ -26,7 +25,7 @@ class MaxRewardedAdClient(
     config: AdClient.Config,
     private val activity: Activity,
     appLovinSdk: AppLovinSdk = AppLovinSdk.getInstance(activity.applicationContext),
-    plugins: List<RewardedAdClientPlugin> = emptyList(),
+    plugins: List<MaxRewardedAdClientPlugin> = emptyList(),
     localExtrasProviders: List<LocalExtrasProvider> = emptyList(),
 ) : BaseAdClient<MaxRewardedAdWrapper, Ad.Rewarded>(config = config) {
 
@@ -43,8 +42,8 @@ class MaxRewardedAdClient(
     private val maxAdViewListener = MultiMaxAdViewAdListener()
 
     init {
-        require(config.adCacheSize == 0) {
-            "Invalid adCacheSize. Only one rewarded ad can be loaded at a time"
+        require(config.adCacheSize == 1) {
+            "Invalid adCacheSize. Only one rewarded ad can be loaded at a time. adCacheSize must be == 1."
         }
 
         (activity as? LifecycleOwner)?.lifecycle?.let(::registerToLifecycle)
@@ -52,11 +51,14 @@ class MaxRewardedAdClient(
 
     override fun close() {
         super.close()
+        runPlugin { it.close() }
         loader.destroy()
     }
 
     override fun destroyAd(ad: MaxRewardedAdWrapper) {
-        // no-op, don't destroy the loader
+        runPlugin { it.onDestroyAd(ad) }
+        // don't destroy the unique loader
+        Log.e("MaxRewardedAdClient", "destroyAd called, this should never happen")
     }
 
     /** see https://developers.applovin.com/en/android/ad-formats/banner-Rewarded-ads/ */
@@ -111,7 +113,7 @@ class MaxRewardedAdClient(
                 }
             } catch (e: MaxAdLoadException) {
                 Log.e("MaxRewardedAdClient", "Failed to load ad", e)
-                runPlugin { it.onAdLoadException(loader, e) }
+                runPlugin { it.onAdLoadException(loader, e.error) }
                 runLoadingListeners { it.onAdLoadingFailed(type, e) }
 
                 throw e
@@ -125,7 +127,7 @@ class MaxRewardedAdClient(
         return ad
     }
 
-    private inline fun runPlugin(body: (RewardedAdClientPlugin) -> Unit) {
+    private inline fun runPlugin(body: (MaxRewardedAdClientPlugin) -> Unit) {
         plugins.forEach {
             // try/catch plugin to not crash if an error occurs
             try {

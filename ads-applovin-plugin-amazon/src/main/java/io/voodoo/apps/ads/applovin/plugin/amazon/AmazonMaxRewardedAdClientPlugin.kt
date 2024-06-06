@@ -6,28 +6,29 @@ import com.amazon.device.ads.DTBAdCallback
 import com.amazon.device.ads.DTBAdRequest
 import com.amazon.device.ads.DTBAdResponse
 import com.amazon.device.ads.DTBAdSize
+import com.applovin.mediation.MaxError
 import com.applovin.mediation.ads.MaxRewardedAd
-import io.voodoo.apps.ads.api.model.Ad
-import io.voodoo.apps.ads.api.rewarded.RewardedAdClientPlugin
+import io.voodoo.apps.ads.applovin.rewarded.MaxRewardedAdClientPlugin
+import io.voodoo.apps.ads.applovin.rewarded.MaxRewardedAdWrapper
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 
-class AmazonRewardedAdClientPlugin(
+// Note: create a new instance for each AdClient
+class AmazonMaxRewardedAdClientPlugin(
     private val amazonSlotId: String
-) : RewardedAdClientPlugin {
+) : MaxRewardedAdClientPlugin {
 
-    private var loaded = false
+    private var amazonLoader: DTBAdRequest? = null
 
-    override suspend fun onPreLoadAd(loader: Any) {
+    override suspend fun onPreLoadAd(loader: MaxRewardedAd) {
         if (!AdRegistration.isInitialized()) return
-        require(loader is MaxRewardedAd)
 
-        if (loaded) return
-        loaded = true
+        // Only run once per MaxRewardedAd
+        if (amazonLoader != null) return
 
         val amazonLoader = DTBAdRequest().also {
             it.setSizes(DTBAdSize.DTBVideo(320, 480, amazonSlotId))
-        }
+        }.also { this.amazonLoader = it }
 
         suspendCoroutine {
             amazonLoader.loadAd(object : DTBAdCallback {
@@ -44,11 +45,20 @@ class AmazonRewardedAdClientPlugin(
         }
     }
 
-    override suspend fun onAdLoadException(loader: Any, exception: Exception) {
+    override suspend fun onAdLoadException(loader: MaxRewardedAd, error: MaxError) {
         // no-op
     }
 
-    override suspend fun onAdLoaded(ad: Ad.Rewarded) {
+    override suspend fun onAdLoaded(ad: MaxRewardedAdWrapper) {
         // no-op
+    }
+
+    override fun onDestroyAd(ad: MaxRewardedAdWrapper) {
+        // no-op
+    }
+
+    override fun close() {
+        amazonLoader?.stop()
+        amazonLoader = null
     }
 }
