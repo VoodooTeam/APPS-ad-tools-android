@@ -14,7 +14,7 @@ import io.voodoo.apps.ads.applovin.util.toModerationResult
 
 class MaxMRECAdWrapper internal constructor(
     val ad: MaxAd,
-    internal val view: MaxAdView,
+    val view: MaxAdView,
 ) : Ad.MREC() {
 
     override val id: Id = ad.id

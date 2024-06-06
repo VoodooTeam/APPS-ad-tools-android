@@ -18,11 +18,10 @@ dependencies {
     val amazonVersion = amazonAdapterVersion.toString().substringBeforeLast('.')
 
     compileOnly(project(":ads-api"))
-    //noinspection UseTomlInstead
-    compileOnly("com.applovin:applovin-sdk:${rootProject.extra.get("APPLOVIN")}")
+    compileOnly(project(":ads-applovin"))
 
     //noinspection UseTomlInstead
-    implementation("com.applovin.mediation:amazon-tam-adapter:$amazonAdapterVersion")
+    api("com.applovin.mediation:amazon-tam-adapter:$amazonAdapterVersion")
     //noinspection UseTomlInstead
     api("com.amazon.android:aps-sdk:$amazonVersion")
 }

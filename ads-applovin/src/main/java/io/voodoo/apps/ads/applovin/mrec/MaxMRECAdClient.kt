@@ -21,7 +21,6 @@ import io.voodoo.apps.ads.api.AdClient
 import io.voodoo.apps.ads.api.BaseAdClient
 import io.voodoo.apps.ads.api.LocalExtrasProvider
 import io.voodoo.apps.ads.api.model.Ad
-import io.voodoo.apps.ads.api.mrec.MRECAdClientPlugin
 import io.voodoo.apps.ads.applovin.exception.MaxAdLoadException
 import io.voodoo.apps.ads.applovin.listener.DefaultMaxAdViewAdListener
 import io.voodoo.apps.ads.applovin.listener.MultiMaxAdViewAdListener
@@ -35,7 +34,7 @@ import kotlin.coroutines.resumeWithException
 class MaxMRECAdClient(
     config: AdClient.Config,
     private val activity: Activity,
-    plugins: List<MRECAdClientPlugin> = emptyList(),
+    plugins: List<MaxMRECAdClientPlugin> = emptyList(),
     localExtrasProviders: List<LocalExtrasProvider> = emptyList(),
 ) : BaseAdClient<MaxMRECAdWrapper, Ad.MREC>(config = config) {
 
@@ -65,10 +64,16 @@ class MaxMRECAdClient(
         maxAdViewListener.remove(listener)
     }
 
+    override fun close() {
+        super.close()
+        runPlugin { it.close() }
+    }
+
     override fun destroyAd(ad: MaxMRECAdWrapper) {
         if (useModeration) {
             AppHarbr.removeBannerView(ad.view)
         }
+        runPlugin { it.onDestroyAd(ad) }
         ad.view.destroy()
     }
 
@@ -129,7 +134,7 @@ class MaxMRECAdClient(
                 }
             } catch (e: MaxAdLoadException) {
                 Log.e("MaxMRECAdClient", "Failed to load ad", e)
-                runPlugin { it.onAdLoadException(view, e) }
+                runPlugin { it.onAdLoadException(view, e.error) }
                 runLoadingListeners { it.onAdLoadingFailed(type, e) }
 
                 // Keep reused ad instead of destroying it
@@ -194,7 +199,7 @@ class MaxMRECAdClient(
         runModerationListener { it.onAdBlocked(ad) }
     }
 
-    private inline fun runPlugin(body: (MRECAdClientPlugin) -> Unit) {
+    private inline fun runPlugin(body: (MaxMRECAdClientPlugin) -> Unit) {
         plugins.forEach {
             // try/catch plugin to not crash if an error occurs
             try {
