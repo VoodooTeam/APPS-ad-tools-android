@@ -4,19 +4,18 @@ import com.applovin.mediation.MaxAd
 import com.applovin.mediation.MaxError
 import com.applovin.mediation.nativeAds.MaxNativeAdListener
 import com.applovin.mediation.nativeAds.MaxNativeAdView
-import java.util.Collections
+import java.util.concurrent.CopyOnWriteArraySet
 
 internal class MultiMaxNativeAdListener : MaxNativeAdListener() {
 
-    private val _delegates = Collections.synchronizedSet(mutableSetOf<MaxNativeAdListener>())
-    private val delegates get() = synchronized(_delegates) { _delegates.toList() }
+    private val delegates = CopyOnWriteArraySet<MaxNativeAdListener>()
 
     fun add(listener: MaxNativeAdListener) {
-        _delegates.add(listener)
+        delegates.add(listener)
     }
 
     fun remove(listener: MaxNativeAdListener) {
-        _delegates.remove(listener)
+        delegates.remove(listener)
     }
 
     override fun onNativeAdLoaded(view: MaxNativeAdView?, ad: MaxAd) {

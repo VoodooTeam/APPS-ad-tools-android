@@ -34,10 +34,11 @@ class AdArbitrageurFactory {
             adViewFactory = MaxNativeAdViewFactory(),
             // Provide extras via here if more convenient than the UI
             localExtrasProviders = emptyList(),
-            loadingListener = adTracker,
-            revenueListener = adTracker,
-            moderationListener = adTracker,
-        )
+        ).apply {
+            addAdLoadingListener(adTracker)
+            addAdRevenueListener(adTracker)
+            addAdModerationListener(adTracker)
+        }
     }
 
     private fun createMRECClient(activity: Activity): AdClient<Ad.MREC> {
@@ -50,9 +51,10 @@ class AdArbitrageurFactory {
             plugins = listOf(AmazonMRECAdClientPlugin(MockData.AMAZON_SLOT_ID)),
             // Provide extras via here if more convenient than the UI
             localExtrasProviders = emptyList(),
-            loadingListener = adTracker,
-            revenueListener = adTracker,
-            moderationListener = adTracker,
-        )
+        ).apply {
+            addAdLoadingListener(adTracker)
+            addAdRevenueListener(adTracker)
+            addAdModerationListener(adTracker)
+        }
     }
 }

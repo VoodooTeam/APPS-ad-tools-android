@@ -93,12 +93,12 @@ class VoodooPrivacyManager(
      * Show consent edit settings
      */
     fun changePrivacyConsent() {
-        if(!isFirstMessageLoaded()) {
+        if (!isFirstMessageLoaded()) {
             Log.w("PrivacyManager", "Privacy -- first message is not loaded yet")
             return
         }
 
-        if(isPrivacyApplies()) {
+        if (isPrivacyApplies()) {
             forceAutoShow = true
             setConsentStatus(ConsentStatus.LOADING)
             if (isUsNatApplicable()) {
@@ -180,6 +180,7 @@ class VoodooPrivacyManager(
     fun isFirstMessageLoaded(): Boolean {
         return receivedConsent != null
     }
+
     fun isPrivacyApplies(): Boolean {
         return isGdprApplicable() || isUsNatApplicable() || isCcpaApplicable()
     }

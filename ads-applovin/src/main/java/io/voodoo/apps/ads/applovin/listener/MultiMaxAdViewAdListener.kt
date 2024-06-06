@@ -3,19 +3,18 @@ package io.voodoo.apps.ads.applovin.listener
 import com.applovin.mediation.MaxAd
 import com.applovin.mediation.MaxAdViewAdListener
 import com.applovin.mediation.MaxError
-import java.util.Collections
+import java.util.concurrent.CopyOnWriteArraySet
 
 internal class MultiMaxAdViewAdListener : MaxAdViewAdListener {
 
-    private val _delegates = Collections.synchronizedSet(mutableSetOf<MaxAdViewAdListener>())
-    private val delegates get() = synchronized(_delegates) { _delegates.toList() }
+    private val delegates = CopyOnWriteArraySet<MaxAdViewAdListener>()
 
     fun add(listener: MaxAdViewAdListener) {
-        _delegates.add(listener)
+        delegates.add(listener)
     }
 
     fun remove(listener: MaxAdViewAdListener) {
-        _delegates.remove(listener)
+        delegates.remove(listener)
     }
 
     override fun onAdLoaded(ad: MaxAd) {

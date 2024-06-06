@@ -5,8 +5,12 @@ import androidx.annotation.CallSuper
 import androidx.annotation.MainThread
 import androidx.lifecycle.Lifecycle
 import io.voodoo.apps.ads.api.lifecycle.CloseOnDestroyLifecycleObserver
+import io.voodoo.apps.ads.api.listener.AdLoadingListener
+import io.voodoo.apps.ads.api.listener.AdModerationListener
+import io.voodoo.apps.ads.api.listener.AdRevenueListener
 import io.voodoo.apps.ads.api.model.Ad
 import java.io.Closeable
+import java.util.concurrent.CopyOnWriteArraySet
 
 /**
  * Ad lexicon:
@@ -17,6 +21,15 @@ import java.io.Closeable
  * - available: a "fresh" ad (canBeServed, not locked, not rendered), see [isAvailable]
  */
 interface AdClient<T : Ad> : Closeable {
+
+    fun addAdLoadingListener(listener: AdLoadingListener)
+    fun removeAdLoadingListener(listener: AdLoadingListener)
+
+    fun addAdModerationListener(listener: AdModerationListener)
+    fun removeAdModerationListener(listener: AdModerationListener)
+
+    fun addAdRevenueListener(listener: AdRevenueListener)
+    fun removeAdRevenueListener(listener: AdRevenueListener)
 
     /**
      * @return number of available "fresh" ads to display (ads that weren't already rendered,
@@ -77,8 +90,36 @@ abstract class BaseAdClient<ActualType : PublicType, PublicType : Ad>(
 
     private var lifecycleObserver: CloseOnDestroyLifecycleObserver? = null
 
+    protected val adLoadingListeners = CopyOnWriteArraySet<AdLoadingListener>()
+    protected val adModerationListeners = CopyOnWriteArraySet<AdModerationListener>()
+    protected val adRevenueListeners = CopyOnWriteArraySet<AdRevenueListener>()
+
     init {
         require(config.adCacheSize >= 0) { "adCacheSize must be >= 0" }
+    }
+
+    override fun addAdLoadingListener(listener: AdLoadingListener) {
+        adLoadingListeners.add(listener)
+    }
+
+    override fun removeAdLoadingListener(listener: AdLoadingListener) {
+        adLoadingListeners.remove(listener)
+    }
+
+    override fun addAdModerationListener(listener: AdModerationListener) {
+        adModerationListeners.add(listener)
+    }
+
+    override fun removeAdModerationListener(listener: AdModerationListener) {
+        adModerationListeners.remove(listener)
+    }
+
+    override fun addAdRevenueListener(listener: AdRevenueListener) {
+        adRevenueListeners.add(listener)
+    }
+
+    override fun removeAdRevenueListener(listener: AdRevenueListener) {
+        adRevenueListeners.remove(listener)
     }
 
     @CallSuper
@@ -207,6 +248,18 @@ abstract class BaseAdClient<ActualType : PublicType, PublicType : Ad>(
             removeRequestIdMapping(adsToDestroy.map { it.id })
             adsToDestroy.forEach(::destroyAd)
         }
+    }
+
+    protected inline fun runLoadingListeners(body: (AdLoadingListener) -> Unit) {
+        adLoadingListeners.forEach(body)
+    }
+
+    protected inline fun runModerationListener(body: (AdModerationListener) -> Unit) {
+        adModerationListeners.forEach(body)
+    }
+
+    protected inline fun runRevenueListener(body: (AdRevenueListener) -> Unit) {
+        adRevenueListeners.forEach(body)
     }
 
     /** @return true if the ad is "fresh" and can be displayed as a new unseen ad */

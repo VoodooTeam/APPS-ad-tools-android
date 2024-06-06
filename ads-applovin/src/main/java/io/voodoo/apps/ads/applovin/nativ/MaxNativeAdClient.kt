@@ -15,9 +15,6 @@ import com.applovin.sdk.AppLovinSdk
 import io.voodoo.apps.ads.api.AdClient
 import io.voodoo.apps.ads.api.BaseAdClient
 import io.voodoo.apps.ads.api.LocalExtrasProvider
-import io.voodoo.apps.ads.api.listener.AdLoadingListener
-import io.voodoo.apps.ads.api.listener.AdModerationListener
-import io.voodoo.apps.ads.api.listener.AdRevenueListener
 import io.voodoo.apps.ads.api.model.Ad
 import io.voodoo.apps.ads.applovin.exception.MaxAdLoadException
 import io.voodoo.apps.ads.applovin.listener.MultiMaxNativeAdListener
@@ -32,16 +29,12 @@ class MaxNativeAdClient(
     private val activity: Activity,
     appLovinSdk: AppLovinSdk = AppLovinSdk.getInstance(activity.applicationContext),
     adViewFactory: MaxNativeAdViewFactory,
-    private val localExtrasProviders: List<LocalExtrasProvider> = emptyList(),
-    private val loadingListener: AdLoadingListener? = null,
-    private val revenueListener: AdRevenueListener? = null,
-    private val moderationListener: AdModerationListener? = null,
-    nativeAdListener: MaxNativeAdListener? = null,
+    localExtrasProviders: List<LocalExtrasProvider> = emptyList(),
 ) : BaseAdClient<MaxNativeAdWrapper, Ad.Native>(config = config) {
 
     private val type: Ad.Type = Ad.Type.NATIVE
 
-    private val listener = MultiMaxNativeAdListener()
+    private val maxNativeAdListener = MultiMaxNativeAdListener()
 
     private val loader = MaxNativeAdLoader(
         config.adUnit,
@@ -50,18 +43,27 @@ class MaxNativeAdClient(
     )
     private val adViewPool = MaxNativeAdViewPool(adViewFactory)
 
+    private val localExtrasProviders = localExtrasProviders.toList()
+
     init {
         require(appLovinSdk.isInitialized) { "AppLovin instance not initialized" }
-        nativeAdListener?.let(listener::add)
-        loader.setNativeAdListener(listener)
+        loader.setNativeAdListener(maxNativeAdListener)
         loader.setRevenueListener { ad ->
             val adWrapper = findAdOrNull { it.ad === ad }
                 ?: MaxNativeAdWrapper(ad, loader, adViewPool)
 
-            revenueListener?.onAdRevenuePaid(adWrapper)
+            runRevenueListener { it.onAdRevenuePaid(adWrapper) }
         }
 
         (activity as? LifecycleOwner)?.lifecycle?.let(::registerToLifecycle)
+    }
+
+    fun addMaxNativeAdListener(listener: MaxNativeAdListener) {
+        maxNativeAdListener.add(listener)
+    }
+
+    fun removeMaxNativeAdListener(listener: MaxNativeAdListener) {
+        maxNativeAdListener.remove(listener)
     }
 
     override fun close() {
@@ -75,7 +77,7 @@ class MaxNativeAdClient(
 
     /** see https://developers.applovin.com/en/android/ad-formats/native-ads#templates */
     override suspend fun fetchAd(vararg localExtras: Pair<String, Any>): MaxNativeAdWrapper {
-        loadingListener?.onAdLoadingStarted(type)
+        runLoadingListeners { it.onAdLoadingStarted(type) }
 
         val reusedAd = getReusableAd()
 
@@ -86,7 +88,7 @@ class MaxNativeAdClient(
                 suspendCancellableCoroutine<MaxNativeAdWrapper> { continuation ->
                     val callback = object : MaxNativeAdListener() {
                         override fun onNativeAdLoaded(view: MaxNativeAdView?, ad: MaxAd) {
-                            listener.remove(this)
+                            maxNativeAdListener.remove(this)
                             val adWrapper = MaxNativeAdWrapper(
                                 ad = ad,
                                 loader = loader,
@@ -106,7 +108,7 @@ class MaxNativeAdClient(
                         }
 
                         override fun onNativeAdLoadFailed(adUnitId: String, error: MaxError) {
-                            listener.remove(this)
+                            maxNativeAdListener.remove(this)
                             try {
                                 continuation.resumeWithException(MaxAdLoadException(error))
                             } catch (e: Exception) {
@@ -117,7 +119,7 @@ class MaxNativeAdClient(
                     }
 
                     Log.i("MaxNativeAdClient", "fetchAd")
-                    listener.add(callback)
+                    maxNativeAdListener.add(callback)
                     providersExtras.forEach { (key, value) ->
                         loader.setLocalExtraParameter(key, value)
                     }
@@ -127,12 +129,12 @@ class MaxNativeAdClient(
                     loader.loadAd()
 
                     continuation.invokeOnCancellation {
-                        listener.remove(callback)
+                        maxNativeAdListener.remove(callback)
                     }
                 }
             } catch (e: MaxAdLoadException) {
                 Log.e("MaxNativeAdClient", "Failed to load ad", e)
-                loadingListener?.onAdLoadingFailed(type, e)
+                runLoadingListeners { it.onAdLoadingFailed(type, e) }
 
                 // Keep reused ad instead of destroying it
                 reusedAd?.let { addLoadedAd(it, isAlreadyServed = true) }
@@ -142,11 +144,11 @@ class MaxNativeAdClient(
         }
 
         if (ad.isBlocked) {
-            moderationListener?.onAdBlocked(ad)
+            runModerationListener { it.onAdBlocked(ad) }
         }
 
         Log.i("MaxNativeAdClient", "fetchAd success")
-        loadingListener?.onAdLoadingFinished(ad)
+        runLoadingListeners { it.onAdLoadingFinished(ad) }
         addLoadedAd(ad)
         return ad
     }
