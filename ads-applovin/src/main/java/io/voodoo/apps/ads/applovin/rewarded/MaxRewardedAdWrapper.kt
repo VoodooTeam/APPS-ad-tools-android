@@ -13,12 +13,12 @@ import io.voodoo.apps.ads.applovin.util.toModerationResult
 class MaxRewardedAdWrapper internal constructor(
     val ad: MaxAd,
     internal val loader: MaxRewardedAd,
+    internal var apphrbrModerationResult: AdResult? = null
 ) : Ad.Rewarded() {
 
     override val id: Id = ad.id
     override val info: Info = ad.buildInfo()
 
-    internal var apphrbrModerationResult: AdResult? = null
     override val moderationResult: ModerationResult?
         get() = apphrbrModerationResult?.adStateResult?.toModerationResult()
 

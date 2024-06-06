@@ -3,9 +3,16 @@ package io.voodoo.apps.ads.applovin.rewarded
 import android.app.Activity
 import android.util.Log
 import androidx.lifecycle.LifecycleOwner
+import com.appharbr.sdk.engine.AdBlockReason
+import com.appharbr.sdk.engine.AdResult
+import com.appharbr.sdk.engine.AdSdk
+import com.appharbr.sdk.engine.AdStateResult
 import com.appharbr.sdk.engine.AppHarbr
+import com.appharbr.sdk.engine.listeners.AHListener
 import com.applovin.mediation.MaxAd
 import com.applovin.mediation.MaxError
+import com.applovin.mediation.MaxReward
+import com.applovin.mediation.MaxRewardedAdListener
 import com.applovin.mediation.ads.MaxRewardedAd
 import com.applovin.sdk.AppLovinSdk
 import io.voodoo.apps.ads.api.AdClient
@@ -36,6 +43,7 @@ class MaxRewardedAdClient(
     private val loader = MaxRewardedAd.getInstance(config.adUnit, appLovinSdk, activity)
 
     private val useModeration by lazy { AppHarbr.isInitialized() }
+    private val appharbrListener: AHListener
 
     private val plugins = plugins.toList()
     private val localExtrasProviders = localExtrasProviders.toList()
@@ -47,13 +55,49 @@ class MaxRewardedAdClient(
             "Invalid adCacheSize. Only one rewarded ad can be loaded at a time. adCacheSize must be == 1."
         }
 
-        loader.setListener(maxRewardedAdListener)
+        appharbrListener = AHListener { _, _, _, reasons ->
+            markAdAsBlocked(reasons)
+        }
+
+        val loaderListener = if (useModeration) {
+            AppHarbr.addRewardedAd<MaxRewardedAdListener>(
+                AdSdk.MAX,
+                loader,
+                null,
+                maxRewardedAdListener,
+                (activity as LifecycleOwner).lifecycle,
+                appharbrListener
+            )
+        } else {
+            maxRewardedAdListener
+        }
+        loader.setListener(loaderListener)
+
+        // TODO check behavior, in Wizz we track revenue in onUserRewarded...
+        //   but there's loader.setRevenueListener {}
+        maxRewardedAdListener.add(object : DefaultMaxRewardedAdListener() {
+            override fun onUserRewarded(ad: MaxAd, reward: MaxReward) {
+                val adWrapper = findAdOrNull { it.ad === ad }
+                    ?: MaxRewardedAdWrapper(ad, loader)
+
+                runRevenueListener { it.onAdRevenuePaid(adWrapper) }
+            }
+        })
 
         (activity as? LifecycleOwner)?.lifecycle?.let(::registerToLifecycle)
     }
 
+    fun addMaxNativeAdListener(listener: MaxRewardedAdListener) {
+        maxRewardedAdListener.add(listener)
+    }
+
+    fun removeMaxNativeAdListener(listener: MaxRewardedAdListener) {
+        maxRewardedAdListener.remove(listener)
+    }
+
     override fun close() {
         super.close()
+        AppHarbr.removeRewardedAd(loader)
         runPlugin { it.close() }
         loader.destroy()
     }
@@ -80,7 +124,15 @@ class MaxRewardedAdClient(
                     val callback = object : DefaultMaxRewardedAdListener() {
                         override fun onAdLoaded(ad: MaxAd) {
                             maxRewardedAdListener.remove(this)
-                            val adWrapper = MaxRewardedAdWrapper(ad = ad, loader = loader)
+                            val adWrapper = MaxRewardedAdWrapper(
+                                ad = ad,
+                                loader = loader,
+                                apphrbrModerationResult = if (AppHarbr.isInitialized()) {
+                                    loader.getRewardedAdModerationResult()
+                                } else {
+                                    null
+                                }
+                            )
                             try {
                                 continuation.resume(adWrapper)
                             } catch (e: Exception) {
@@ -130,6 +182,19 @@ class MaxRewardedAdClient(
         return ad
     }
 
+    private fun markAdAsBlocked(reasons: Array<AdBlockReason>) {
+        val ad = findAdOrNull { it.loader === loader } ?: return
+
+        // Ad was already moderated, drop event
+        if (ad.apphrbrModerationResult != null) return
+
+        val moderationResult = AdResult(AdStateResult.BLOCKED).apply {
+            blockReasons.addAll(reasons)
+        }
+        ad.apphrbrModerationResult = moderationResult
+        runModerationListener { it.onAdBlocked(ad) }
+    }
+
     private inline fun runPlugin(body: (MaxRewardedAdClientPlugin) -> Unit) {
         plugins.forEach {
             // try/catch plugin to not crash if an error occurs
@@ -141,3 +206,8 @@ class MaxRewardedAdClient(
         }
     }
 }
+
+private fun MaxRewardedAd.getRewardedAdModerationResult(): AdResult {
+    return AppHarbr.getRewardedResult(this)
+}
+
