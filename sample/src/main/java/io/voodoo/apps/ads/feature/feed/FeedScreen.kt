@@ -20,7 +20,7 @@ import io.voodoo.apps.ads.compose.lazylist.DefaultScrollAdBehaviorEffect
 import io.voodoo.apps.ads.compose.lazylist.LazyListAdMediator
 import io.voodoo.apps.ads.compose.lazylist.items
 import io.voodoo.apps.ads.compose.lazylist.rememberLazyListAdMediator
-import io.voodoo.apps.ads.compose.model.AdArbitrageurHolder
+import io.voodoo.apps.ads.compose.model.AdClientArbitrageurHolder
 import io.voodoo.apps.ads.feature.feed.component.FeedAdItem
 import io.voodoo.apps.ads.feature.feed.component.FeedErrorState
 import io.voodoo.apps.ads.feature.feed.component.FeedItem
@@ -30,7 +30,7 @@ import java.util.concurrent.TimeUnit
 @Composable
 fun FeedScreen(
     viewModel: FeedViewModel,
-    adArbitrageur: AdArbitrageurHolder?,
+    adClientArbitrageur: AdClientArbitrageurHolder?,
     onNavigateToMediationDebugger: () -> Unit,
     onNavigateToPrivacyEdit: () -> Unit,
     onNavigateToProfileClick: () -> Unit,
@@ -40,7 +40,7 @@ fun FeedScreen(
     val listState = rememberLazyListState()
     val adMediator = rememberLazyListAdMediator(
         lazyListState = listState,
-        adArbitrageur = adArbitrageur,
+        adClientArbitrageur = adClientArbitrageur,
         adInterval = 3,
     )
 

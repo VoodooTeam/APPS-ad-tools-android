@@ -14,9 +14,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
-import io.voodoo.apps.ads.compose.model.AdArbitrageurHolder
+import io.voodoo.apps.ads.compose.model.AdClientArbitrageurHolder
 import io.voodoo.apps.ads.feature.ads.AdsInitiliazer
-import io.voodoo.apps.ads.feature.ads.FeedAdArbitrageurFactory
+import io.voodoo.apps.ads.feature.ads.FeedAdClientArbitrageurFactory
 import io.voodoo.apps.ads.feature.feed.FeedViewModel
 import io.voodoo.apps.privacy.VoodooPrivacyManager
 import io.voodoo.apps.privacy.config.SourcepointConfiguration
@@ -29,7 +29,7 @@ class MainActivity : ComponentActivity() {
     private val feedViewModel: FeedViewModel by viewModels { FeedViewModel.Factory }
 
     // This is bound to the activity, and shouldn't be leaked outside the activity scope
-    private val feedArbitrageur by lazy { FeedAdArbitrageurFactory().create(this) }
+    private val feedAdClientArbitrageur by lazy { FeedAdClientArbitrageurFactory().create(this) }
 
     private val voodooConsentManager by lazy {
         VoodooPrivacyManager(
@@ -84,7 +84,11 @@ class MainActivity : ComponentActivity() {
             AppNavHost(
                 modifier = modifier.fillMaxSize(),
                 feedViewModel = feedViewModel,
-                feedAdArbitrageur = if (adsEnabled) AdArbitrageurHolder(feedArbitrageur) else null,
+                feedAdClientArbitrageur = if (adsEnabled) {
+                    AdClientArbitrageurHolder(feedAdClientArbitrageur)
+                } else {
+                    null
+                },
                 onNavigateToPrivacyEdit = {
                     voodooConsentManager.changePrivacyConsent()
                 }

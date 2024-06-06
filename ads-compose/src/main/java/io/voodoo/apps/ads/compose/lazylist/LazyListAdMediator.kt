@@ -20,7 +20,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import io.voodoo.apps.ads.api.model.Ad
-import io.voodoo.apps.ads.compose.model.AdArbitrageurHolder
+import io.voodoo.apps.ads.compose.model.AdClientArbitrageurHolder
 import io.voodoo.apps.ads.compose.util.getAdFetchResults
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.conflate
@@ -34,18 +34,18 @@ import kotlin.math.max
 @Composable
 fun rememberLazyListAdMediator(
     lazyListState: LazyListState?,
-    adArbitrageur: AdArbitrageurHolder?,
+    adClientArbitrageur: AdClientArbitrageurHolder?,
     adInterval: Int,
 ): LazyListAdMediator {
     return rememberSaveable(saver = LazyListAdMediator.Saver) {
         LazyListAdMediator(
             lazyListState = lazyListState,
-            adArbitrageur = adArbitrageur,
+            adClientArbitrageur = adClientArbitrageur,
             adInterval = adInterval,
         )
     }.apply {
         this.lazyListState = lazyListState
-        this.adArbitrageur = adArbitrageur
+        this.adClientArbitrageur = adClientArbitrageur
         this.adInterval = adInterval
     }
 }
@@ -53,14 +53,14 @@ fun rememberLazyListAdMediator(
 @Stable
 class LazyListAdMediator internal constructor(
     lazyListState: LazyListState?,
-    adArbitrageur: AdArbitrageurHolder?,
+    adClientArbitrageur: AdClientArbitrageurHolder?,
     adInterval: Int,
     adIndices: IntArray = intArrayOf(),
 ) {
 
     var lazyListState by mutableStateOf(lazyListState)
         internal set
-    var adArbitrageur by mutableStateOf(adArbitrageur)
+    var adClientArbitrageur by mutableStateOf(adClientArbitrageur)
         internal set
 
     /** how many actual items between two ads */
@@ -80,7 +80,7 @@ class LazyListAdMediator internal constructor(
     val totalItemCount by derivedStateOf { computeTotalItemCount() }
 
     suspend fun fetchAdIfNecessary(localExtrasProvider: () -> Array<Pair<String, Any>>) {
-        val arbitrageur = adArbitrageur?.arbitrageur ?: return
+        val arbitrageur = adClientArbitrageur?.arbitrageur ?: return
         Log.d("LazyListAdMediator", "fetchAdIfNecessary")
 
         // This is a blocking call, only returns when all operations are finished
@@ -126,21 +126,21 @@ class LazyListAdMediator internal constructor(
     }
 
     fun getAdAt(index: Int): Ad? {
-        val ad = adArbitrageur?.arbitrageur?.getAd(requestId = index.toString())
+        val ad = adClientArbitrageur?.arbitrageur?.getAd(requestId = index.toString())
         Log.d("LazyListAdMediator", "Returning ad $ad at $index")
         return ad
     }
 
     fun releaseAd(ad: Ad) {
         Log.d("LazyListAdMediator", "Release ad $ad")
-        adArbitrageur?.arbitrageur?.releaseAd(ad)
+        adClientArbitrageur?.arbitrageur?.releaseAd(ad)
     }
 
     fun checkAndInsertAvailableAds() {
         // If we're before the last ad added, we may have scrolled back, since ads will be used
         // for previous indices, don't insert for now
         val lazyListState = lazyListState ?: return
-        val arbitrageur = adArbitrageur?.arbitrageur ?: return
+        val arbitrageur = adClientArbitrageur?.arbitrageur ?: return
 
         val firstVisibleItemIndex = lazyListState.firstVisibleItemIndex
         if (
@@ -203,7 +203,7 @@ class LazyListAdMediator internal constructor(
             restore = {
                 LazyListAdMediator(
                     lazyListState = null,
-                    adArbitrageur = null,
+                    adClientArbitrageur = null,
                     adInterval = it[0] as Int,
                     adIndices = it[1] as IntArray,
                 )
@@ -220,7 +220,7 @@ fun LazyListAdMediator.DefaultScrollAdBehaviorEffect(
     val currentLocalExtraProvider by rememberUpdatedState(localExtrasProvider)
 
     LaunchedEffect(this) {
-        snapshotFlow { adArbitrageur }
+        snapshotFlow { adClientArbitrageur }
             .flatMapLatest {
                 snapshotFlow { lazyListState?.firstVisibleItemIndex to itemCount }
                     .conflate()
@@ -251,7 +251,7 @@ inline fun LazyListAdMediator.AdFetchResultEffect(
     crossinline body: suspend () -> Unit,
 ) {
     LaunchedEffect(this) {
-        snapshotFlow { adArbitrageur?.arbitrageur }
+        snapshotFlow { adClientArbitrageur?.arbitrageur }
             .flatMapLatest { it?.getAdFetchResults() ?: emptyFlow() }
             .filter { it.isSuccess }
             .collect {

@@ -8,7 +8,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.applovin.sdk.AppLovinSdk
-import io.voodoo.apps.ads.compose.model.AdArbitrageurHolder
+import io.voodoo.apps.ads.compose.model.AdClientArbitrageurHolder
 import io.voodoo.apps.ads.feature.feed.FeedScreen
 import io.voodoo.apps.ads.feature.feed.FeedViewModel
 import io.voodoo.apps.ads.feature.profile.ProfileScreen
@@ -16,7 +16,7 @@ import io.voodoo.apps.ads.feature.profile.ProfileScreen
 @Composable
 fun AppNavHost(
     feedViewModel: FeedViewModel,
-    feedAdArbitrageur: AdArbitrageurHolder?,
+    feedAdClientArbitrageur: AdClientArbitrageurHolder?,
     modifier: Modifier = Modifier,
     navController: NavHostController = rememberNavController(),
     onNavigateToPrivacyEdit: () -> Unit,
@@ -31,7 +31,7 @@ fun AppNavHost(
 
             FeedScreen(
                 viewModel = feedViewModel,
-                adArbitrageur = feedAdArbitrageur,
+                adClientArbitrageur = feedAdClientArbitrageur,
                 onNavigateToMediationDebugger = {
                     AppLovinSdk.getInstance(context.applicationContext)
                         .showMediationDebugger()

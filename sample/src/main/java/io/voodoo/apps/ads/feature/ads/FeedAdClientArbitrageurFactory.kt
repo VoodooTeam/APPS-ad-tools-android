@@ -3,23 +3,23 @@ package io.voodoo.apps.ads.feature.ads
 import android.app.Activity
 import androidx.activity.ComponentActivity
 import io.voodoo.apps.ads.MockData
-import io.voodoo.apps.ads.api.AdArbitrageur
 import io.voodoo.apps.ads.api.AdClient
+import io.voodoo.apps.ads.api.AdClientArbitrageur
 import io.voodoo.apps.ads.api.model.Ad
 import io.voodoo.apps.ads.applovin.mrec.MaxMRECAdClient
 import io.voodoo.apps.ads.applovin.nativ.MaxNativeAdClient
 import io.voodoo.apps.ads.applovin.plugin.amazon.AmazonMRECAdClientPlugin
 import io.voodoo.apps.ads.feature.ads.nativ.MaxNativeAdViewFactory
 
-class FeedAdArbitrageurFactory {
+class FeedAdClientArbitrageurFactory {
 
     private val adTracker = AdTracker(
         nativeAdUnit = MockData.NATIVE_AD_UNIT,
         mrecAdUnit = MockData.MREC_AD_UNIT
     )
 
-    fun create(activity: ComponentActivity): AdArbitrageur {
-        return AdArbitrageur(
+    fun create(activity: ComponentActivity): AdClientArbitrageur {
+        return AdClientArbitrageur(
             clients = listOf(createNativeClient(activity), createMRECClient(activity))
         ).also {
             it.registerToLifecycle(activity.lifecycle)

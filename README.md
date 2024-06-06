@@ -33,7 +33,7 @@ implementation("io.voodoo.apps:ads-api:<latest_version>")
 implementation("io.voodoo.apps:ads-compose:<latest_version>")
 
 // The actual implementation of the ads-api module, your app module needs it to initialize
-// AppLovin and AppHrbr SDK, as well as provide AdClient/AdArbitrageur to your modules via DI
+// AppLovin and AppHrbr SDK, as well as provide AdClient/AdClientArbitrageur to your modules via DI
 implementation("io.voodoo.apps:ads-applovin:<latest_version>")
 
 // GDPR/Consent flow
@@ -65,8 +65,8 @@ instagram.
 * AppLovin SDK + Apphrbr (moderation) initialization
   in [AdsInitializer](sample/src/main/java/io/voodoo/apps/ads/feature/ads/AdsInitiliazer.kt) class
   (called from `MainActivity` after the consent is given)
-* [FeedAdArbitrageurFactory](sample/src/main/java/io/voodoo/apps/ads/feature/ads/FeedAdArbitrageurFactory.kt):
-  `AdClient` + `AdArbitrageur` instantiation
+* [FeedAdClientArbitrageurFactory](sample/src/main/java/io/voodoo/apps/ads/feature/ads/FeedAdClientArbitrageurFactory.kt):
+  `AdClient` + `AdClientArbitrageur` instantiation
 * [AdTracker](sample/src/main/java/io/voodoo/apps/ads/feature/ads/AdTracker.kt):
   Base tracking implementation that you probably need to implement
 * [FeedScreen](sample/src/main/java/io/voodoo/apps/ads/feature/feed/FeedScreen.kt): main screen,
@@ -131,10 +131,11 @@ of `LazyListScope.items` that takes a `adMediator: LazyListAdMediator` parameter
   demo app in `AdsInitiliazer`
     * Note: before initializing applovin/apphrbr and instanciating any clients, wait until you have
       the user's GDPR consents for ads
-* Create an `MaxNativeAdClient` and/or `MaxMRECAdClient` and/or `AdArbitrageur` and start
-  loading/displaying ads following the example in the sample app
+* Create a `MaxNativeAdClient` and/or `MaxMRECAdClient` (and potentially `AdClientArbitrageur`) and
+  start loading/displaying ads following the example in the sample app
 
-Don't forget to close your `AdArbitrageur`/`AdClient` when you're done to free resources. By default
+Don't forget to close your `AdClientArbitrageur`/`AdClient` when you're done to free resources. By
+default
 if the activity provided to the clients is a `LifecycleOwner`, the client will close itself when the
 activity is destroyed.
 

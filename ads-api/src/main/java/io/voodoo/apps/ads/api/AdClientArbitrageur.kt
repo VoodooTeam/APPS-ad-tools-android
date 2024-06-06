@@ -17,7 +17,7 @@ import java.io.Closeable
 import java.util.concurrent.CopyOnWriteArraySet
 
 // TODO: check if we can factorize some AdClient api in a common interface (registerToLifecycle, availableAdCount, ...)
-class AdArbitrageur(
+class AdClientArbitrageur(
     clients: List<AdClient<*>>,
     private val requiredAvailableAdCount: Int = 1
 ) : Closeable, AdListenerHolder {
