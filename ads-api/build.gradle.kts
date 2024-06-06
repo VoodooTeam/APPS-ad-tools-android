@@ -14,7 +14,6 @@ android {
 }
 
 dependencies {
-    implementation(libs.kotlin.coroutines)
     compileOnly(libs.androidx.core.ktx)
 }
 

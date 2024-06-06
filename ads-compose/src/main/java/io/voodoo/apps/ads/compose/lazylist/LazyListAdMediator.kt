@@ -21,6 +21,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import io.voodoo.apps.ads.api.model.Ad
 import io.voodoo.apps.ads.compose.model.AdArbitrageurHolder
+import io.voodoo.apps.ads.compose.util.getAdFetchResults
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.conflate
 import kotlinx.coroutines.flow.emptyFlow

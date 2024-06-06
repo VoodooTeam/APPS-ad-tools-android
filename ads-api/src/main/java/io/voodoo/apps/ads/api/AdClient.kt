@@ -5,6 +5,7 @@ import androidx.annotation.CallSuper
 import androidx.annotation.MainThread
 import androidx.lifecycle.Lifecycle
 import io.voodoo.apps.ads.api.lifecycle.CloseOnDestroyLifecycleObserver
+import io.voodoo.apps.ads.api.listener.AdListenerHolder
 import io.voodoo.apps.ads.api.listener.AdLoadingListener
 import io.voodoo.apps.ads.api.listener.AdModerationListener
 import io.voodoo.apps.ads.api.listener.AdRevenueListener
@@ -20,16 +21,7 @@ import java.util.concurrent.CopyOnWriteArraySet
  * - rendered: rendered to the UI framework (composed/attached to window): doesn't mean it was actually seen
  * - available: a "fresh" ad (canBeServed, not locked, not rendered), see [isAvailable]
  */
-interface AdClient<T : Ad> : Closeable {
-
-    fun addAdLoadingListener(listener: AdLoadingListener)
-    fun removeAdLoadingListener(listener: AdLoadingListener)
-
-    fun addAdModerationListener(listener: AdModerationListener)
-    fun removeAdModerationListener(listener: AdModerationListener)
-
-    fun addAdRevenueListener(listener: AdRevenueListener)
-    fun removeAdRevenueListener(listener: AdRevenueListener)
+interface AdClient<T : Ad> : Closeable, AdListenerHolder {
 
     /**
      * @return number of available "fresh" ads to display (ads that weren't already rendered,
@@ -76,8 +68,6 @@ interface AdClient<T : Ad> : Closeable {
         val adCacheSize: Int,
         val adUnit: String,
     )
-
-
 }
 
 abstract class BaseAdClient<ActualType : PublicType, PublicType : Ad>(
@@ -96,30 +86,6 @@ abstract class BaseAdClient<ActualType : PublicType, PublicType : Ad>(
 
     init {
         require(config.adCacheSize >= 0) { "adCacheSize must be >= 0" }
-    }
-
-    override fun addAdLoadingListener(listener: AdLoadingListener) {
-        adLoadingListeners.add(listener)
-    }
-
-    override fun removeAdLoadingListener(listener: AdLoadingListener) {
-        adLoadingListeners.remove(listener)
-    }
-
-    override fun addAdModerationListener(listener: AdModerationListener) {
-        adModerationListeners.add(listener)
-    }
-
-    override fun removeAdModerationListener(listener: AdModerationListener) {
-        adModerationListeners.remove(listener)
-    }
-
-    override fun addAdRevenueListener(listener: AdRevenueListener) {
-        adRevenueListeners.add(listener)
-    }
-
-    override fun removeAdRevenueListener(listener: AdRevenueListener) {
-        adRevenueListeners.remove(listener)
     }
 
     @CallSuper
@@ -201,6 +167,30 @@ abstract class BaseAdClient<ActualType : PublicType, PublicType : Ad>(
             ad.unlock()
             ensureBufferSize()
         }
+    }
+
+    override fun addAdLoadingListener(listener: AdLoadingListener) {
+        adLoadingListeners.add(listener)
+    }
+
+    override fun removeAdLoadingListener(listener: AdLoadingListener) {
+        adLoadingListeners.remove(listener)
+    }
+
+    override fun addAdModerationListener(listener: AdModerationListener) {
+        adModerationListeners.add(listener)
+    }
+
+    override fun removeAdModerationListener(listener: AdModerationListener) {
+        adModerationListeners.remove(listener)
+    }
+
+    override fun addAdRevenueListener(listener: AdRevenueListener) {
+        adRevenueListeners.add(listener)
+    }
+
+    override fun removeAdRevenueListener(listener: AdRevenueListener) {
+        adRevenueListeners.remove(listener)
     }
 
     protected fun findAdOrNull(predicate: (ActualType) -> Boolean): ActualType? {

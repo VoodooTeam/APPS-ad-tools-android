@@ -21,7 +21,13 @@ class AdArbitrageurFactory {
     fun create(activity: ComponentActivity): AdArbitrageur {
         return AdArbitrageur(
             clients = listOf(createNativeClient(activity), createMRECClient(activity))
-        ).also { it.registerToLifecycle(activity.lifecycle) }
+        ).also {
+            it.registerToLifecycle(activity.lifecycle)
+
+            it.addAdLoadingListener(adTracker)
+            it.addAdRevenueListener(adTracker)
+            it.addAdModerationListener(adTracker)
+        }
     }
 
     private fun createNativeClient(activity: Activity): AdClient<Ad.Native> {
@@ -34,11 +40,7 @@ class AdArbitrageurFactory {
             adViewFactory = MaxNativeAdViewFactory(),
             // Provide extras via here if more convenient than the UI
             localExtrasProviders = emptyList(),
-        ).apply {
-            addAdLoadingListener(adTracker)
-            addAdRevenueListener(adTracker)
-            addAdModerationListener(adTracker)
-        }
+        )
     }
 
     private fun createMRECClient(activity: Activity): AdClient<Ad.MREC> {
@@ -51,10 +53,6 @@ class AdArbitrageurFactory {
             plugins = listOf(AmazonMRECAdClientPlugin(MockData.AMAZON_SLOT_ID)),
             // Provide extras via here if more convenient than the UI
             localExtrasProviders = emptyList(),
-        ).apply {
-            addAdLoadingListener(adTracker)
-            addAdRevenueListener(adTracker)
-            addAdModerationListener(adTracker)
-        }
+        )
     }
 }

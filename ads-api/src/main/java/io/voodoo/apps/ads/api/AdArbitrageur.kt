@@ -3,22 +3,24 @@ package io.voodoo.apps.ads.api
 import androidx.annotation.MainThread
 import androidx.lifecycle.Lifecycle
 import io.voodoo.apps.ads.api.lifecycle.CloseOnDestroyLifecycleObserver
+import io.voodoo.apps.ads.api.listener.AdListenerHolder
+import io.voodoo.apps.ads.api.listener.AdListenerHolderWrapper
+import io.voodoo.apps.ads.api.listener.AdLoadingListener
+import io.voodoo.apps.ads.api.listener.AdModerationListener
+import io.voodoo.apps.ads.api.listener.AdRevenueListener
 import io.voodoo.apps.ads.api.model.Ad
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.channels.BufferOverflow
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.supervisorScope
 import kotlinx.coroutines.sync.Mutex
 import java.io.Closeable
+import java.util.concurrent.CopyOnWriteArraySet
 
 // TODO: check if we can factorize some AdClient api in a common interface (registerToLifecycle, availableAdCount, ...)
 class AdArbitrageur(
     clients: List<AdClient<*>>,
     private val requiredAvailableAdCount: Int = 1
-) : Closeable {
+) : Closeable, AdListenerHolder {
 
     private val clients = clients.toList()
     private val mutexByClientMap = clients.associateWith { Mutex() }
@@ -26,25 +28,30 @@ class AdArbitrageur(
     private val clientIndexByRequestIdMap = mutableMapOf<String, Int>()
     private val clientIndexByAdIdMap = mutableMapOf<Ad.Id, Int>()
 
-    private val adFetchResults = MutableSharedFlow<Result<Ad>>(
-        extraBufferCapacity = 8,
-        onBufferOverflow = BufferOverflow.DROP_OLDEST
+    private val adLoadingListeners = CopyOnWriteArraySet<AdLoadingListener>()
+    private val adModerationListeners = CopyOnWriteArraySet<AdModerationListener>()
+    private val adRevenueListeners = CopyOnWriteArraySet<AdRevenueListener>()
+    private val listenersWrapper = AdListenerHolderWrapper(
+        adLoadingListeners = adLoadingListeners,
+        adModerationListeners = adModerationListeners,
+        adRevenueListeners = adRevenueListeners
     )
 
     private var lifecycleObserver: CloseOnDestroyLifecycleObserver? = null
+
+    init {
+        clients.forEach {
+            it.addAdLoadingListener(listenersWrapper)
+            it.addAdModerationListener(listenersWrapper)
+            it.addAdRevenueListener(listenersWrapper)
+        }
+    }
 
     @MainThread
     fun registerToLifecycle(lifecycle: Lifecycle) {
         lifecycleObserver?.removeFromLifecycle()
         lifecycleObserver = CloseOnDestroyLifecycleObserver(lifecycle, this)
             .also { lifecycle.addObserver(it) }
-    }
-
-    /**
-     * @return a flow that'll emit every client's [AdClient.fetchAd] results
-     */
-    fun getAdFetchResults(): Flow<Result<Ad>> {
-        return adFetchResults.asSharedFlow()
     }
 
     /**
@@ -142,7 +149,6 @@ class AdArbitrageur(
                         if (mutex.tryLock()) {
                             try {
                                 runCatching { client.fetchAd(*localExtras) }
-                                    .also { adFetchResults.emit(it) }
                             } finally {
                                 mutex.unlock()
                             }
@@ -161,5 +167,29 @@ class AdArbitrageur(
 
     override fun close() {
         clients.forEach { it.close() }
+    }
+
+    override fun addAdLoadingListener(listener: AdLoadingListener) {
+        adLoadingListeners.add(listener)
+    }
+
+    override fun removeAdLoadingListener(listener: AdLoadingListener) {
+        adLoadingListeners.remove(listener)
+    }
+
+    override fun addAdModerationListener(listener: AdModerationListener) {
+        adModerationListeners.add(listener)
+    }
+
+    override fun removeAdModerationListener(listener: AdModerationListener) {
+        adModerationListeners.remove(listener)
+    }
+
+    override fun addAdRevenueListener(listener: AdRevenueListener) {
+        adRevenueListeners.add(listener)
+    }
+
+    override fun removeAdRevenueListener(listener: AdRevenueListener) {
+        adRevenueListeners.remove(listener)
     }
 }
