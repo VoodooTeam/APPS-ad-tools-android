@@ -5,13 +5,19 @@ known issues.
 
 For any question/bug/feature request regarding the integration, slack me **@Yann Badoual**
 
+## Changelog
+
 [Changelog](https://github.com/VoodooTeam/APPS-ad-tools-android/releases)
+
+## Privacy module (GDPR, ...)
 
 [Privacy-Module](https://github.com/VoodooTeam/APPS-ad-tools-android/blob/feature/privacy-docs/privacy/README.md)
 
-## Installation
+## Setup
 
-#### Add the following maven repositories to resolve the artifacts
+#### Maven repositories
+
+Add the following maven repositories to resolve the artifacts
 
 ```groovy
 maven {
@@ -23,6 +29,8 @@ maven {
 // jitpack required for apphrbr, feel free to add an mavenContent/includeGroup clause
 maven { setUrl("https://jitpack.io") }
 ```
+
+Note: you'll need the jitpack credentials to get apphrbr from jitpack
 
 #### Artifacts
 
@@ -43,6 +51,23 @@ implementation("io.voodoo.apps:ads-privacy:<latest_version>")
 implementation("io.voodoo.apps:ads-applovin-plugin-amazon:<latest_version>")
 ```
 
+* `ads-api`: abstraction layer with no dependency to applovin/any network
+* `ads-compose`: provides some useful classes/extensions to use the lib with compose.
+    * `LazyListAdMediator` is a basic integration of the ads into a LazyList (used in sample app)
+* `ads-applovin`: the implementation of the API with applovin SDK dependency
+    * apphrbr is included until we find a clean API to extract it in another module like we did for
+      amazon's integration
+* `ads-applovin-plugin-*`: every extension plugin that might be required for a network to be
+  integrated (eg: amazon for mrec in `AmazonMRECAdClientPlugin`)
+* `ads-no-op`: a dummy implementation of `ads-api` to build your app without ads (eg: for faster
+  debug build).
+    * the objective is to replace `ads-applovin` module
+    * note that this module doesn't provide a dummy implementation of `MaxNativeAdClient` (or mrec).
+      Instead it just gives you a dummy AdClient implementation that will never return an ad
+    * if you want to use this, you'll need to create two modules in your app, one to provide the
+      actual clients to your arbitrageur/code, and one to provide the mock. Then you can import one
+      or the other depending on what you want to build.
+
 #### Versioning
 
 The SDK versioning is based on applovin's version, and concatenates a version number
@@ -58,15 +83,16 @@ version will be `9.9.3.X.Y`
 The sample module is a demo app with integration of ads in a list (`LazyColumn`) of posts like
 instagram.
 
-* Add your GAID in `AdsInitiliazer` to the `setTestDeviceAdvertisingIds` call
+* Add your GAID in `AdsInitiliazer` to the `setTestDeviceAdvertisingIds` call if you want to enable
+  test mode
 * [MainActivity](sample/src/main/java/io/voodoo/apps/ads/MainActivity.kt) handles getting user's
   consent to use collect data/use ads. Only after this consent is given we can initialize the
   various ads SDK.
-* AppLovin SDK + Apphrbr (moderation) initialization
-  in [AdsInitializer](sample/src/main/java/io/voodoo/apps/ads/feature/ads/AdsInitiliazer.kt) class
+* [AdsInitializer](sample/src/main/java/io/voodoo/apps/ads/feature/ads/AdsInitiliazer.kt): AppLovin
+  SDK + Apphrbr (moderation) initialization
   (called from `MainActivity` after the consent is given)
 * [FeedAdClientArbitrageurFactory](sample/src/main/java/io/voodoo/apps/ads/feature/ads/FeedAdClientArbitrageurFactory.kt):
-  `AdClient` + `AdClientArbitrageur` instantiation
+  `AdClient` + `AdClientArbitrageur` instantiation/configuration
 * [AdTracker](sample/src/main/java/io/voodoo/apps/ads/feature/ads/AdTracker.kt):
   Base tracking implementation that you probably need to implement
 * [FeedScreen](sample/src/main/java/io/voodoo/apps/ads/feature/feed/FeedScreen.kt): main screen,
@@ -76,11 +102,12 @@ instagram.
     * For native ads, you need to implement the whole layout in an XML layout file with views for
       each element (title, body, icon, ...) (applovin requirement). You'll need to pass a view
       factory instance to your `MaxNativeAdClient`.
-      See [MaxNativeAdViewFactory](sample/src/main/java/io/voodoo/apps/ads/feature/ads/MaxNativeAdViewFactory.kt)
+      See [MaxNativeAdViewFactory](sample/src/main/java/io/voodoo/apps/ads/feature/ads/nativ/MaxNativeAdViewFactory.kt)
       for sample.
       see https://developers.applovin.com/en/android/ad-formats/native-ads#manual
-    * For MREC ads, the applovin SDK provides us with a 300x250 view, and we can use it as we want.
-      We can integrate this in a composable, like we do in the `FeedMRECAdItem` comopsable.
+    * For MREC ads, the applovin SDK provides us with a 300dp x 250dp view, and we can use it as we
+      want.
+      We can integrate this in a composable, like we do in the `FeedMRECAdItem` composable.
       see https://developers.applovin.com/en/android/ad-formats/banner-mrec-ads#mrecs
 
 Because ads are loaded and can take time to be available, it creates a lot of edge cases, and we
@@ -90,28 +117,9 @@ The [LazyListAdMediator](ads-compose/src/main/java/io/voodoo/apps/ads/compose/la
 class available in the `ads-compose` artifact provides a default integration of this behavior and
 tries to handle most edge cases for the behavior wanted in an app like this.
 
-For a seemless integration in an existing LazyList, you can use the overloads
+For a seamless integration in an existing LazyList, you can use the overloads
 of `LazyListScope.items` that takes a `adMediator: LazyListAdMediator` parameter
 (see `FeedScreenContent` composable).
-
-## Artifacts
-
-* `ads-api`: abstraction layer with no dependency to applovin/any network
-* `ads-compose`: provides some useful classes/extensions to use the lib with compose.
-    * `LazyListAdMediator` is a basic integration of the ads into a LazyList (used in sample app)
-* `ads-applovin`: the implementation of the API with applovin SDK dependency
-    * apphrbr is included until we find a clean API to extract it in another module like we did for
-      amazon's integration
-* `ads-applovin-plugin-*`: every extension plugin that might be required for a network to be
-  integrated (eg: amazon for mrec in `AmazonMRECAdClientPlugin`)
-* `ads-no-op`: a dummy implementation of `ads-api` to build your app without ads (eg: for faster
-  debug build).
-    * the objective is to remplace `ads-applovin` module
-    * note that this module doesn't provide a dummy implementation of `MaxNativeAdClient` (or mrec).
-      Instead it just gives you a dummy AdClient implementation that will never return an ad
-    * if you want to use this, you'll need to create two modules in your app, one to provide the
-      actual clients to your arbitrageur/code, and one to provide the mock. Then you can import one
-      or the other depending on what you want to build.
 
 ## Integration steps
 
