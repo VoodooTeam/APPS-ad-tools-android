@@ -17,18 +17,20 @@ import java.util.concurrent.CopyOnWriteArraySet
 /**
  * Ad lexicon:
  * - canBeServed: the ad can be displayed to the user (not expired, not blocked)
- * - served: an ad released after being rendered
+ * - rendered: rendered to the UI framework (composed/attached to window): doesn't mean it was actually seen, but we consider as if
+ * - served (alias of rendered): an ad released after being rendered
  * - locked: currently used by a ui component (free by calling [releaseAd])
- * - rendered: rendered to the UI framework (composed/attached to window): doesn't mean it was actually seen
- * - available: a "fresh" ad (canBeServed, not locked, not rendered), see [isAvailable]
+ * - available: a "fresh" ad (canBeServed + not locked + not served), see [BaseAdClient.isAvailable]
  */
 interface AdClient<T : Ad> : Closeable, AdListenerHolder {
 
     /**
      * @return number of available "fresh" ads to display (ads that weren't already rendered,
      * aren't blocked, aren't currently used by another component, ...)
+     *
+     * canBeServed + not locked + not served
      */
-    fun getAvailableAdCount(): Int
+    fun getAvailableAdCount(filterLocked: Boolean = true): Int
 
     /**
      * @return the ad previously served via [getAvailableAd] with the same [requestId], or null if:
@@ -37,12 +39,12 @@ interface AdClient<T : Ad> : Closeable, AdListenerHolder {
      * - the ad is used by another component
      * - the ad can't be served anymore (eg: blocked)
      */
-    fun getServedAd(requestId: String?): T?
+    fun getServedAd(requestId: String? = null): T?
 
     /**
      * @return either [getServedAd] for the given [requestId], or the first available ad (see lexicon).
      */
-    fun getAvailableAd(requestId: String?): T?
+    fun getAvailableAd(requestId: String? = null): T?
 
     /**
      * @return any ad that can be served and not used by another component (even if already rendered)
@@ -111,9 +113,11 @@ abstract class BaseAdClient<ActualType : PublicType, PublicType : Ad>(
 
     protected abstract fun destroyAd(ad: ActualType)
 
-    override fun getAvailableAdCount(): Int {
+    override fun getAvailableAdCount(filterLocked: Boolean): Int {
         return synchronized(loadedAds) {
-            loadedAds.count { it.isAvailable() }
+            loadedAds.count { ad ->
+                ad.canBeServed() && !ad.rendered && (!filterLocked || ad.isLocked())
+            }
         }
     }
 

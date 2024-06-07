@@ -8,7 +8,7 @@ import io.voodoo.apps.ads.api.model.Ad
 
 class NoOpAdClient : AdClient<NoOpMRECAd> {
 
-    override fun getAvailableAdCount(): Int = 0
+    override fun getAvailableAdCount(filterLocked: Boolean): Int = 0
 
     override fun getServedAd(requestId: String?): NoOpMRECAd? = null
     override fun getAvailableAd(requestId: String?): NoOpMRECAd? = null
