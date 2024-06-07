@@ -21,7 +21,7 @@ maven {
 
 ```groovy
 // GDPR/Consent flow
-implementation("io.voodoo.apps:ads-privacy:<latest_version>")
+implementation("io.voodoo.apps:privacy:<latest_version>")
 ```
 
 ### Versioning

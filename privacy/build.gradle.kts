@@ -6,7 +6,7 @@ plugins {
 apply(from = "../gradlescripts/android-library.gradle")
 
 val artifactGroupId by extra("io.voodoo.apps")
-val artifactId by extra("ads-privacy")
+val artifactId by extra("privacy")
 val artifactVersion by extra(rootProject.extra.get("SDK_VER"))
 
 android {

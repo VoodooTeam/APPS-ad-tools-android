@@ -126,7 +126,7 @@ dependencies {
     if (true) {
         implementation(project(":privacy"))
     } else {
-        implementation("io.voodoo.apps", "ads-privacy", sdkVersion)
+        implementation("io.voodoo.apps", "privacy", sdkVersion)
     }
 
     // Test
