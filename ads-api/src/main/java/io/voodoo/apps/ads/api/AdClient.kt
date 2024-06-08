@@ -116,7 +116,7 @@ abstract class BaseAdClient<ActualType : PublicType, PublicType : Ad>(
     override fun getAvailableAdCount(filterLocked: Boolean): Int {
         return synchronized(loadedAds) {
             loadedAds.count { ad ->
-                ad.canBeServed() && !ad.rendered && (!filterLocked || ad.isLocked())
+                ad.canBeServed() && !ad.rendered && (!filterLocked || !ad.isLocked())
             }
         }
     }
