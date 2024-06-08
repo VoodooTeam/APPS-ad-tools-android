@@ -3,6 +3,7 @@ package io.voodoo.apps.ads.applovin.nativ
 import android.util.Log
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.view.children
 import androidx.core.view.doOnNextLayout
 import androidx.core.view.size
 import com.appharbr.sdk.engine.AdResult
@@ -49,11 +50,17 @@ class MaxNativeAdWrapper internal constructor(
 
         // Sometimes it looks like the network is either not attaching the content, or doesn't have one
         Log.v("MaxNativeAdWrapper", "render children count: " + view.mediaContentViewGroup.size)
-        view.doOnNextLayout {
+        view.mediaContentViewGroup.doOnNextLayout {
             Log.v(
                 "MaxNativeAdWrapper",
-                "layout size: " + view.measuredWidth + "x" + view.measuredHeight
+                "layout size: " + it.measuredWidth + "x" + it.measuredHeight
             )
+            view.mediaContentViewGroup.children.forEachIndexed { i, child ->
+                Log.v(
+                    "MaxNativeAdWrapper",
+                    "child $i layout size: " + child.measuredWidth + "x" + child.measuredHeight
+                )
+            }
         }
     }
 
