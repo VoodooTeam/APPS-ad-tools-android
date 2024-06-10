@@ -29,6 +29,7 @@ class MaxNativeAdClient(
     private val activity: Activity,
     appLovinSdk: AppLovinSdk = AppLovinSdk.getInstance(activity.applicationContext),
     adViewFactory: MaxNativeAdViewFactory,
+    private val renderListener: MaxNativeAdRenderListener? = null,
     localExtrasProviders: List<LocalExtrasProvider> = emptyList(),
 ) : BaseAdClient<MaxNativeAdWrapper, Ad.Native>(config = config) {
 
@@ -50,7 +51,7 @@ class MaxNativeAdClient(
         loader.setNativeAdListener(maxNativeAdListener)
         loader.setRevenueListener { ad ->
             val adWrapper = findAdOrNull { it.ad === ad }
-                ?: MaxNativeAdWrapper(ad, loader, adViewPool)
+                ?: MaxNativeAdWrapper(ad, loader, null, adViewPool)
 
             runRevenueListener { it.onAdRevenuePaid(adWrapper) }
         }
@@ -92,6 +93,7 @@ class MaxNativeAdClient(
                             val adWrapper = MaxNativeAdWrapper(
                                 ad = ad,
                                 loader = loader,
+                                renderListener = renderListener,
                                 viewPool = adViewPool,
                                 apphrbrModerationResult = if (AppHarbr.isInitialized()) {
                                     ad.getNativeAdModerationResult()

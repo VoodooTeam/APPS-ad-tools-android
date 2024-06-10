@@ -3,6 +3,7 @@ package io.voodoo.apps.ads.applovin.nativ
 import android.util.Log
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.view.children
 import androidx.core.view.doOnNextLayout
 import androidx.core.view.size
 import com.appharbr.sdk.engine.AdResult
@@ -19,6 +20,7 @@ import io.voodoo.apps.ads.applovin.util.toModerationResult
 class MaxNativeAdWrapper internal constructor(
     val ad: MaxAd,
     internal val loader: MaxNativeAdLoader,
+    internal val renderListener: MaxNativeAdRenderListener?,
     internal val viewPool: MaxNativeAdViewPool,
     internal val apphrbrModerationResult: AdResult? = null,
 ) : Ad.Native() {
@@ -44,19 +46,22 @@ class MaxNativeAdWrapper internal constructor(
 
         val view = viewPool.getOrCreate(parent.context)
         parent.addView(view)
+
+        renderListener?.onPreRender(this, view)
         loader.render(view, ad)
         markAsRendered()
+        renderListener?.onPostRender(this, view)
 
         // Sometimes it looks like the ad is not rendered ...
         Log.v("MaxNativeAdWrapper", "render children count: " + view.mediaContentViewGroup.size)
-        view.doOnNextLayout {
-            Log.v("MaxNativeAdWrapper", "adView nextLayout")
-        }
         view.mediaContentViewGroup.doOnNextLayout {
             Log.v(
                 "MaxNativeAdWrapper",
                 "mediaContentViewGroup nextLayout height ${it.measuredHeight}"
             )
+            if (view.mediaContentViewGroup.children.firstOrNull()?.measuredHeight == 0) {
+                Log.e("MaxNativeAdWrapper", "media not displayed (height = 0)")
+            }
         }
     }
 
