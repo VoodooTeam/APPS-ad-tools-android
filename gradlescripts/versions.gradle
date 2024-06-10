@@ -11,7 +11,7 @@ ext {
     // To know exactly which version of applovin is used in the wrapper SDK, we use the same
     // versioning logic that they use, and concat their version number with ours
     // Same thing for amazon plugin using amazon's adapter (itself using amazon versioning as a base)
-    SDK_VERSION_CODE = "6-beta1"
+    SDK_VERSION_CODE = "6"
     SDK_VER = "$APPLOVIN.$SDK_VERSION_CODE"
     SDK_AMAZON_PLUGIN_VER = "$AMAZON_ADAPTER.$SDK_VERSION_CODE"
 }
