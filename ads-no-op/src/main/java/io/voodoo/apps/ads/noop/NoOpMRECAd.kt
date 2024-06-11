@@ -15,11 +15,13 @@ class NoOpMRECAd(
         adUnit = "",
         network = "",
         revenue = 0.0,
+        revenuePrecision = "",
         cohortId = null,
         creativeId = null,
         placement = null,
         reviewCreativeId = null,
         formatLabel = null,
+        requestLatencyMillis = 0L
     )
     override val isExpired: Boolean
         get() = false
