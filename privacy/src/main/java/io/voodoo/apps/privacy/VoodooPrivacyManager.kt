@@ -121,6 +121,20 @@ class VoodooPrivacyManager(
     }
 
     /**
+     * Close consent edit setting
+     *
+     * @return true if it was closed
+     */
+    fun closeIfVisible(): Boolean {
+        return viewToShow?.let {
+            spConsentLib.removeView(it)
+            setConsentStatus(ConsentStatus.NA)
+            viewToShow = null
+            true
+        } ?: false
+    }
+
+    /**
      * Initialize the consent manager and download the FTL message
      */
     fun initializeConsent() {
@@ -150,6 +164,13 @@ class VoodooPrivacyManager(
      */
     fun setOnConsentReady(onConsentReceived: ((VoodooPrivacyConsent) -> Unit)?) {
         this.onConsentReceived = onConsentReceived
+    }
+
+    /**
+     *
+     */
+    fun setOnStatusUpdate(onStatusUpdate: (ConsentStatus) -> Unit) {
+        this.onStatusUpdate = onStatusUpdate
     }
 
     /**
@@ -234,13 +255,12 @@ class VoodooPrivacyManager(
         }
 
         override fun onUIReady(view: View) {
+            viewToShow = view
             setConsentStatus(ConsentStatus.UI_READY)
             if (autoShowPopup || forceAutoShow) {
                 setConsentStatus(ConsentStatus.UI_SHOWN)
                 spConsentLib.showView(view)
                 forceAutoShow = false
-            } else {
-                viewToShow = view
             }
             onUiReady?.invoke()
         }
