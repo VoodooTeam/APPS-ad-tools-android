@@ -11,7 +11,6 @@ import kotlinx.coroutines.channels.trySendBlocking
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.buffer
 import kotlinx.coroutines.flow.callbackFlow
-import kotlinx.coroutines.flow.distinctUntilChanged
 
 /**
  * @return a flow that'll emit every client's [AdClient.fetchAd] results
@@ -38,18 +37,49 @@ fun AdListenerHolder.getAdFetchResults(): Flow<Result<Ad>> {
     }.buffer(capacity = 16, onBufferOverflow = BufferOverflow.DROP_OLDEST)
 }
 
+sealed interface AdClientStatus {
+    data object Loading : AdClientStatus
+    data object Error : AdClientStatus
+    data object Ready : AdClientStatus
+}
+
 /**
- * @return a flow that'll emit the number of available ads every time it changes
- *
- * @see AdClient.getAvailableAdCount
+ * @return a flow that'll emit every client's [AdClient.fetchAd] results
  */
-fun AdListenerHolder.getAdAvailableCountFlow(): Flow<AdClient.AdCount> {
+fun <T : Ad> AdClient<T>.getStatus(loadOnce: Boolean): Flow<AdClientStatus> {
     return callbackFlow {
-        val listener = OnAvailableAdCountChangedListener(::trySendBlocking)
+        var failedOnce = false
+        val loadingListener = object : AdLoadingListener {
+            override fun onAdLoadingStarted(type: Ad.Type) {
+                if (!loadOnce || !failedOnce) {
+                    trySendBlocking(AdClientStatus.Loading)
+                }
+            }
 
-        addOnAvailableAdCountChangedListener(listener)
+            override fun onAdLoadingFailed(type: Ad.Type, exception: Exception) {
+                failedOnce = true
+                trySendBlocking(AdClientStatus.Error)
+            }
 
-        awaitClose { removeOnAvailableAdCountChangedListener(listener) }
-    }.buffer(capacity = 1, onBufferOverflow = BufferOverflow.DROP_OLDEST)
-        .distinctUntilChanged()
+            override fun onAdLoadingFinished(ad: Ad) {
+                trySendBlocking(AdClientStatus.Ready)
+            }
+        }
+        val adCountListener = OnAvailableAdCountChangedListener {
+            if (it.total == 0) {
+                trySendBlocking(AdClientStatus.Loading)
+            }
+        }
+
+        addAdLoadingListener(loadingListener)
+        addOnAvailableAdCountChangedListener(adCountListener)
+
+        when {
+            getAvailableAdCount().total > 0 -> AdClientStatus.Ready
+            isRequestInProgress() -> AdClientStatus.Loading
+            else -> AdClientStatus.Error
+        }.also { trySendBlocking(it) }
+
+        awaitClose { removeAdLoadingListener(loadingListener) }
+    }.buffer(capacity = 16, onBufferOverflow = BufferOverflow.DROP_OLDEST)
 }

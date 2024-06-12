@@ -1,5 +1,6 @@
 package io.voodoo.apps.ads.feature.profile
 
+import android.util.Log
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -18,24 +19,20 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.unit.dp
-import io.voodoo.apps.ads.api.model.Ad
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.voodoo.apps.ads.compose.model.AdClientHolder
-import io.voodoo.apps.ads.compose.model.AdHolder
-import io.voodoo.apps.ads.compose.util.getAdFetchResults
+import io.voodoo.apps.ads.compose.util.AdClientStatus
+import io.voodoo.apps.ads.compose.util.getAvailableAdCountFlow
+import io.voodoo.apps.ads.compose.util.getStatus
 import io.voodoo.apps.ads.feature.ads.RewardedAdClientFactory
 import io.voodoo.apps.ads.util.activity
-import kotlinx.coroutines.flow.conflate
-import kotlinx.coroutines.flow.filterIsInstance
-import kotlinx.coroutines.flow.filterNotNull
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.isActive
 
 @Composable
 fun ProfileScreen(
@@ -71,42 +68,50 @@ private fun ProfileContent(
     Column(modifier = modifier.padding(16.dp)) {
         val activity = LocalContext.current.activity
         val container = LocalView.current
+
         val clientHolder = remember { AdClientHolder(RewardedAdClientFactory().create(activity)) }
-        var ad by remember { mutableStateOf<AdHolder<Ad.Rewarded>?>(null) }
 
-        // TODO WIP: real API in compose module to work with rewarded (auto fetch with retry, ...)
+        // Infinite load retry
         LaunchedEffect(Unit) {
-            snapshotFlow { ad }
-                .conflate()
-                .collect {
-                    if (it == null) {
-                        clientHolder.fetchAd()
-                    }
+            while (isActive) {
+                clientHolder
+                    .getAvailableAdCountFlow()
+                    .firstOrNull { it.total == 0 }
+
+                // Note: if a fetchAd is made elsewhere, this will loop retry
+                while (clientHolder.getAvailableAdCount().total == 0) {
+                    runCatching { clientHolder.fetchAd() }
                 }
+            }
         }
 
-        LaunchedEffect(clientHolder) {
-            clientHolder.getAdFetchResults()
-                .map { it.getOrNull() }
-                .filterIsInstance<Ad.Rewarded>()
-                .filterNotNull()
-                .collect {
-                    ad = it.let(::AdHolder)
-                }
-        }
+        val clientStatus by clientHolder.getStatus(loadOnce = true)
+            .collectAsStateWithLifecycle(AdClientStatus.Loading)
 
         Button(
-            enabled = ad != null,
+            enabled = clientStatus !is AdClientStatus.Ready,
             onClick = {
-                ad?.ad?.render(container)
-                ad = null
+                try {
+                    val ad = checkNotNull(clientHolder.getAvailableAd())
+                    ad.render(container)
+                } catch (e: Exception) {
+                    Log.e("ProfileScreen", "Failed to play ad")
+                }
             },
             modifier = Modifier.widthIn(240.dp)
         ) {
-            if (ad == null) {
-                CircularProgressIndicator(modifier = Modifier.size(24.dp))
-            } else {
-                Text("Play ad")
+            when (clientStatus) {
+                AdClientStatus.Loading -> {
+                    CircularProgressIndicator(modifier = Modifier.size(24.dp))
+                }
+
+                AdClientStatus.Ready -> {
+                    Text("Play ad")
+                }
+
+                AdClientStatus.Error -> {
+                    Text("Error")
+                }
             }
         }
     }
