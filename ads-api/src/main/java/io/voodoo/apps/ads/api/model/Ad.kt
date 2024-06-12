@@ -30,11 +30,13 @@ sealed class Ad {
         val adUnit: String,
         val network: String,
         val revenue: Double,
+        val revenuePrecision: String,
         val cohortId: String?,
         val creativeId: String?,
         val placement: String?,
         val reviewCreativeId: String?,
         val formatLabel: String?,
+        val requestLatencyMillis: Long,
     )
 
     enum class ModerationResult(val analyticsValue: String) {

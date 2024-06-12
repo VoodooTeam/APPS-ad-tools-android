@@ -69,7 +69,6 @@
         app:cornerRadius="16dp"
         app:layout_constraintTop_toBottomOf="@id/lbl_subtitle">
 
-        <!-- Useless according to gautier, so we hide it -->
         <TextView
             android:id="@+id/advertiser_textView"
             android:layout_width="wrap_content"
@@ -77,16 +76,21 @@
             android:layout_marginHorizontal="16dp"
             android:textColor="#CCC2DC"
             android:textSize="11sp"
-            android:visibility="gone"
             tools:text="Sponsored by AppLovin" />
 
-        <FrameLayout
-            android:id="@+id/media_view_container"
+        <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="#0E0E0E"
-            tools:foreground="#805B5B"
-            tools:layout_height="200dp" />
+            android:layout_height="wrap_content">
+
+            <FrameLayout
+                android:id="@+id/media_view_container"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:background="#0E0E0E"
+                app:layout_constraintDimensionRatio="3:4"
+                app:layout_constraintTop_toTopOf="parent"
+                tools:foreground="#805B5B" />
+        </androidx.constraintlayout.widget.ConstraintLayout>
 
         <Button
             android:id="@+id/cta_button"

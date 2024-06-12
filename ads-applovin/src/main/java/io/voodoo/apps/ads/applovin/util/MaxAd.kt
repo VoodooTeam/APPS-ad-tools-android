@@ -11,11 +11,13 @@ fun MaxAd.buildInfo(): Ad.Info {
         adUnit = this.adUnitId,
         network = this.networkName,
         revenue = this.revenue,
+        revenuePrecision = this.revenuePrecision,
         cohortId = this.waterfall?.testName,
         creativeId = this.creativeId,
         placement = this.placement,
         reviewCreativeId = this.adReviewCreativeId,
         formatLabel = this.format?.label,
+        requestLatencyMillis = this.requestLatencyMillis,
     )
 }
 
