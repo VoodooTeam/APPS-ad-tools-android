@@ -151,8 +151,8 @@ class MaxMRECAdClient(
 
         runPlugin { it.onAdLoaded(view, ad) }
         Log.i("MaxMRECAdClient", "fetchAd success")
-        runLoadingListeners { it.onAdLoadingFinished(ad) }
         addLoadedAd(ad)
+        runLoadingListeners { it.onAdLoadingFinished(ad) }
         return ad
     }
 
@@ -187,6 +187,10 @@ class MaxMRECAdClient(
     // TODO: the ad value could change before apphrbr listener call
     //  thus calling this listener with incorrect ad
     private fun markAdAsBlocked(view: MaxAdView, reasons: Array<AdBlockReason>) {
+        Log.e(
+            "MaxMRECAdClient",
+            "Ad blocked: ${reasons.joinToString { it.reason }}"
+        )
         val ad = findAdOrNull { it.view === view } ?: return
 
         // Ad was already moderated, drop event
@@ -197,6 +201,7 @@ class MaxMRECAdClient(
         }
         ad.apphrbrModerationResult = moderationResult
         runModerationListener { it.onAdBlocked(ad) }
+        checkAndNotifyAvailableAdCountChanges()
     }
 
     private inline fun runPlugin(body: (MaxMRECAdClientPlugin) -> Unit) {

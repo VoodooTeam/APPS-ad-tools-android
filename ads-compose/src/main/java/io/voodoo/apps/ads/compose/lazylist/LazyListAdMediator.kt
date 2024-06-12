@@ -151,7 +151,7 @@ class LazyListAdMediator internal constructor(
             return
         }
 
-        val availableAdCount = arbitrageur.getAvailableAdCount()
+        val availableAdCount = arbitrageur.getAvailableAdCount().notLocked
         val insertedNextAdCount = adIndices.count { it > firstVisibleItemIndex }
         val adsToInsert = (availableAdCount - insertedNextAdCount).coerceAtLeast(0)
         Log.d("LazyListAdMediator", "checkAndInsertAvailableAds insert $adsToInsert ads")

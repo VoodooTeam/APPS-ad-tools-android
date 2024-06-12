@@ -56,6 +56,13 @@ class MaxNativeAdClient(
             runRevenueListener { it.onAdRevenuePaid(adWrapper) }
         }
 
+        maxNativeAdListener.add(object : MaxNativeAdListener() {
+            override fun onNativeAdExpired(ad: MaxAd) {
+                // ad expired, can't be served anymore
+                checkAndNotifyAvailableAdCountChanges()
+            }
+        })
+
         (activity as? LifecycleOwner)?.lifecycle?.let(::registerToLifecycle)
     }
 
@@ -150,8 +157,8 @@ class MaxNativeAdClient(
         }
 
         Log.i("MaxNativeAdClient", "fetchAd success")
-        runLoadingListeners { it.onAdLoadingFinished(ad) }
         addLoadedAd(ad)
+        runLoadingListeners { it.onAdLoadingFinished(ad) }
         return ad
     }
 }
