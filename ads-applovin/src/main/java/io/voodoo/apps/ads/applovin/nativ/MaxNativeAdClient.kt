@@ -84,7 +84,7 @@ class MaxNativeAdClient(
     }
 
     /** see https://developers.applovin.com/en/android/ad-formats/native-ads#templates */
-    override suspend fun fetchAd(vararg localExtras: Pair<String, Any>): MaxNativeAdWrapper {
+    override suspend fun fetchAdSafe(vararg localExtras: Pair<String, Any>): MaxNativeAdWrapper {
         runLoadingListeners { it.onAdLoadingStarted(type) }
 
         val reusedAd = getReusableAd()

@@ -108,7 +108,7 @@ class MaxRewardedAdClient(
     }
 
     /** see https://developers.applovin.com/en/android/ad-formats/banner-Rewarded-ads/ */
-    override suspend fun fetchAd(vararg localExtras: Pair<String, Any>): MaxRewardedAdWrapper {
+    override suspend fun fetchAdSafe(vararg localExtras: Pair<String, Any>): MaxRewardedAdWrapper {
         require(getAvailableAdCount().total == 0) { "Only one ad can be loaded at a time" }
 
         runLoadingListeners { it.onAdLoadingStarted(type) }

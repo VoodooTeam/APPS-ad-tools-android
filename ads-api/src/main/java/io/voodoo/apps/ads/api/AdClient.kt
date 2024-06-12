@@ -12,6 +12,8 @@ import io.voodoo.apps.ads.api.listener.AdModerationListener
 import io.voodoo.apps.ads.api.listener.AdRevenueListener
 import io.voodoo.apps.ads.api.listener.OnAvailableAdCountChangedListener
 import io.voodoo.apps.ads.api.model.Ad
+import io.voodoo.apps.ads.api.model.AdAlreadyLoadingException
+import kotlinx.coroutines.sync.Mutex
 import java.io.Closeable
 import java.util.concurrent.CopyOnWriteArraySet
 
@@ -56,6 +58,9 @@ interface AdClient<T : Ad> : Closeable, AdListenerHolder {
      * call once the UI component is removed from the hierarchy (composable/view from window)
      */
     fun releaseAd(ad: Ad)
+
+    /** @return true if a fetch operation is in progress, false otherwise */
+    fun isRequestInProgress(): Boolean
 
     /**
      * trigger a new ad load
@@ -105,6 +110,8 @@ abstract class BaseAdClient<ActualType : PublicType, PublicType : Ad>(
         CopyOnWriteArraySet<OnAvailableAdCountChangedListener>()
 
     private var lastNotifiedAvailableAdCount = AdClient.AdCount.ZERO
+
+    private val mutex = Mutex()
 
     init {
         require(config.adCacheSize > 0) { "adCacheSize must be > 0" }
@@ -199,6 +206,22 @@ abstract class BaseAdClient<ActualType : PublicType, PublicType : Ad>(
                 ?.also { checkAndNotifyAvailableAdCountChanges() }
         }
     }
+
+    override fun isRequestInProgress(): Boolean = mutex.isLocked
+
+    final override suspend fun fetchAd(vararg localExtras: Pair<String, Any>): PublicType {
+        return if (mutex.tryLock()) {
+            try {
+                fetchAdSafe(*localExtras)
+            } finally {
+                mutex.unlock()
+            }
+        } else {
+            throw AdAlreadyLoadingException()
+        }
+    }
+
+    protected abstract suspend fun fetchAdSafe(vararg localExtras: Pair<String, Any>): ActualType
 
     override fun releaseAd(ad: Ad) {
         synchronized(loadedAds) {

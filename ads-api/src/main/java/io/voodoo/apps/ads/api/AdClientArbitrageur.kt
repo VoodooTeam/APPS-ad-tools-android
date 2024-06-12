@@ -10,10 +10,10 @@ import io.voodoo.apps.ads.api.listener.AdModerationListener
 import io.voodoo.apps.ads.api.listener.AdRevenueListener
 import io.voodoo.apps.ads.api.listener.OnAvailableAdCountChangedListener
 import io.voodoo.apps.ads.api.model.Ad
+import io.voodoo.apps.ads.api.model.AdAlreadyLoadingException
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.supervisorScope
-import kotlinx.coroutines.sync.Mutex
 import java.io.Closeable
 import java.util.concurrent.CopyOnWriteArraySet
 
@@ -24,7 +24,6 @@ class AdClientArbitrageur(
 ) : Closeable, AdListenerHolder {
 
     private val clients = clients.toList()
-    private val mutexByClientMap = clients.associateWith { Mutex() }
 
     private val clientIndexByRequestIdMap = mutableMapOf<String, Int>()
     private val clientIndexByAdIdMap = mutableMapOf<Ad.Id, Int>()
@@ -160,20 +159,10 @@ class AdClientArbitrageur(
         clients
             .map { client ->
                 async {
-                    val mutex = mutexByClientMap[client] ?: return@async null
-
                     if (client.getAvailableAdCount().notLocked < requiredAvailableAdCount) {
-                        // lock to prevent simultaneous requests
-                        if (mutex.tryLock()) {
-                            try {
-                                runCatching { client.fetchAd(*localExtras) }
-                            } finally {
-                                mutex.unlock()
-                            }
-                        } else {
-                            // Request already in progress in another call
-                            null
-                        }
+                        runCatching { client.fetchAd(*localExtras) }
+                            // client will throw AdAlreadyLoadingException if already loading
+                            .takeIf { it.exceptionOrNull() !is AdAlreadyLoadingException }
                     } else {
                         // No fetch needed
                         null
