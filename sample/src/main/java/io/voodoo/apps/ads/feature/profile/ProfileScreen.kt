@@ -89,7 +89,7 @@ private fun ProfileContent(
             .collectAsStateWithLifecycle(AdClientStatus.Loading)
 
         Button(
-            enabled = clientStatus !is AdClientStatus.Ready,
+            enabled = clientStatus is AdClientStatus.Ready,
             onClick = {
                 try {
                     val ad = checkNotNull(clientHolder.getAvailableAd())
