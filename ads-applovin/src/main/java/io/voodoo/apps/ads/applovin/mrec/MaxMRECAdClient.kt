@@ -78,7 +78,7 @@ class MaxMRECAdClient(
     }
 
     /** see https://developers.applovin.com/en/android/ad-formats/banner-mrec-ads/ */
-    override suspend fun fetchAd(vararg localExtras: Pair<String, Any>): MaxMRECAdWrapper {
+    override suspend fun fetchAdSafe(vararg localExtras: Pair<String, Any>): MaxMRECAdWrapper {
         runLoadingListeners { it.onAdLoadingStarted(type) }
 
         val reusedAd = getReusableAd()

@@ -19,6 +19,8 @@ class NoOpAdClient : AdClient<NoOpMRECAd> {
         // no-op
     }
 
+    override fun isRequestInProgress(): Boolean = false
+
     override suspend fun fetchAd(vararg localExtras: Pair<String, Any>): NoOpMRECAd {
         throw NotImplementedError("no op")
     }
