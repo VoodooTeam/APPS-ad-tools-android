@@ -36,17 +36,22 @@ fun rememberLazyListAdMediator(
     lazyListState: LazyListState?,
     adClientArbitrageur: AdClientArbitrageurHolder?,
     adInterval: Int,
+    adPreferredInitialIndex: Int = adInterval,
+    adRequiredMinInitialIndex: Int = 1,
 ): LazyListAdMediator {
     return rememberSaveable(saver = LazyListAdMediator.Saver) {
         LazyListAdMediator(
             lazyListState = lazyListState,
             adClientArbitrageur = adClientArbitrageur,
             adInterval = adInterval,
+            adPreferredInitialIndex = adPreferredInitialIndex,
+            adRequiredMinInitialIndex = adRequiredMinInitialIndex,
         )
     }.apply {
         this.lazyListState = lazyListState
         this.adClientArbitrageur = adClientArbitrageur
         this.adInterval = adInterval
+        this.adPreferredInitialIndex = this.adPreferredInitialIndex
     }
 }
 
@@ -56,6 +61,8 @@ class LazyListAdMediator internal constructor(
     adClientArbitrageur: AdClientArbitrageurHolder?,
     adInterval: Int,
     adIndices: IntArray = intArrayOf(),
+    adPreferredInitialIndex: Int,
+    adRequiredMinInitialIndex: Int
 ) {
 
     var lazyListState by mutableStateOf(lazyListState)
@@ -69,6 +76,9 @@ class LazyListAdMediator internal constructor(
 
     /** number of actual items (without the ads) */
     var itemCount by mutableIntStateOf(0)
+
+    var adPreferredInitialIndex by mutableIntStateOf(adPreferredInitialIndex)
+    var adRequiredMinInitialIndex by mutableIntStateOf(adRequiredMinInitialIndex)
 
     private val adIndices = mutableStateListOf(*adIndices.toTypedArray())
     private val latestAdIndex get() = adIndices.lastOrNull()
@@ -165,14 +175,16 @@ class LazyListAdMediator internal constructor(
         val lastRenderedItem =
             lazyListState?.layoutInfo?.visibleItemsInfo?.maxByOrNull { it.index }?.index ?: 0
         val totalItemCount = totalItemCount
+        val latestAdIndex = latestAdIndex
+
         val index = max(
             (lastRenderedItem + 1)
-                .coerceAtLeast(adInterval)
+                .coerceAtLeast(adPreferredInitialIndex)
                 .coerceAtMost(totalItemCount),
             latestAdIndex?.plus(adInterval + 1) ?: Int.MIN_VALUE
         )
 
-        if (index !in 1..totalItemCount) {
+        if (index !in adRequiredMinInitialIndex..totalItemCount) {
             // We can't display the ad
             Log.d("LazyListAdMediator", "can't insert ad at $index")
             return
@@ -198,6 +210,8 @@ class LazyListAdMediator internal constructor(
                 listOf(
                     it.adInterval,
                     it.adIndices.toIntArray(),
+                    it.adPreferredInitialIndex,
+                    it.adRequiredMinInitialIndex,
                 )
             },
             restore = {
@@ -206,6 +220,8 @@ class LazyListAdMediator internal constructor(
                     adClientArbitrageur = null,
                     adInterval = it[0] as Int,
                     adIndices = it[1] as IntArray,
+                    adPreferredInitialIndex = it[2] as Int,
+                    adRequiredMinInitialIndex = it[3] as Int
                 )
             }
         )

@@ -60,6 +60,7 @@ captures/
 .idea/compiler.xml
 .idea/vcs.xml
 .idea/inspectionProfiles/**
+.idea/other.xml
 
 # Keystore files
 # Uncomment the following lines if you do not want to check your keystore files in.
