@@ -77,7 +77,17 @@ class LazyListAdMediator internal constructor(
     /** number of actual items (without the ads) */
     var itemCount by mutableIntStateOf(0)
 
+    /**
+     * the first index to display an ad at
+     * (might not be respected if [itemCount] is less than this value and
+     * if [adRequiredMinInitialIndex] allows it
+     */
     var adPreferredInitialIndex by mutableIntStateOf(adPreferredInitialIndex)
+
+    /**
+     * the enforced minimum index to display an ad at.
+     * this is useful if your [itemCount] is less than [adPreferredInitialIndex]
+     */
     var adRequiredMinInitialIndex by mutableIntStateOf(adRequiredMinInitialIndex)
 
     private val adIndices = mutableStateListOf(*adIndices.toTypedArray())
@@ -175,7 +185,6 @@ class LazyListAdMediator internal constructor(
         val lastRenderedItem =
             lazyListState?.layoutInfo?.visibleItemsInfo?.maxByOrNull { it.index }?.index ?: 0
         val totalItemCount = totalItemCount
-        val latestAdIndex = latestAdIndex
 
         val index = max(
             (lastRenderedItem + 1)
