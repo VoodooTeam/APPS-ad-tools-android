@@ -38,6 +38,7 @@ fun rememberLazyListAdMediator(
     adInterval: Int,
     adPreferredInitialIndex: Int = adInterval,
     adRequiredMinInitialIndex: Int = 1,
+    lazyListIndexOffset: Int = 0,
 ): LazyListAdMediator {
     return rememberSaveable(saver = LazyListAdMediator.Saver) {
         LazyListAdMediator(
@@ -46,12 +47,14 @@ fun rememberLazyListAdMediator(
             adInterval = adInterval,
             adPreferredInitialIndex = adPreferredInitialIndex,
             adRequiredMinInitialIndex = adRequiredMinInitialIndex,
+            lazyListIndexOffset = lazyListIndexOffset,
         )
     }.apply {
         this.lazyListState = lazyListState
         this.adClientArbitrageur = adClientArbitrageur
         this.adInterval = adInterval
-        this.adPreferredInitialIndex = this.adPreferredInitialIndex
+        this.adPreferredInitialIndex = adPreferredInitialIndex
+        this.lazyListIndexOffset = lazyListIndexOffset
     }
 }
 
@@ -62,7 +65,8 @@ class LazyListAdMediator internal constructor(
     adInterval: Int,
     adIndices: IntArray = intArrayOf(),
     adPreferredInitialIndex: Int,
-    adRequiredMinInitialIndex: Int
+    adRequiredMinInitialIndex: Int,
+    lazyListIndexOffset: Int,
 ) {
 
     var lazyListState by mutableStateOf(lazyListState)
@@ -89,6 +93,12 @@ class LazyListAdMediator internal constructor(
      * this is useful if your [itemCount] is less than [adPreferredInitialIndex]
      */
     var adRequiredMinInitialIndex by mutableIntStateOf(adRequiredMinInitialIndex)
+
+    /**
+     * offset for lazy list indices (useful when using the `LazyListScope.items` convenience function
+     * while having items added before
+     */
+    var lazyListIndexOffset by mutableIntStateOf(lazyListIndexOffset)
 
     private val adIndices = mutableStateListOf(*adIndices.toTypedArray())
     private val latestAdIndex get() = adIndices.lastOrNull()
@@ -162,7 +172,9 @@ class LazyListAdMediator internal constructor(
         val lazyListState = lazyListState ?: return
         val arbitrageur = adClientArbitrageur?.arbitrageur ?: return
 
-        val firstVisibleItemIndex = lazyListState.firstVisibleItemIndex
+        val firstVisibleItemIndex =
+            (lazyListState.firstVisibleItemIndex - lazyListIndexOffset)
+                .coerceAtLeast(0)
         if (
             firstVisibleItemIndex > (adIndices.firstOrNull() ?: Int.MAX_VALUE) &&
             firstVisibleItemIndex < (latestAdIndex ?: Int.MIN_VALUE)
@@ -183,7 +195,11 @@ class LazyListAdMediator internal constructor(
 
     private fun insertAdIndex() {
         val lastRenderedItem =
-            lazyListState?.layoutInfo?.visibleItemsInfo?.maxByOrNull { it.index }?.index ?: 0
+            lazyListState?.layoutInfo?.visibleItemsInfo
+                ?.maxByOrNull { it.index }?.index
+                ?.minus(lazyListIndexOffset)
+                ?.coerceAtLeast(0)
+                ?: 0
         val totalItemCount = totalItemCount
 
         val index = max(
@@ -221,6 +237,7 @@ class LazyListAdMediator internal constructor(
                     it.adIndices.toIntArray(),
                     it.adPreferredInitialIndex,
                     it.adRequiredMinInitialIndex,
+                    it.lazyListIndexOffset,
                 )
             },
             restore = {
@@ -230,7 +247,8 @@ class LazyListAdMediator internal constructor(
                     adInterval = it[0] as Int,
                     adIndices = it[1] as IntArray,
                     adPreferredInitialIndex = it[2] as Int,
-                    adRequiredMinInitialIndex = it[3] as Int
+                    adRequiredMinInitialIndex = it[3] as Int,
+                    lazyListIndexOffset = it[4] as Int,
                 )
             }
         )
