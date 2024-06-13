@@ -17,6 +17,7 @@ import com.sourcepoint.cmplibrary.model.PMTab
 import com.sourcepoint.cmplibrary.model.exposed.ActionType
 import com.sourcepoint.cmplibrary.model.exposed.SPConsents
 import com.sourcepoint.cmplibrary.model.exposed.SpConfig
+import com.sourcepoint.cmplibrary.util.clearAllData
 import io.voodoo.apps.privacy.config.CmpPurpose
 import io.voodoo.apps.privacy.config.CmpPurposeHelper
 import io.voodoo.apps.privacy.config.CmpVendorHelper
@@ -246,6 +247,12 @@ class VoodooPrivacyManager(
         } else
             status
         onStatusUpdate?.invoke(consentStatus)
+    }
+
+    fun clearConsent() {
+        clearAllData(context = currentActivity)
+        receivedConsent = null
+        setConsentStatus(ConsentStatus.NA)
     }
 
     internal inner class LocalClient : SpClient {
