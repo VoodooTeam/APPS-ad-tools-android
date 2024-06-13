@@ -3,6 +3,7 @@ package io.voodoo.apps.ads
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.compose.foundation.layout.fillMaxSize
@@ -10,6 +11,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -54,6 +58,8 @@ class MainActivity : ComponentActivity() {
         )
     }
 
+    private val _isConsentUiShown = mutableStateOf(false)
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -65,6 +71,9 @@ class MainActivity : ComponentActivity() {
             ) {
                 MainActivityContent()
             }
+        }
+        voodooConsentManager.setOnStatusUpdate {
+            _isConsentUiShown.value = it == VoodooPrivacyManager.ConsentStatus.UI_SHOWN
         }
         voodooConsentManager.initializeConsent()
     }
@@ -79,6 +88,7 @@ class MainActivity : ComponentActivity() {
                 surface = Color.Black
             )
         ) {
+            val isConsentUiShown by remember { _isConsentUiShown }
             val adsEnabled = AdsInitiliazer.adsEnabled.collectAsStateWithLifecycle().value
 
             AppNavHost(
@@ -93,6 +103,10 @@ class MainActivity : ComponentActivity() {
                     voodooConsentManager.changePrivacyConsent()
                 }
             )
+
+            BackHandler(enabled = isConsentUiShown) {
+                voodooConsentManager.closeIfVisible()
+            }
         }
     }
 
