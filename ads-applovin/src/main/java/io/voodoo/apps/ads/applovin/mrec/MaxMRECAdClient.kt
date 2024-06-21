@@ -3,9 +3,7 @@ package io.voodoo.apps.ads.applovin.mrec
 import android.app.Activity
 import android.graphics.Color
 import android.util.Log
-import android.view.LayoutInflater
 import android.view.ViewGroup
-import androidx.annotation.LayoutRes
 import androidx.lifecycle.LifecycleOwner
 import com.appharbr.sdk.engine.AdBlockReason
 import com.appharbr.sdk.engine.AdResult
@@ -36,7 +34,6 @@ import kotlin.coroutines.resumeWithException
 class MaxMRECAdClient(
     config: AdClient.Config,
     private val activity: Activity,
-    @LayoutRes private val viewRes: Int,
     plugins: List<MaxMRECAdClientPlugin> = emptyList(),
     localExtrasProviders: List<LocalExtrasProvider> = emptyList(),
 ) : BaseAdClient<MaxMRECAdWrapper, Ad.MREC>(config = config) {
@@ -161,8 +158,7 @@ class MaxMRECAdClient(
 
     private suspend fun createView(activity: Activity): MaxAdView {
         return withContext(Dispatchers.Main.immediate) {
-            (LayoutInflater.from(activity).inflate(viewRes, null) as MaxAdView).apply {
-                // MaxAdView(config.adUnit, MaxAdFormat.MREC, activity).apply {
+            MaxAdView(config.adUnit, MaxAdFormat.MREC, activity).apply {
                 val widthPx = AppLovinSdkUtils.dpToPx(activity, 300)
                 val heightPx = AppLovinSdkUtils.dpToPx(activity, 250)
                 layoutParams = ViewGroup.LayoutParams(widthPx, heightPx)
