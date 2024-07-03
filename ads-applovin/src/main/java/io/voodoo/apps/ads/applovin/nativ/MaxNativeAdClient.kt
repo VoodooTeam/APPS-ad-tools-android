@@ -73,6 +73,7 @@ class MaxNativeAdClient(
     }
 
     override fun destroyAd(ad: MaxNativeAdWrapper) {
+        Log.w("AdClient", "destroyAd ${ad.id}")
         loader.destroy(ad.ad)
     }
 
@@ -144,6 +145,8 @@ class MaxNativeAdClient(
                 throw e
             }
         }
+
+        reusedAd?.let(::destroyAd)
 
         if (ad.isBlocked) {
             runModerationListener { it.onAdBlocked(ad) }

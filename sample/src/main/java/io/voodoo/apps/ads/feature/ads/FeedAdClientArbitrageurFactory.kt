@@ -21,7 +21,10 @@ class FeedAdClientArbitrageurFactory {
 
     fun create(activity: ComponentActivity): AdClientArbitrageur {
         return AdClientArbitrageur(
-            clients = listOf(createNativeClient(activity), createMRECClient(activity))
+            clients = listOf(
+                createNativeClient(activity),
+                createMRECClient(activity),
+            )
         ).also {
             it.registerToLifecycle(activity.lifecycle)
 

@@ -70,6 +70,7 @@ class MaxMRECAdClient(
     }
 
     override fun destroyAd(ad: MaxMRECAdWrapper) {
+        Log.w("AdClient", "destroyAd ${ad.id}")
         if (useModeration) {
             AppHarbr.removeBannerView(ad.view)
         }
