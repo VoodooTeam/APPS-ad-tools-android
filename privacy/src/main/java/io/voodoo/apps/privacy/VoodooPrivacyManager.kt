@@ -45,6 +45,7 @@ class VoodooPrivacyManager(
     private var forceAutoShow = false
     private var consentStatus: ConsentStatus = ConsentStatus.NA
     private var receivedConsent: SPConsents? = null
+    private var isInitializing = false
 
     init {
         lifecycleOwner.lifecycle.addObserver(this)
@@ -145,10 +146,10 @@ class VoodooPrivacyManager(
      * Initialize the consent manager and download the FTL message
      */
     fun initializeConsent() {
-        if (isPrivacyInitialized || isInitializing) return
-        if (BuildConfig.DEBUG) {
-            Log.i("VoodooPrivacyManager", "Initialization started")
+        if ((isPrivacyInitialized && receivedConsent != null) || isInitializing) {
+            return
         }
+
         isInitializing = true
         loadMessage()
     }
@@ -253,10 +254,6 @@ class VoodooPrivacyManager(
     }
 
     private fun setConsentStatus(status: ConsentStatus) {
-        if (BuildConfig.DEBUG) {
-            Log.i("VoodooPrivacyManager", "Consent Status: $status")
-        }
-
         consentStatus = if (status == ConsentStatus.RECEIVED && !isPrivacyApplies()) {
             ConsentStatus.NON_APPLICABLE
         } else
@@ -303,6 +300,7 @@ class VoodooPrivacyManager(
             onError?.invoke(error)
         }
 
+        @Deprecated("Will be removed in next version of SP")
         override fun onMessageReady(message: JSONObject) {
 
         }
@@ -345,7 +343,6 @@ class VoodooPrivacyManager(
 
     companion object {
         var isPrivacyInitialized = false
-        var isInitializing = false
         var weakRefConsent: WeakReference<SPConsents>? = null
     }
 }
