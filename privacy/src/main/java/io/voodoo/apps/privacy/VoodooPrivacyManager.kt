@@ -193,7 +193,7 @@ class VoodooPrivacyManager(
         this.onError = onError
     }
 
-    private fun getPrivacyConsent(): VoodooPrivacyConsent {
+    fun getPrivacyConsent(): VoodooPrivacyConsent {
         return VoodooPrivacyConsent(
             adConsent = CmpPurposeHelper.get(CmpPurpose.STORE_AND_ACCESS_INFO_ON_DEVICE) &&
                     CmpPurposeHelper.get(CmpPurpose.USE_LIMITED_DATA_TO_SELECT_ADVERTISING) &&
