@@ -19,7 +19,7 @@ dependencies {
     implementation(libs.androidx.lifecycle.common.java8)
 
     //noinspection UseTomlInstead
-    implementation("com.sourcepoint.cmplibrary:cmplibrary:7.8.4")
+    implementation("com.sourcepoint.cmplibrary:cmplibrary:7.8.5")
     //noinspection UseTomlInstead
     implementation("com.google.code.gson:gson:2.11.0")
 }
