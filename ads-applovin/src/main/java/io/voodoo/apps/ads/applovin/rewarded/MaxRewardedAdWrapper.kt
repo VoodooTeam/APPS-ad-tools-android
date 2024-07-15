@@ -13,10 +13,11 @@ import io.voodoo.apps.ads.applovin.util.toModerationResult
 class MaxRewardedAdWrapper internal constructor(
     val ad: MaxAd,
     internal val loader: MaxRewardedAd,
+    private val placement: String?,
 ) : Ad.Rewarded() {
 
     override val id: Id = ad.id
-    override val info: Info = ad.buildInfo()
+    override val info: Info = ad.buildInfo(placement = placement)
 
     internal var apphrbrModerationResult: AdResult? = null
     override val moderationResult: ModerationResult?
@@ -30,7 +31,7 @@ class MaxRewardedAdWrapper internal constructor(
     }
 
     override fun render(parent: View) {
-        loader.showAd(loader.activity)
+        loader.showAd(placement, loader.activity)
         markAsRendered()
     }
 

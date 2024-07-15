@@ -71,6 +71,7 @@ interface AdClient<T : Ad> : Closeable, AdListenerHolder {
          */
         @IntRange(from = 1) val adCacheSize: Int,
         val adUnit: String,
+        val placement: String? = null,
     )
 }
 

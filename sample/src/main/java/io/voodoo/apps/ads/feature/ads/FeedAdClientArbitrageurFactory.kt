@@ -38,7 +38,8 @@ class FeedAdClientArbitrageurFactory {
         return MaxNativeAdClient(
             config = AdClient.Config(
                 adCacheSize = 3,
-                adUnit = MockData.NATIVE_AD_UNIT
+                adUnit = MockData.NATIVE_AD_UNIT,
+                placement = "feed"
             ),
             activity = activity,
             renderListener = MaxNativeAdRenderListener(),
@@ -52,7 +53,8 @@ class FeedAdClientArbitrageurFactory {
         return MaxMRECAdClient(
             config = AdClient.Config(
                 adCacheSize = 3,
-                adUnit = MockData.MREC_AD_UNIT
+                adUnit = MockData.MREC_AD_UNIT,
+                placement = "feed"
             ),
             activity = activity,
             plugins = listOf(AmazonMRECAdClientPlugin(MockData.AMAZON_SLOT_ID)),

@@ -80,7 +80,11 @@ class MaxRewardedAdClient(
                     val callback = object : DefaultMaxRewardedAdListener() {
                         override fun onAdLoaded(ad: MaxAd) {
                             maxRewardedAdListener.remove(this)
-                            val adWrapper = MaxRewardedAdWrapper(ad = ad, loader = loader)
+                            val adWrapper = MaxRewardedAdWrapper(
+                                ad = ad,
+                                loader = loader,
+                                placement = config.placement
+                            )
                             try {
                                 continuation.resume(adWrapper)
                             } catch (e: Exception) {

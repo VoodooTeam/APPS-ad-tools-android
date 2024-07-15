@@ -173,6 +173,8 @@ class MaxMRECAdClient(
                     runRevenueListener { it.onAdRevenuePaid(adWrapper) }
                 }
 
+                config.placement?.let { placement = it }
+
                 if (useModeration) {
                     AppHarbr.addBannerView(
                         AdSdk.MAX,

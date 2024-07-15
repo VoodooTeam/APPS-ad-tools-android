@@ -57,6 +57,7 @@ class MaxNativeAdClient(
         }
 
         (activity as? LifecycleOwner)?.lifecycle?.let(::registerToLifecycle)
+        config.placement?.let { loader.placement = it }
     }
 
     fun addMaxNativeAdListener(listener: MaxNativeAdListener) {
