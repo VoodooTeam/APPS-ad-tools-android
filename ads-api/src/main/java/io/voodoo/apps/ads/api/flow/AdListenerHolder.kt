@@ -1,4 +1,4 @@
-package io.voodoo.apps.ads.compose.util
+package io.voodoo.apps.ads.api.flow
 
 import io.voodoo.apps.ads.api.AdClient
 import io.voodoo.apps.ads.api.listener.AdListenerHolder
@@ -14,7 +14,7 @@ import kotlinx.coroutines.flow.callbackFlow
 /**
  * @return a flow that'll emit every client's [AdClient.fetchAd] results
  */
-fun AdListenerHolder.getAdFetchResults(): Flow<Result<Ad>> {
+fun AdListenerHolder.getAdFetchResultFlow(): Flow<Result<Ad>> {
     return callbackFlow<Result<Ad>> {
         val listener = object : AdLoadingListener {
             override fun onAdLoadingStarted(type: Ad.Type) {

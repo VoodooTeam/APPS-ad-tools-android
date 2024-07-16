@@ -1,16 +1,14 @@
-package io.voodoo.apps.ads.compose.util
+package io.voodoo.apps.ads.api.flow
 
 import io.voodoo.apps.ads.api.AdClient
 import io.voodoo.apps.ads.api.listener.AdLoadingListener
 import io.voodoo.apps.ads.api.listener.OnAvailableAdCountChangedListener
 import io.voodoo.apps.ads.api.model.Ad
-import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.channels.trySendBlocking
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.buffer
 import kotlinx.coroutines.flow.callbackFlow
-import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.conflate
 
 fun AdClient<*>.isRequestInProgressFlow(): Flow<Boolean> {
     return callbackFlow {
@@ -32,7 +30,7 @@ fun AdClient<*>.isRequestInProgressFlow(): Flow<Boolean> {
         trySendBlocking(isRequestInProgress())
 
         awaitClose { removeAdLoadingListener(listener) }
-    }.buffer(capacity = 16, onBufferOverflow = BufferOverflow.DROP_OLDEST)
+    }.conflate()
 }
 
 /**
@@ -48,8 +46,7 @@ fun AdClient<*>.getAvailableAdCountFlow(): Flow<AdClient.AdCount> {
         trySendBlocking(getAvailableAdCount())
 
         awaitClose { removeOnAvailableAdCountChangedListener(listener) }
-    }.buffer(capacity = 1, onBufferOverflow = BufferOverflow.DROP_OLDEST)
-        .distinctUntilChanged()
+    }.conflate()
 }
 
 
@@ -64,20 +61,17 @@ sealed interface AdClientStatus {
  *
  * Note: this implementation is based on the assumption that the client is
  * configured with [AdClient.Config.adCacheSize] == 1.
- * A failure will always emit [io.voodoo.apps.ads.compose.util.AdClientStatus.Error] even if an ad is available.
+ *
+ * Note: A failure will always emit [io.voodoo.apps.ads.compose.util.AdClientStatus.Error] even if an ad is available.
  */
-fun <T : Ad> AdClient<T>.getStatus(loadOnce: Boolean): Flow<AdClientStatus> {
+fun <T : Ad> AdClient<T>.getStatusFlow(): Flow<AdClientStatus> {
     return callbackFlow {
-        var failedOnce = false
         val loadingListener = object : AdLoadingListener {
             override fun onAdLoadingStarted(type: Ad.Type) {
-                if (!loadOnce || !failedOnce) {
-                    trySendBlocking(AdClientStatus.Loading)
-                }
+                trySendBlocking(AdClientStatus.Loading)
             }
 
             override fun onAdLoadingFailed(type: Ad.Type, exception: Exception) {
-                failedOnce = true
                 trySendBlocking(AdClientStatus.Error)
             }
 
@@ -98,8 +92,11 @@ fun <T : Ad> AdClient<T>.getStatus(loadOnce: Boolean): Flow<AdClientStatus> {
             getAvailableAdCount().total > 0 -> AdClientStatus.Ready
             isRequestInProgress() -> AdClientStatus.Loading
             else -> AdClientStatus.Error
-        }.also { trySendBlocking(it) }
+        }.let(::trySendBlocking)
 
-        awaitClose { removeAdLoadingListener(loadingListener) }
-    }.buffer(capacity = 16, onBufferOverflow = BufferOverflow.DROP_OLDEST)
+        awaitClose {
+            removeAdLoadingListener(loadingListener)
+            removeOnAvailableAdCountChangedListener(adCountListener)
+        }
+    }.conflate()
 }

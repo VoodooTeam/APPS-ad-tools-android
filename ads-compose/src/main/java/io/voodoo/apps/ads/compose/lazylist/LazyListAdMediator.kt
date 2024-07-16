@@ -19,9 +19,9 @@ import androidx.compose.runtime.saveable.listSaver
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
+import io.voodoo.apps.ads.api.flow.getAdFetchResultFlow
 import io.voodoo.apps.ads.api.model.Ad
 import io.voodoo.apps.ads.compose.model.AdClientArbitrageurHolder
-import io.voodoo.apps.ads.compose.util.getAdFetchResults
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.conflate
 import kotlinx.coroutines.flow.emptyFlow
@@ -252,7 +252,7 @@ inline fun LazyListAdMediator.AdFetchResultEffect(
 ) {
     LaunchedEffect(this) {
         snapshotFlow { adClientArbitrageur?.arbitrageur }
-            .flatMapLatest { it?.getAdFetchResults() ?: emptyFlow() }
+            .flatMapLatest { it?.getAdFetchResultFlow() ?: emptyFlow() }
             .filter { it.isSuccess }
             .collect {
                 body()

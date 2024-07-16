@@ -63,7 +63,7 @@ interface AdClient<T : Ad> : Closeable, AdListenerHolder {
     fun isRequestInProgress(): Boolean
 
     /**
-     * trigger a new ad load
+     * Load a new ad
      *
      * Note: there's no limit to the number of ads that can be loaded,
      * if you call this 10 times, it'll load 10 different ads.
