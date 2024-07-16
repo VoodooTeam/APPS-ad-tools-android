@@ -73,7 +73,12 @@ class MaxRewardedAdClient(
         maxRewardedAdListener.add(object : DefaultMaxRewardedAdListener() {
             override fun onUserRewarded(ad: MaxAd, reward: MaxReward) {
                 val adWrapper = findAdOrNull { it.ad === ad }
-                    ?: MaxRewardedAdWrapper(ad, loader)
+                    ?: MaxRewardedAdWrapper(
+                        ad = ad,
+                        loader = loader,
+                        apphrbrModerationResult = null,
+                        placement = config.placement
+                    )
 
                 runRevenueListener { it.onAdRevenuePaid(adWrapper) }
             }
@@ -126,12 +131,12 @@ class MaxRewardedAdClient(
                             val adWrapper = MaxRewardedAdWrapper(
                                 ad = ad,
                                 loader = loader,
-                                placement = config.placement,
                                 apphrbrModerationResult = if (AppHarbr.isInitialized()) {
                                     loader.getRewardedAdModerationResult()
                                 } else {
                                     null
-                                }
+                                },
+                                placement = config.placement
                             )
                             try {
                                 continuation.resume(adWrapper)
