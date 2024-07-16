@@ -50,11 +50,7 @@ fun AdClient<*>.getAvailableAdCountFlow(): Flow<AdClient.AdCount> {
 }
 
 
-sealed interface AdClientStatus {
-    data object Loading : AdClientStatus
-    data object Error : AdClientStatus
-    data object Ready : AdClientStatus
-}
+enum class AdClientStatus { LOADING, ERROR, READY }
 
 /**
  * @return a flow that'll emit the [AdClientStatus]
@@ -64,24 +60,29 @@ sealed interface AdClientStatus {
  *
  * Note: A failure will always emit [io.voodoo.apps.ads.compose.util.AdClientStatus.Error] even if an ad is available.
  */
-fun <T : Ad> AdClient<T>.getStatusFlow(): Flow<AdClientStatus> {
+fun <T : Ad> AdClient<T>.getStatusFlow(
+    emitLoadingAfterError: Boolean = false
+): Flow<AdClientStatus> {
     return callbackFlow {
+        var errored = false
         val loadingListener = object : AdLoadingListener {
             override fun onAdLoadingStarted(type: Ad.Type) {
-                trySendBlocking(AdClientStatus.Loading)
+                if (!emitLoadingAfterError && errored) return
+                trySendBlocking(AdClientStatus.LOADING)
             }
 
             override fun onAdLoadingFailed(type: Ad.Type, exception: Exception) {
-                trySendBlocking(AdClientStatus.Error)
+                trySendBlocking(AdClientStatus.ERROR)
+                errored = true
             }
 
             override fun onAdLoadingFinished(ad: Ad) {
-                trySendBlocking(AdClientStatus.Ready)
+                trySendBlocking(AdClientStatus.READY)
             }
         }
         val adCountListener = OnAvailableAdCountChangedListener {
             if (it.total == 0) {
-                trySendBlocking(AdClientStatus.Loading)
+                trySendBlocking(AdClientStatus.LOADING)
             }
         }
 
@@ -89,9 +90,9 @@ fun <T : Ad> AdClient<T>.getStatusFlow(): Flow<AdClientStatus> {
         addOnAvailableAdCountChangedListener(adCountListener)
 
         when {
-            getAvailableAdCount().total > 0 -> AdClientStatus.Ready
-            isRequestInProgress() -> AdClientStatus.Loading
-            else -> AdClientStatus.Error
+            getAvailableAdCount().total > 0 -> AdClientStatus.READY
+            isRequestInProgress() -> AdClientStatus.LOADING
+            else -> AdClientStatus.ERROR
         }.let(::trySendBlocking)
 
         awaitClose {

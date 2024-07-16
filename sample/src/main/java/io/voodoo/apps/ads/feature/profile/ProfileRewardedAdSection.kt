@@ -30,7 +30,6 @@ import io.voodoo.apps.ads.feature.ads.RewardedAdClientFactory
 import io.voodoo.apps.ads.util.activity
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.firstOrNull
-import kotlinx.coroutines.flow.runningReduce
 import kotlinx.coroutines.isActive
 import kotlin.time.Duration.Companion.seconds
 
@@ -76,17 +75,8 @@ fun ProfileRewardedAdSection(
         }
 
         // Collect status (loading/error/ready)
-        val clientStatus by remember {
-            clientHolder.getStatusFlow()
-                .runningReduce { acc, value ->
-                    // Keep error state even if a loading is starting
-                    if (acc == AdClientStatus.Error && value == AdClientStatus.Loading) {
-                        acc
-                    } else {
-                        value
-                    }
-                }
-        }.collectAsStateWithLifecycle(AdClientStatus.Loading)
+        val clientStatus by remember { clientHolder.getStatusFlow() }
+            .collectAsStateWithLifecycle(AdClientStatus.LOADING)
 
         Text(
             text = "Rewarded ad:",
@@ -94,7 +84,7 @@ fun ProfileRewardedAdSection(
         )
 
         Button(
-            enabled = clientStatus is AdClientStatus.Ready,
+            enabled = clientStatus == AdClientStatus.READY,
             onClick = {
                 try {
                     val ad = checkNotNull(clientHolder.getAvailableAd())
@@ -108,15 +98,15 @@ fun ProfileRewardedAdSection(
                 .align(Alignment.CenterHorizontally)
         ) {
             when (clientStatus) {
-                AdClientStatus.Loading -> {
+                AdClientStatus.LOADING -> {
                     CircularProgressIndicator(modifier = Modifier.size(24.dp))
                 }
 
-                AdClientStatus.Ready -> {
+                AdClientStatus.READY -> {
                     Text("Play ad ▶\uFE0F")
                 }
 
-                AdClientStatus.Error -> {
+                AdClientStatus.ERROR -> {
                     Text("⛔ Error ⛔")
                 }
             }
