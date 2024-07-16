@@ -50,7 +50,7 @@ class MaxRewardedAdClient(
 
     init {
         require(config.adCacheSize == 1) {
-            "Invalid adCacheSize. Only one rewarded ad can be loaded at a time. adCacheSize must be == 1."
+            "Invalid adCacheSize. Only one rewarded ad can be loaded at a time. adCacheSize must be 1."
         }
 
         val loaderListener = if (useModeration) {
@@ -115,6 +115,9 @@ class MaxRewardedAdClient(
     /** see https://developers.applovin.com/en/android/ad-formats/banner-Rewarded-ads/ */
     override suspend fun fetchAdSafe(vararg localExtras: Pair<String, Any>): MaxRewardedAdWrapper {
         require(getAvailableAdCount().total == 0) { "Only one ad can be loaded at a time" }
+
+        // Remove any previous ad from pool (but don't call destroyAd, applovin handles it itself)
+        getReusableAd()
 
         runLoadingListeners { it.onAdLoadingStarted(type) }
 
