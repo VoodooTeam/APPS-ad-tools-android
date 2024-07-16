@@ -5,6 +5,7 @@ import android.util.Log
 import android.view.View
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
+import com.example.cmplibrary.BuildConfig
 import com.sourcepoint.cmplibrary.NativeMessageController
 import com.sourcepoint.cmplibrary.SpClient
 import com.sourcepoint.cmplibrary.core.nativemessage.MessageStructure
@@ -17,12 +18,14 @@ import com.sourcepoint.cmplibrary.model.PMTab
 import com.sourcepoint.cmplibrary.model.exposed.ActionType
 import com.sourcepoint.cmplibrary.model.exposed.SPConsents
 import com.sourcepoint.cmplibrary.model.exposed.SpConfig
+import com.sourcepoint.cmplibrary.util.clearAllData
 import io.voodoo.apps.privacy.config.CmpPurpose
 import io.voodoo.apps.privacy.config.CmpPurposeHelper
 import io.voodoo.apps.privacy.config.CmpVendorHelper
 import io.voodoo.apps.privacy.config.SourcepointConfiguration
 import io.voodoo.apps.privacy.model.VoodooPrivacyConsent
 import org.json.JSONObject
+import java.lang.ref.WeakReference
 
 /**
  *
@@ -38,14 +41,19 @@ class VoodooPrivacyManager(
     private var onStatusUpdate: ((ConsentStatus) -> Unit)? = null
 ) : DefaultLifecycleObserver {
 
-    init {
-        lifecycleOwner.lifecycle.addObserver(this)
-    }
-
     private var doNotSellDataEnabled = false
     private var forceAutoShow = false
     private var consentStatus: ConsentStatus = ConsentStatus.NA
     private var receivedConsent: SPConsents? = null
+    private var isInitializing = false
+
+    init {
+        lifecycleOwner.lifecycle.addObserver(this)
+        if (weakRefConsent?.get() != null)
+            receivedConsent = weakRefConsent?.get()!!
+    }
+
+
     private val cmpConfig: SpConfig = config {
         accountId = sourcepointConfiguration.accountId
         propertyId = sourcepointConfiguration.propertyId
@@ -121,9 +129,28 @@ class VoodooPrivacyManager(
     }
 
     /**
+     * Close consent edit setting
+     *
+     * @return true if it was closed
+     */
+    fun closeIfVisible(): Boolean {
+        return viewToShow?.let {
+            spConsentLib.removeView(it)
+            setConsentStatus(ConsentStatus.NA)
+            viewToShow = null
+            true
+        } ?: false
+    }
+
+    /**
      * Initialize the consent manager and download the FTL message
      */
     fun initializeConsent() {
+        if ((isPrivacyInitialized && receivedConsent != null) || isInitializing) {
+            return
+        }
+
+        isInitializing = true
         loadMessage()
     }
 
@@ -153,13 +180,20 @@ class VoodooPrivacyManager(
     }
 
     /**
+     *
+     */
+    fun setOnStatusUpdate(onStatusUpdate: (ConsentStatus) -> Unit) {
+        this.onStatusUpdate = onStatusUpdate
+    }
+
+    /**
      * Set the onErrorCallback, onError will be called if there are an error when loading the consent
      */
     fun setOnError(onError: ((Throwable) -> Unit)) {
         this.onError = onError
     }
 
-    private fun getPrivacyConsent(): VoodooPrivacyConsent {
+    fun getPrivacyConsent(): VoodooPrivacyConsent {
         return VoodooPrivacyConsent(
             adConsent = CmpPurposeHelper.get(CmpPurpose.STORE_AND_ACCESS_INFO_ON_DEVICE) &&
                     CmpPurposeHelper.get(CmpPurpose.USE_LIMITED_DATA_TO_SELECT_ADVERTISING) &&
@@ -225,6 +259,17 @@ class VoodooPrivacyManager(
         } else
             status
         onStatusUpdate?.invoke(consentStatus)
+        if (status == ConsentStatus.RECEIVED || status == ConsentStatus.ERROR) {
+            isInitializing = false
+            if (status == ConsentStatus.RECEIVED) isPrivacyInitialized = true
+        }
+    }
+
+    fun clearConsent() {
+        clearAllData(context = currentActivity)
+        receivedConsent = null
+        weakRefConsent?.clear()
+        setConsentStatus(ConsentStatus.NA)
     }
 
     internal inner class LocalClient : SpClient {
@@ -234,13 +279,12 @@ class VoodooPrivacyManager(
         }
 
         override fun onUIReady(view: View) {
+            viewToShow = view
             setConsentStatus(ConsentStatus.UI_READY)
             if (autoShowPopup || forceAutoShow) {
                 setConsentStatus(ConsentStatus.UI_SHOWN)
                 spConsentLib.showView(view)
                 forceAutoShow = false
-            } else {
-                viewToShow = view
             }
             onUiReady?.invoke()
         }
@@ -256,6 +300,7 @@ class VoodooPrivacyManager(
             onError?.invoke(error)
         }
 
+        @Deprecated("Will be removed in next version of SP")
         override fun onMessageReady(message: JSONObject) {
 
         }
@@ -263,6 +308,10 @@ class VoodooPrivacyManager(
         override fun onConsentReady(consent: SPConsents) {
             processConsent(consent)
             receivedConsent = consent
+            if (weakRefConsent?.get() == null) {
+                weakRefConsent = WeakReference(consent)
+            }
+
             setConsentStatus(ConsentStatus.RECEIVED)
             onConsentReceived?.invoke(getPrivacyConsent())
         }
@@ -290,6 +339,11 @@ class VoodooPrivacyManager(
         UI_SHOWN,
         ERROR,
         RECEIVED
+    }
+
+    companion object {
+        var isPrivacyInitialized = false
+        var weakRefConsent: WeakReference<SPConsents>? = null
     }
 }
 

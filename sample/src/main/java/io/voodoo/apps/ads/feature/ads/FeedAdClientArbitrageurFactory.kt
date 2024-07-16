@@ -21,7 +21,10 @@ class FeedAdClientArbitrageurFactory {
 
     fun create(activity: ComponentActivity): AdClientArbitrageur {
         return AdClientArbitrageur(
-            clients = listOf(createNativeClient(activity), createMRECClient(activity))
+            clients = listOf(
+                createNativeClient(activity),
+                createMRECClient(activity),
+            )
         ).also {
             it.registerToLifecycle(activity.lifecycle)
 
@@ -35,7 +38,8 @@ class FeedAdClientArbitrageurFactory {
         return MaxNativeAdClient(
             config = AdClient.Config(
                 adCacheSize = 3,
-                adUnit = MockData.NATIVE_AD_UNIT
+                adUnit = MockData.NATIVE_AD_UNIT,
+                placement = "feed"
             ),
             activity = activity,
             renderListener = MaxNativeAdRenderListener(),
@@ -49,7 +53,8 @@ class FeedAdClientArbitrageurFactory {
         return MaxMRECAdClient(
             config = AdClient.Config(
                 adCacheSize = 3,
-                adUnit = MockData.MREC_AD_UNIT
+                adUnit = MockData.MREC_AD_UNIT,
+                placement = "feed"
             ),
             activity = activity,
             plugins = listOf(AmazonMRECAdClientPlugin(MockData.AMAZON_SLOT_ID)),

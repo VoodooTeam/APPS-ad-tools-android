@@ -64,6 +64,7 @@ class MaxNativeAdClient(
         })
 
         (activity as? LifecycleOwner)?.lifecycle?.let(::registerToLifecycle)
+        config.placement?.let { loader.placement = it }
     }
 
     fun addMaxNativeAdListener(listener: MaxNativeAdListener) {
@@ -80,6 +81,7 @@ class MaxNativeAdClient(
     }
 
     override fun destroyAd(ad: MaxNativeAdWrapper) {
+        Log.w("AdClient", "destroyAd ${ad.id}")
         loader.destroy(ad.ad)
     }
 
@@ -151,6 +153,8 @@ class MaxNativeAdClient(
                 throw e
             }
         }
+
+        reusedAd?.let(::destroyAd)
 
         if (ad.isBlocked) {
             runModerationListener { it.onAdBlocked(ad) }

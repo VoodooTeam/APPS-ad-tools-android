@@ -42,9 +42,12 @@ class MaxNativeAdWrapper internal constructor(
     }
 
     override fun render(parent: View) {
+        // safety in case the view is already render (shouldn't happen, but be safe)
+        release()
         require(parent is ViewGroup) { "parent is not a ViewGroup" }
 
         val view = viewPool.getOrCreate(parent.context)
+            .also { this.view = it }
         parent.addView(view)
 
         renderListener?.onPreRender(this, view)

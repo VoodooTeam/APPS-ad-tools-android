@@ -126,6 +126,7 @@ class MaxRewardedAdClient(
                             val adWrapper = MaxRewardedAdWrapper(
                                 ad = ad,
                                 loader = loader,
+                                placement = config.placement,
                                 apphrbrModerationResult = if (AppHarbr.isInitialized()) {
                                     loader.getRewardedAdModerationResult()
                                 } else {

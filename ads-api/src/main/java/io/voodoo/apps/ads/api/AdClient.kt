@@ -77,6 +77,7 @@ interface AdClient<T : Ad> : Closeable, AdListenerHolder {
          */
         @IntRange(from = 1) val adCacheSize: Int,
         val adUnit: String,
+        val placement: String? = null,
     )
 
     data class AdCount(val total: Int, val locked: Int) {
@@ -272,10 +273,7 @@ abstract class BaseAdClient<ActualType : PublicType, PublicType : Ad>(
 
     protected fun getReusableAd(): ActualType? {
         return synchronized(loadedAds) {
-            val servedAds = loadedAds.filter { !it.isAvailable() && !it.isLocked() }
-            // Since we want to keep N ads in memory, we don't re-use if we have less than that
-            if (servedAds.size < config.adCacheSize) return null
-            val ad = servedAds.firstOrNull() ?: return null
+            val ad = getAdsToDestroy().firstOrNull() ?: return null
 
             loadedAds.remove(ad)
             removeRequestIdMapping(listOf(ad.id))
@@ -297,11 +295,8 @@ abstract class BaseAdClient<ActualType : PublicType, PublicType : Ad>(
 
     private fun truncateAdCache() {
         synchronized(loadedAds) {
-            // Special case, make sure to keep at least once ad to be re-used for improved perf
-            if (loadedAds.size == 1) return
-
-            val servedAds = loadedAds.filter { !it.isAvailable() && !it.isLocked() }
-            val adsToDestroy = servedAds.dropLast(config.adCacheSize)
+            val adsToDestroy = getAdsToDestroy()
+            if (adsToDestroy.isEmpty()) return
 
             Log.d("AdClient", "Destroying ${adsToDestroy.size} ads")
             loadedAds.removeAll(adsToDestroy.toSet())
@@ -363,5 +358,17 @@ abstract class BaseAdClient<ActualType : PublicType, PublicType : Ad>(
         adIds: List<Ad.Id>
     ) {
         adIdByRequestIdMap -= adIdByRequestIdMap.filter { (_, adId) -> adId in adIds }.keys
+    }
+
+    /** unsafe threading, call in `syncrhonized(loadedAds)` block */
+    private fun getAdsToDestroy(): List<ActualType> {
+        val adsToDestroyCount = loadedAds.size - config.adCacheSize
+        if (adsToDestroyCount <= 0) return emptyList()
+
+        val servedAds = loadedAds.filter { !it.isAvailable() && !it.isLocked() }
+        return servedAds.take(adsToDestroyCount)
+            .also { ads ->
+                Log.v("AdClient", "getAdsToDestroy: " + ads.joinToString { it.id.id })
+            }
     }
 }

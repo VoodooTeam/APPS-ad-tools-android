@@ -6,7 +6,11 @@ import io.voodoo.apps.ads.api.model.Ad
 
 val MaxAd.id: Ad.Id get() = Ad.Id(System.identityHashCode(this).toString())
 
-fun MaxAd.buildInfo(): Ad.Info {
+fun MaxAd.buildInfo(
+    // Special case to allow override in rewarded ads, because the placement value before the display
+    // is the value defined in the web console
+    placement: String? = this.placement,
+): Ad.Info {
     return Ad.Info(
         adUnit = this.adUnitId,
         network = this.networkName,
