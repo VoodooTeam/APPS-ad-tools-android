@@ -15,22 +15,27 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.repeatOnLifecycle
 import io.voodoo.apps.ads.api.flow.AdClientStatus
 import io.voodoo.apps.ads.api.flow.getAvailableAdCountFlow
 import io.voodoo.apps.ads.api.flow.getStatusFlow
 import io.voodoo.apps.ads.api.model.AdAlreadyLoadingException
+import io.voodoo.apps.ads.api.util.renderAsync
 import io.voodoo.apps.ads.compose.model.AdClientHolder
 import io.voodoo.apps.ads.feature.ads.RewardedAdClientFactory
 import io.voodoo.apps.ads.util.activity
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
 import kotlin.time.Duration.Companion.seconds
 
 @Composable
@@ -44,6 +49,7 @@ fun ProfileRewardedAdSection(
         val activity = LocalContext.current.activity
         val container = LocalView.current
 
+        val coroutineScope = rememberCoroutineScope()
         val clientHolder = remember { AdClientHolder(RewardedAdClientFactory().create(activity)) }
 
         // Destroy client when leaving screen
@@ -58,18 +64,20 @@ fun ProfileRewardedAdSection(
         // This should run in background or your app, even if the screen is not visible
         // if you want to always have an available ad
         LaunchedEffect(Unit) {
-            while (isActive) {
-                clientHolder
-                    .getAvailableAdCountFlow()
-                    .firstOrNull { it.total == 0 } ?: return@LaunchedEffect
+            activity.lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
+                while (isActive) {
+                    clientHolder
+                        .getAvailableAdCountFlow()
+                        .firstOrNull { it.total == 0 } ?: return@repeatOnLifecycle
 
-                try {
-                    clientHolder.fetchAd()
-                } catch (e: AdAlreadyLoadingException) {
-                    Log.e("ProfileScreen", "Ad already loading")
-                    delay(1.seconds)
-                } catch (e: Exception) {
-                    Log.e("ProfileScreen", "Failed to load ad", e)
+                    try {
+                        clientHolder.fetchAd()
+                    } catch (e: AdAlreadyLoadingException) {
+                        delay(1.seconds)
+                    } catch (e: Exception) {
+                        Log.e("ProfileScreen", "Failed to load ad", e)
+                        delay(1.seconds)
+                    }
                 }
             }
         }
@@ -86,11 +94,13 @@ fun ProfileRewardedAdSection(
         Button(
             enabled = clientStatus == AdClientStatus.READY,
             onClick = {
-                try {
-                    val ad = checkNotNull(clientHolder.getAvailableAd())
-                    ad.render(container)
-                } catch (e: Exception) {
-                    Log.e("ProfileScreen", "Failed to play ad")
+                coroutineScope.launch {
+                    try {
+                        val ad = clientHolder.client.renderAsync(container)
+                        Log.e("ProfileScreen", "Ad rendered and rewarded ${ad.info.revenue}")
+                    } catch (e: Exception) {
+                        Log.e("ProfileScreen", "Failed to play ad", e)
+                    }
                 }
             },
             modifier = Modifier

@@ -78,6 +78,7 @@ fun <T : Ad> AdClient<T>.getStatusFlow(
 
             override fun onAdLoadingFinished(ad: Ad) {
                 trySendBlocking(AdClientStatus.READY)
+                errored = false
             }
         }
         val adCountListener = OnAvailableAdCountChangedListener {
@@ -90,7 +91,7 @@ fun <T : Ad> AdClient<T>.getStatusFlow(
         addOnAvailableAdCountChangedListener(adCountListener)
 
         when {
-            getAvailableAdCount().total > 0 -> AdClientStatus.READY
+            getAvailableAdCount().notLocked > 0 -> AdClientStatus.READY
             isRequestInProgress() -> AdClientStatus.LOADING
             else -> AdClientStatus.ERROR
         }.let(::trySendBlocking)
