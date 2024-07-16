@@ -10,7 +10,10 @@ import io.voodoo.apps.ads.api.listener.AdListenerHolder
 import io.voodoo.apps.ads.api.listener.AdLoadingListener
 import io.voodoo.apps.ads.api.listener.AdModerationListener
 import io.voodoo.apps.ads.api.listener.AdRevenueListener
+import io.voodoo.apps.ads.api.listener.OnAvailableAdCountChangedListener
 import io.voodoo.apps.ads.api.model.Ad
+import io.voodoo.apps.ads.api.model.AdAlreadyLoadingException
+import kotlinx.coroutines.sync.Mutex
 import java.io.Closeable
 import java.util.concurrent.CopyOnWriteArraySet
 
@@ -26,11 +29,11 @@ interface AdClient<T : Ad> : Closeable, AdListenerHolder {
 
     /**
      * @return number of available "fresh" ads to display (ads that weren't already rendered,
-     * aren't blocked, aren't currently used by another component, ...)
+     * aren't blocked, ...)
      *
-     * canBeServed + not locked + not served
+     * canBeServed + not served
      */
-    fun getAvailableAdCount(filterLocked: Boolean = true): Int
+    fun getAvailableAdCount(): AdCount
 
     /**
      * @return the ad previously served via [getAvailableAd] with the same [requestId], or null if:
@@ -44,7 +47,7 @@ interface AdClient<T : Ad> : Closeable, AdListenerHolder {
     /**
      * @return either [getServedAd] for the given [requestId], or the first available ad (see lexicon).
      */
-    fun getAvailableAd(requestId: String? = null): T?
+    fun getAvailableAd(requestId: String? = null, revenueThreshold: Double = 0.0): T?
 
     /**
      * @return any ad that can be served and not used by another component (even if already rendered)
@@ -56,8 +59,11 @@ interface AdClient<T : Ad> : Closeable, AdListenerHolder {
      */
     fun releaseAd(ad: Ad)
 
+    /** @return true if a fetch operation is in progress, false otherwise */
+    fun isRequestInProgress(): Boolean
+
     /**
-     * trigger a new ad load
+     * Load a new ad
      *
      * Note: there's no limit to the number of ads that can be loaded,
      * if you call this 10 times, it'll load 10 different ads.
@@ -73,6 +79,19 @@ interface AdClient<T : Ad> : Closeable, AdListenerHolder {
         val adUnit: String,
         val placement: String? = null,
     )
+
+    data class AdCount(val total: Int, val locked: Int) {
+
+        val notLocked get() = total - locked
+
+        operator fun plus(other: AdCount): AdCount {
+            return AdCount(total = total + other.total, locked = locked + other.locked)
+        }
+
+        companion object {
+            val ZERO = AdCount(0, 0)
+        }
+    }
 }
 
 abstract class BaseAdClient<ActualType : PublicType, PublicType : Ad>(
@@ -88,6 +107,12 @@ abstract class BaseAdClient<ActualType : PublicType, PublicType : Ad>(
     protected val adLoadingListeners = CopyOnWriteArraySet<AdLoadingListener>()
     protected val adModerationListeners = CopyOnWriteArraySet<AdModerationListener>()
     protected val adRevenueListeners = CopyOnWriteArraySet<AdRevenueListener>()
+    protected val onAdAvailableAdCountChangedListeners =
+        CopyOnWriteArraySet<OnAvailableAdCountChangedListener>()
+
+    private var lastNotifiedAvailableAdCount = AdClient.AdCount.ZERO
+
+    private val mutex = Mutex()
 
     init {
         require(config.adCacheSize > 0) { "adCacheSize must be > 0" }
@@ -114,11 +139,21 @@ abstract class BaseAdClient<ActualType : PublicType, PublicType : Ad>(
 
     protected abstract fun destroyAd(ad: ActualType)
 
-    override fun getAvailableAdCount(filterLocked: Boolean): Int {
-        return synchronized(loadedAds) {
-            loadedAds.count { ad ->
-                ad.canBeServed() && !ad.rendered && (!filterLocked || !ad.isLocked())
+    override fun getAvailableAdCount(): AdClient.AdCount {
+        synchronized(loadedAds) {
+            if (loadedAds.isEmpty()) return AdClient.AdCount.ZERO
+            var count = 0
+            var lockedCount = 0
+            for (ad in loadedAds) {
+                if (ad.canBeServed() && !ad.rendered) {
+                    count++
+                    if (ad.isLocked()) {
+                        lockedCount++
+                    }
+                }
             }
+
+            return AdClient.AdCount(total = count, locked = lockedCount)
         }
     }
 
@@ -139,7 +174,7 @@ abstract class BaseAdClient<ActualType : PublicType, PublicType : Ad>(
         }
     }
 
-    override fun getAvailableAd(requestId: String?): ActualType? {
+    override fun getAvailableAd(requestId: String?, revenueThreshold: Double): ActualType? {
         return synchronized(loadedAds) {
             // Return previously served ad for the same requestId if still exists
             val previousAd = getServedAd(requestId)
@@ -147,13 +182,17 @@ abstract class BaseAdClient<ActualType : PublicType, PublicType : Ad>(
                 return@synchronized previousAd
             }
 
-            // Take first ad ready for display
-            val ad = loadedAds.firstOrNull { it.isAvailable() }
+            // Take first ad ready for display that matches revenue threshold
+            val ad = loadedAds.firstOrNull {
+                it.isAvailable() && it.info.revenue >= revenueThreshold
+            }
             if (ad != null) {
                 ad.lock()
                 if (requestId != null) {
                     adIdByRequestIdMap[requestId] = ad.id
                 }
+
+                checkAndNotifyAvailableAdCountChanges()
             }
 
             ad
@@ -165,14 +204,32 @@ abstract class BaseAdClient<ActualType : PublicType, PublicType : Ad>(
             loadedAds
                 .firstOrNull { it.canBeServed() && !it.isLocked() }
                 ?.also { it.lock() }
+                ?.also { checkAndNotifyAvailableAdCountChanges() }
         }
     }
+
+    override fun isRequestInProgress(): Boolean = mutex.isLocked
+
+    final override suspend fun fetchAd(vararg localExtras: Pair<String, Any>): PublicType {
+        return if (mutex.tryLock()) {
+            try {
+                fetchAdSafe(*localExtras)
+            } finally {
+                mutex.unlock()
+            }
+        } else {
+            throw AdAlreadyLoadingException()
+        }
+    }
+
+    protected abstract suspend fun fetchAdSafe(vararg localExtras: Pair<String, Any>): ActualType
 
     override fun releaseAd(ad: Ad) {
         synchronized(loadedAds) {
             ad.release()
             ad.unlock()
-            ensureBufferSize()
+            truncateAdCache()
+            checkAndNotifyAvailableAdCountChanges()
         }
     }
 
@@ -200,6 +257,14 @@ abstract class BaseAdClient<ActualType : PublicType, PublicType : Ad>(
         adRevenueListeners.remove(listener)
     }
 
+    override fun addOnAvailableAdCountChangedListener(listener: OnAvailableAdCountChangedListener) {
+        onAdAvailableAdCountChangedListeners.add(listener)
+    }
+
+    override fun removeOnAvailableAdCountChangedListener(listener: OnAvailableAdCountChangedListener) {
+        onAdAvailableAdCountChangedListeners.remove(listener)
+    }
+
     protected fun findAdOrNull(predicate: (ActualType) -> Boolean): ActualType? {
         return synchronized(loadedAds) {
             loadedAds.firstOrNull(predicate)
@@ -224,10 +289,11 @@ abstract class BaseAdClient<ActualType : PublicType, PublicType : Ad>(
             } else {
                 loadedAds.add(ad)
             }
+            checkAndNotifyAvailableAdCountChanges()
         }
     }
 
-    private fun ensureBufferSize() {
+    private fun truncateAdCache() {
         synchronized(loadedAds) {
             val adsToDestroy = getAdsToDestroy()
             if (adsToDestroy.isEmpty()) return
@@ -236,6 +302,16 @@ abstract class BaseAdClient<ActualType : PublicType, PublicType : Ad>(
             loadedAds.removeAll(adsToDestroy.toSet())
             removeRequestIdMapping(adsToDestroy.map { it.id })
             adsToDestroy.forEach(::destroyAd)
+        }
+    }
+
+    protected fun checkAndNotifyAvailableAdCountChanges() {
+        val count = getAvailableAdCount()
+        if (count != lastNotifiedAvailableAdCount) {
+            runOnAdAvailableAdCountChangedListeners {
+                it.onAvailableAdCountChanged(count)
+            }
+            lastNotifiedAvailableAdCount = count
         }
     }
 
@@ -249,6 +325,12 @@ abstract class BaseAdClient<ActualType : PublicType, PublicType : Ad>(
 
     protected inline fun runRevenueListener(body: (AdRevenueListener) -> Unit) {
         adRevenueListeners.forEach(body)
+    }
+
+    protected inline fun runOnAdAvailableAdCountChangedListeners(
+        body: (OnAvailableAdCountChangedListener) -> Unit
+    ) {
+        onAdAvailableAdCountChangedListeners.forEach(body)
     }
 
     /** @return true if the ad is "fresh" and can be displayed as a new unseen ad */

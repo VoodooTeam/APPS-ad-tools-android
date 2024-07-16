@@ -6,6 +6,7 @@ import io.voodoo.apps.ads.api.model.Ad
 
 // wrapper for compose stability
 @Immutable
+@Deprecated("Use compose config file instead for stability")
 class AdClientHolder<T : Ad>(val client: AdClient<T>) : AdClient<T> by client {
 
     override fun equals(other: Any?): Boolean {

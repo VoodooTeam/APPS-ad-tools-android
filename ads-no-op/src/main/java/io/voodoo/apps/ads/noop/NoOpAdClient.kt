@@ -4,19 +4,22 @@ import io.voodoo.apps.ads.api.AdClient
 import io.voodoo.apps.ads.api.listener.AdLoadingListener
 import io.voodoo.apps.ads.api.listener.AdModerationListener
 import io.voodoo.apps.ads.api.listener.AdRevenueListener
+import io.voodoo.apps.ads.api.listener.OnAvailableAdCountChangedListener
 import io.voodoo.apps.ads.api.model.Ad
 
 class NoOpAdClient : AdClient<NoOpMRECAd> {
 
-    override fun getAvailableAdCount(filterLocked: Boolean): Int = 0
+    override fun getAvailableAdCount() = AdClient.AdCount.ZERO
 
     override fun getServedAd(requestId: String?): NoOpMRECAd? = null
-    override fun getAvailableAd(requestId: String?): NoOpMRECAd? = null
+    override fun getAvailableAd(requestId: String?, revenueThreshold: Double): NoOpMRECAd? = null
     override fun getAnyAd(): NoOpMRECAd? = null
 
     override fun releaseAd(ad: Ad) {
         // no-op
     }
+
+    override fun isRequestInProgress(): Boolean = false
 
     override suspend fun fetchAd(vararg localExtras: Pair<String, Any>): NoOpMRECAd {
         throw NotImplementedError("no op")
@@ -47,6 +50,14 @@ class NoOpAdClient : AdClient<NoOpMRECAd> {
     }
 
     override fun removeAdRevenueListener(listener: AdRevenueListener) {
+        // no-op
+    }
+
+    override fun addOnAvailableAdCountChangedListener(listener: OnAvailableAdCountChangedListener) {
+        // no-op
+    }
+
+    override fun removeOnAvailableAdCountChangedListener(listener: OnAvailableAdCountChangedListener) {
         // no-op
     }
 }

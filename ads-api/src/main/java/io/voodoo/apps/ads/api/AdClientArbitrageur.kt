@@ -8,11 +8,12 @@ import io.voodoo.apps.ads.api.listener.AdListenerHolderWrapper
 import io.voodoo.apps.ads.api.listener.AdLoadingListener
 import io.voodoo.apps.ads.api.listener.AdModerationListener
 import io.voodoo.apps.ads.api.listener.AdRevenueListener
+import io.voodoo.apps.ads.api.listener.OnAvailableAdCountChangedListener
 import io.voodoo.apps.ads.api.model.Ad
+import io.voodoo.apps.ads.api.model.AdAlreadyLoadingException
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.supervisorScope
-import kotlinx.coroutines.sync.Mutex
 import java.io.Closeable
 import java.util.concurrent.CopyOnWriteArraySet
 
@@ -23,7 +24,6 @@ class AdClientArbitrageur(
 ) : Closeable, AdListenerHolder {
 
     private val clients = clients.toList()
-    private val mutexByClientMap = clients.associateWith { Mutex() }
 
     private val clientIndexByRequestIdMap = mutableMapOf<String, Int>()
     private val clientIndexByAdIdMap = mutableMapOf<Ad.Id, Int>()
@@ -31,19 +31,25 @@ class AdClientArbitrageur(
     private val adLoadingListeners = CopyOnWriteArraySet<AdLoadingListener>()
     private val adModerationListeners = CopyOnWriteArraySet<AdModerationListener>()
     private val adRevenueListeners = CopyOnWriteArraySet<AdRevenueListener>()
-    private val listenersWrapper = AdListenerHolderWrapper(
+    private val onOnAvailableAdCountChangedListeners =
+        CopyOnWriteArraySet<OnAvailableAdCountChangedListener>()
+    private val listenersWrapper: AdListenerHolderWrapper = AdListenerHolderWrapper(
         adLoadingListeners = adLoadingListeners,
         adModerationListeners = adModerationListeners,
-        adRevenueListeners = adRevenueListeners
+        adRevenueListeners = adRevenueListeners,
+        onAvailableAdCountChangedListeners = emptyList()
     )
 
     private var lifecycleObserver: CloseOnDestroyLifecycleObserver? = null
 
     init {
-        clients.forEach {
-            it.addAdLoadingListener(listenersWrapper)
-            it.addAdModerationListener(listenersWrapper)
-            it.addAdRevenueListener(listenersWrapper)
+        clients.forEach { client ->
+            client.addAdLoadingListener(listenersWrapper)
+            client.addAdModerationListener(listenersWrapper)
+            client.addAdRevenueListener(listenersWrapper)
+            client.addOnAvailableAdCountChangedListener { _ ->
+                notifyAvailableAdCountChanged()
+            }
         }
     }
 
@@ -55,17 +61,19 @@ class AdClientArbitrageur(
     }
 
     /**
-     * @return the sum of [AdClient.getAvailableAdCount]
+     * @return the sum of each client's [AdClient.getAvailableAdCount]
      */
-    fun getAvailableAdCount(): Int {
-        return clients.sumOf { it.getAvailableAdCount() }
+    fun getAvailableAdCount(): AdClient.AdCount {
+        return clients.fold(AdClient.AdCount.ZERO) { acc, adClient ->
+            adClient.getAvailableAdCount() + acc
+        }
     }
 
     /**
      * @return true if any client has an available ad
      */
     fun hasAnyAvailableAd(): Boolean {
-        return clients.any { it.getAvailableAdCount() > 0 }
+        return clients.any { it.getAvailableAdCount().notLocked > 0 }
     }
 
     /**
@@ -87,8 +95,17 @@ class AdClientArbitrageur(
             }
 
             // Get all available ads and take most profitable
+            // Use revenueThreshold parameter to avoid locking ad for no reason in client
+            // (which would lead to useless calls of onOnAvailableAdCountChangedListeners
+            var revenue = Double.MIN_VALUE
             val ads = clients.mapNotNull { client ->
-                client to (client.getAvailableAd(requestId) ?: return@mapNotNull null)
+                val ad = client.getAvailableAd(
+                    requestId = requestId,
+                    revenueThreshold = revenue
+                ) ?: return@mapNotNull null
+                revenue = ad.info.revenue
+
+                client to (ad)
             }
             val bestAd = ads.maxByOrNull { (_, ad) -> ad.info.revenue }
 
@@ -142,20 +159,10 @@ class AdClientArbitrageur(
         clients
             .map { client ->
                 async {
-                    val mutex = mutexByClientMap[client] ?: return@async null
-
-                    if (client.getAvailableAdCount() < requiredAvailableAdCount) {
-                        // lock to prevent simultaneous requests
-                        if (mutex.tryLock()) {
-                            try {
-                                runCatching { client.fetchAd(*localExtras) }
-                            } finally {
-                                mutex.unlock()
-                            }
-                        } else {
-                            // Request already in progress in another call
-                            null
-                        }
+                    if (client.getAvailableAdCount().notLocked < requiredAvailableAdCount) {
+                        runCatching { client.fetchAd(*localExtras) }
+                            // client will throw AdAlreadyLoadingException if already loading
+                            .takeIf { it.exceptionOrNull() !is AdAlreadyLoadingException }
                     } else {
                         // No fetch needed
                         null
@@ -191,5 +198,20 @@ class AdClientArbitrageur(
 
     override fun removeAdRevenueListener(listener: AdRevenueListener) {
         adRevenueListeners.remove(listener)
+    }
+
+    override fun addOnAvailableAdCountChangedListener(listener: OnAvailableAdCountChangedListener) {
+        onOnAvailableAdCountChangedListeners.add(listener)
+    }
+
+    override fun removeOnAvailableAdCountChangedListener(listener: OnAvailableAdCountChangedListener) {
+        onOnAvailableAdCountChangedListeners.remove(listener)
+    }
+
+    private fun notifyAvailableAdCountChanged() {
+        val count = getAvailableAdCount()
+        onOnAvailableAdCountChangedListeners.forEach {
+            it.onAvailableAdCountChanged(count)
+        }
     }
 }
