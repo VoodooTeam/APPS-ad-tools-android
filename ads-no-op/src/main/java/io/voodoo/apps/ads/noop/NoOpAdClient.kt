@@ -9,6 +9,11 @@ import io.voodoo.apps.ads.api.model.Ad
 
 class NoOpAdClient : AdClient<NoOpMRECAd> {
 
+    override val adType: Ad.Type
+        get() = Ad.Type.MREC
+    override val config: AdClient.Config
+        get() = AdClient.Config(adCacheSize = 1, adUnit = "", placement = null)
+
     override fun getAvailableAdCount() = AdClient.AdCount.ZERO
 
     override fun getServedAd(requestId: String?): NoOpMRECAd? = null
