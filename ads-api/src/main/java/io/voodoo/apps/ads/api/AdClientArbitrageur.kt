@@ -8,7 +8,6 @@ import io.voodoo.apps.ads.api.listener.AdListenerHolderWrapper
 import io.voodoo.apps.ads.api.listener.AdLoadingListener
 import io.voodoo.apps.ads.api.listener.AdModerationListener
 import io.voodoo.apps.ads.api.listener.AdRevenueListener
-import io.voodoo.apps.ads.api.listener.OnAvailableAdCountChangedListener
 import io.voodoo.apps.ads.api.model.Ad
 import io.voodoo.apps.ads.api.model.AdAlreadyLoadingException
 import kotlinx.coroutines.async
@@ -31,13 +30,10 @@ class AdClientArbitrageur(
     private val adLoadingListeners = CopyOnWriteArraySet<AdLoadingListener>()
     private val adModerationListeners = CopyOnWriteArraySet<AdModerationListener>()
     private val adRevenueListeners = CopyOnWriteArraySet<AdRevenueListener>()
-    private val onOnAvailableAdCountChangedListeners =
-        CopyOnWriteArraySet<OnAvailableAdCountChangedListener>()
     private val listenersWrapper: AdListenerHolderWrapper = AdListenerHolderWrapper(
         adLoadingListeners = adLoadingListeners,
         adModerationListeners = adModerationListeners,
         adRevenueListeners = adRevenueListeners,
-        onAvailableAdCountChangedListeners = emptyList()
     )
 
     private var lifecycleObserver: CloseOnDestroyLifecycleObserver? = null
@@ -47,9 +43,6 @@ class AdClientArbitrageur(
             client.addAdLoadingListener(listenersWrapper)
             client.addAdModerationListener(listenersWrapper)
             client.addAdRevenueListener(listenersWrapper)
-            client.addOnAvailableAdCountChangedListener { _ ->
-                notifyAvailableAdCountChanged()
-            }
         }
     }
 
@@ -198,20 +191,5 @@ class AdClientArbitrageur(
 
     override fun removeAdRevenueListener(listener: AdRevenueListener) {
         adRevenueListeners.remove(listener)
-    }
-
-    override fun addOnAvailableAdCountChangedListener(listener: OnAvailableAdCountChangedListener) {
-        onOnAvailableAdCountChangedListeners.add(listener)
-    }
-
-    override fun removeOnAvailableAdCountChangedListener(listener: OnAvailableAdCountChangedListener) {
-        onOnAvailableAdCountChangedListeners.remove(listener)
-    }
-
-    private fun notifyAvailableAdCountChanged() {
-        val count = getAvailableAdCount()
-        onOnAvailableAdCountChangedListeners.forEach {
-            it.onAvailableAdCountChanged(count)
-        }
     }
 }

@@ -54,6 +54,7 @@ fun rememberLazyListAdMediator(
         this.adClientArbitrageur = adClientArbitrageur
         this.adInterval = adInterval
         this.adPreferredInitialIndex = adPreferredInitialIndex
+        this.adRequiredMinInitialIndex = adRequiredMinInitialIndex
         this.lazyListIndexOffset = lazyListIndexOffset
     }
 }

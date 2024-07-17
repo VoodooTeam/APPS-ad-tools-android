@@ -13,15 +13,15 @@ import kotlinx.coroutines.flow.conflate
 fun AdClient<*>.isRequestInProgressFlow(): Flow<Boolean> {
     return callbackFlow {
         val listener = object : AdLoadingListener {
-            override fun onAdLoadingStarted(type: Ad.Type) {
+            override fun onAdLoadingStarted(adClient: AdClient<*>) {
                 trySendBlocking(true)
             }
 
-            override fun onAdLoadingFailed(type: Ad.Type, exception: Exception) {
+            override fun onAdLoadingFailed(adClient: AdClient<*>, exception: Exception) {
                 trySendBlocking(false)
             }
 
-            override fun onAdLoadingFinished(ad: Ad) {
+            override fun onAdLoadingFinished(adClient: AdClient<*>, ad: Ad) {
                 trySendBlocking(false)
             }
         }
@@ -40,7 +40,9 @@ fun AdClient<*>.isRequestInProgressFlow(): Flow<Boolean> {
  */
 fun AdClient<*>.getAvailableAdCountFlow(): Flow<AdClient.AdCount> {
     return callbackFlow {
-        val listener = OnAvailableAdCountChangedListener(::trySendBlocking)
+        val listener = OnAvailableAdCountChangedListener { _, count ->
+            trySendBlocking(count)
+        }
 
         addOnAvailableAdCountChangedListener(listener)
         trySendBlocking(getAvailableAdCount())
@@ -66,23 +68,23 @@ fun <T : Ad> AdClient<T>.getStatusFlow(
     return callbackFlow {
         var errored = false
         val loadingListener = object : AdLoadingListener {
-            override fun onAdLoadingStarted(type: Ad.Type) {
+            override fun onAdLoadingStarted(adClient: AdClient<*>) {
                 if (!emitLoadingAfterError && errored) return
                 trySendBlocking(AdClientStatus.LOADING)
             }
 
-            override fun onAdLoadingFailed(type: Ad.Type, exception: Exception) {
+            override fun onAdLoadingFailed(adClient: AdClient<*>, exception: Exception) {
                 trySendBlocking(AdClientStatus.ERROR)
                 errored = true
             }
 
-            override fun onAdLoadingFinished(ad: Ad) {
+            override fun onAdLoadingFinished(adClient: AdClient<*>, ad: Ad) {
                 trySendBlocking(AdClientStatus.READY)
                 errored = false
             }
         }
-        val adCountListener = OnAvailableAdCountChangedListener {
-            if (it.total == 0) {
+        val adCountListener = OnAvailableAdCountChangedListener { _, count ->
+            if (count.total == 0) {
                 trySendBlocking(AdClientStatus.LOADING)
             }
         }

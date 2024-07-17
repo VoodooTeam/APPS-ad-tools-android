@@ -11,5 +11,5 @@ fun interface OnAvailableAdCountChangedListener {
      * because the ad could be marked as not "servable" [io.voodoo.apps.ads.api.model.Ad.canBeServed]
      * before it's added to the pool (thus when added to the pool, the number of available ad is unchanged).
      */
-    fun onAvailableAdCountChanged(count: AdClient.AdCount)
+    fun onAvailableAdCountChanged(client: AdClient<*>, count: AdClient.AdCount)
 }

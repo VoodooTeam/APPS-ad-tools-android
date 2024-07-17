@@ -40,7 +40,7 @@ class MaxRewardedAdClient(
     localExtrasProviders: List<LocalExtrasProvider> = emptyList(),
 ) : BaseAdClient<MaxRewardedAdWrapper, Ad.Rewarded>(config = config) {
 
-    private val type: Ad.Type = Ad.Type.REWARDED
+    override val adType: Ad.Type = Ad.Type.REWARDED
 
     // Only one loader can be created at a time for a given adUnit
     private val loader = MaxRewardedAd.getInstance(config.adUnit, appLovinSdk, activity)
@@ -87,7 +87,7 @@ class MaxRewardedAdClient(
                         placement = config.placement
                     )
 
-                runRevenueListener { it.onAdRevenuePaid(adWrapper) }
+                runRevenueListener { it.onAdRevenuePaid(this@MaxRewardedAdClient, adWrapper) }
             }
 
             override fun onAdDisplayed(ad: MaxAd) {
@@ -154,7 +154,7 @@ class MaxRewardedAdClient(
         // Remove any previous ad from pool (but don't call destroyAd, applovin handles it itself)
         getReusableAd()
 
-        runLoadingListeners { it.onAdLoadingStarted(type) }
+        runLoadingListeners { it.onAdLoadingStarted(this) }
 
         val providersExtras = localExtrasProviders.flatMap { it.getLocalExtras() }
         val ad = withContext(Dispatchers.IO) {
@@ -212,7 +212,7 @@ class MaxRewardedAdClient(
             } catch (e: MaxAdLoadException) {
                 Log.e("MaxRewardedAdClient", "Failed to load ad", e)
                 runPlugin { it.onAdLoadException(loader, e.error) }
-                runLoadingListeners { it.onAdLoadingFailed(type, e) }
+                runLoadingListeners { it.onAdLoadingFailed(this@MaxRewardedAdClient, e) }
 
                 throw e
             }
@@ -221,7 +221,7 @@ class MaxRewardedAdClient(
         runPlugin { it.onAdLoaded(ad = ad) }
         Log.i("MaxRewardedAdClient", "fetchAd success")
         addLoadedAd(ad)
-        runLoadingListeners { it.onAdLoadingFinished(ad) }
+        runLoadingListeners { it.onAdLoadingFinished(this, ad) }
         return ad
     }
 
@@ -241,7 +241,7 @@ class MaxRewardedAdClient(
             blockReasons.addAll(reasons)
         }
         ad.apphrbrModerationResult = moderationResult
-        runModerationListener { it.onAdBlocked(ad) }
+        runModerationListener { it.onAdBlocked(this, ad) }
         checkAndNotifyAvailableAdCountChanges()
     }
 

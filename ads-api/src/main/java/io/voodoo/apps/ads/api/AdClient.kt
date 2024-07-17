@@ -27,6 +27,9 @@ import java.util.concurrent.CopyOnWriteArraySet
  */
 interface AdClient<T : Ad> : Closeable, AdListenerHolder {
 
+    val adType: Ad.Type
+    val config: Config
+
     /**
      * @return number of available "fresh" ads to display (ads that weren't already rendered,
      * aren't blocked, ...)
@@ -70,6 +73,9 @@ interface AdClient<T : Ad> : Closeable, AdListenerHolder {
      */
     suspend fun fetchAd(vararg localExtras: Pair<String, Any>): T
 
+    fun addOnAvailableAdCountChangedListener(listener: OnAvailableAdCountChangedListener)
+    fun removeOnAvailableAdCountChangedListener(listener: OnAvailableAdCountChangedListener)
+
     data class Config(
         /**
          * Controls how many ads will be kept in memory to re-display/be re-used to fetch new ads.
@@ -95,7 +101,7 @@ interface AdClient<T : Ad> : Closeable, AdListenerHolder {
 }
 
 abstract class BaseAdClient<ActualType : PublicType, PublicType : Ad>(
-    protected val config: AdClient.Config,
+    final override val config: AdClient.Config,
 ) : AdClient<PublicType> {
 
     private val loadedAds = ArrayList<ActualType>(config.adCacheSize)
@@ -309,7 +315,7 @@ abstract class BaseAdClient<ActualType : PublicType, PublicType : Ad>(
         val count = getAvailableAdCount()
         if (count != lastNotifiedAvailableAdCount) {
             runOnAdAvailableAdCountChangedListeners {
-                it.onAvailableAdCountChanged(count)
+                it.onAvailableAdCountChanged(this, count)
             }
             lastNotifiedAvailableAdCount = count
         }

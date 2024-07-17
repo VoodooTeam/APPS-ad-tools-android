@@ -38,7 +38,7 @@ class MaxMRECAdClient(
     localExtrasProviders: List<LocalExtrasProvider> = emptyList(),
 ) : BaseAdClient<MaxMRECAdWrapper, Ad.MREC>(config = config) {
 
-    private val type: Ad.Type = Ad.Type.MREC
+    override val adType: Ad.Type = Ad.Type.MREC
 
     private val useModeration by lazy { AppHarbr.isInitialized() }
     private val appharbrListener: AHListener
@@ -80,7 +80,7 @@ class MaxMRECAdClient(
 
     /** see https://developers.applovin.com/en/android/ad-formats/banner-mrec-ads/ */
     override suspend fun fetchAdSafe(vararg localExtras: Pair<String, Any>): MaxMRECAdWrapper {
-        runLoadingListeners { it.onAdLoadingStarted(type) }
+        runLoadingListeners { it.onAdLoadingStarted(this) }
 
         val reusedAd = getReusableAd()
         val view = reusedAd?.view ?: createView(activity).apply {
@@ -136,7 +136,7 @@ class MaxMRECAdClient(
             } catch (e: MaxAdLoadException) {
                 Log.e("MaxMRECAdClient", "Failed to load ad", e)
                 runPlugin { it.onAdLoadException(view, e.error) }
-                runLoadingListeners { it.onAdLoadingFailed(type, e) }
+                runLoadingListeners { it.onAdLoadingFailed(this@MaxMRECAdClient, e) }
 
                 // Keep reused ad instead of destroying it
                 // If none, add to pool with a MaxDummyAd to re-use the same view next call
@@ -153,7 +153,7 @@ class MaxMRECAdClient(
         runPlugin { it.onAdLoaded(view, ad) }
         Log.i("MaxMRECAdClient", "fetchAd success")
         addLoadedAd(ad)
-        runLoadingListeners { it.onAdLoadingFinished(ad) }
+        runLoadingListeners { it.onAdLoadingFinished(this, ad) }
         return ad
     }
 
@@ -170,7 +170,7 @@ class MaxMRECAdClient(
                     val adWrapper = findAdOrNull { it.ad === ad }
                         ?: MaxMRECAdWrapper(ad, this)
 
-                    runRevenueListener { it.onAdRevenuePaid(adWrapper) }
+                    runRevenueListener { it.onAdRevenuePaid(this@MaxMRECAdClient, adWrapper) }
                 }
 
                 config.placement?.let { placement = it }
@@ -203,7 +203,7 @@ class MaxMRECAdClient(
             blockReasons.addAll(reasons)
         }
         ad.apphrbrModerationResult = moderationResult
-        runModerationListener { it.onAdBlocked(ad) }
+        runModerationListener { it.onAdBlocked(this, ad) }
         checkAndNotifyAvailableAdCountChanges()
     }
 

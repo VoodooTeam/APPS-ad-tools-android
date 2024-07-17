@@ -33,7 +33,7 @@ class MaxNativeAdClient(
     localExtrasProviders: List<LocalExtrasProvider> = emptyList(),
 ) : BaseAdClient<MaxNativeAdWrapper, Ad.Native>(config = config) {
 
-    private val type: Ad.Type = Ad.Type.NATIVE
+    override val adType: Ad.Type = Ad.Type.NATIVE
 
     private val maxNativeAdListener = MultiMaxNativeAdListener()
 
@@ -53,7 +53,7 @@ class MaxNativeAdClient(
             val adWrapper = findAdOrNull { it.ad === ad }
                 ?: MaxNativeAdWrapper(ad, loader, null, adViewPool)
 
-            runRevenueListener { it.onAdRevenuePaid(adWrapper) }
+            runRevenueListener { it.onAdRevenuePaid(this, adWrapper) }
         }
 
         maxNativeAdListener.add(object : MaxNativeAdListener() {
@@ -87,7 +87,7 @@ class MaxNativeAdClient(
 
     /** see https://developers.applovin.com/en/android/ad-formats/native-ads#templates */
     override suspend fun fetchAdSafe(vararg localExtras: Pair<String, Any>): MaxNativeAdWrapper {
-        runLoadingListeners { it.onAdLoadingStarted(type) }
+        runLoadingListeners { it.onAdLoadingStarted(this) }
 
         val reusedAd = getReusableAd()
 
@@ -145,7 +145,7 @@ class MaxNativeAdClient(
                 }
             } catch (e: MaxAdLoadException) {
                 Log.e("MaxNativeAdClient", "Failed to load ad", e)
-                runLoadingListeners { it.onAdLoadingFailed(type, e) }
+                runLoadingListeners { it.onAdLoadingFailed(this@MaxNativeAdClient, e) }
 
                 // Keep reused ad instead of destroying it
                 reusedAd?.let { addLoadedAd(it, isAlreadyServed = true) }
@@ -157,12 +157,12 @@ class MaxNativeAdClient(
         reusedAd?.let(::destroyAd)
 
         if (ad.isBlocked) {
-            runModerationListener { it.onAdBlocked(ad) }
+            runModerationListener { it.onAdBlocked(this, ad) }
         }
 
         Log.i("MaxNativeAdClient", "fetchAd success")
         addLoadedAd(ad)
-        runLoadingListeners { it.onAdLoadingFinished(ad) }
+        runLoadingListeners { it.onAdLoadingFinished(this, ad) }
         return ad
     }
 }
