@@ -1,6 +1,7 @@
 package io.voodoo.apps.ads.noop
 
 import io.voodoo.apps.ads.api.AdClient
+import io.voodoo.apps.ads.api.listener.AdClickListener
 import io.voodoo.apps.ads.api.listener.AdLoadingListener
 import io.voodoo.apps.ads.api.listener.AdModerationListener
 import io.voodoo.apps.ads.api.listener.AdRevenueListener
@@ -55,6 +56,14 @@ class NoOpAdClient : AdClient<NoOpMRECAd> {
     }
 
     override fun removeAdRevenueListener(listener: AdRevenueListener) {
+        // no-op
+    }
+
+    override fun addAdClickListener(listener: AdClickListener) {
+        // no-op
+    }
+
+    override fun removeAdClickListener(listener: AdClickListener) {
         // no-op
     }
 
