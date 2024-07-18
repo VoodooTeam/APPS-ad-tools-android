@@ -17,8 +17,10 @@ suspend fun AdClient<Ad.Rewarded>.renderAsync(view: View): Ad.Rewarded {
     val ad = getAvailableAd() ?: throw IllegalStateException("No ad available")
 
     suspendCancellableCoroutine { cont ->
-        val listener = AdRevenueListener { _, _ ->
-            cont.resume(Unit)
+        val listener = AdRevenueListener { _, paidAd ->
+            if (paidAd.id == ad.id) {
+                cont.resume(Unit)
+            }
         }
         try {
             addAdRevenueListener(listener)

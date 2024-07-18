@@ -24,9 +24,9 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.repeatOnLifecycle
-import io.voodoo.apps.ads.api.flow.AdClientStatus
+import io.voodoo.apps.ads.api.flow.AdClientLoadingEvent
 import io.voodoo.apps.ads.api.flow.getAvailableAdCountFlow
-import io.voodoo.apps.ads.api.flow.getStatusFlow
+import io.voodoo.apps.ads.api.flow.getLoadingEvents
 import io.voodoo.apps.ads.api.model.AdAlreadyLoadingException
 import io.voodoo.apps.ads.api.util.renderAsync
 import io.voodoo.apps.ads.compose.model.AdClientHolder
@@ -83,8 +83,8 @@ fun ProfileRewardedAdSection(
         }
 
         // Collect status (loading/error/ready)
-        val clientStatus by remember { clientHolder.getStatusFlow() }
-            .collectAsStateWithLifecycle(AdClientStatus.LOADING)
+        val latestLoadingEvent by remember { clientHolder.getLoadingEvents() }
+            .collectAsStateWithLifecycle(AdClientLoadingEvent.STARTED)
 
         Text(
             text = "Rewarded ad:",
@@ -92,7 +92,7 @@ fun ProfileRewardedAdSection(
         )
 
         Button(
-            enabled = clientStatus == AdClientStatus.READY,
+            enabled = latestLoadingEvent == AdClientLoadingEvent.SUCCESS,
             onClick = {
                 coroutineScope.launch {
                     try {
@@ -107,16 +107,16 @@ fun ProfileRewardedAdSection(
                 .widthIn(240.dp)
                 .align(Alignment.CenterHorizontally)
         ) {
-            when (clientStatus) {
-                AdClientStatus.LOADING -> {
+            when (latestLoadingEvent) {
+                AdClientLoadingEvent.STARTED -> {
                     CircularProgressIndicator(modifier = Modifier.size(24.dp))
                 }
 
-                AdClientStatus.READY -> {
+                AdClientLoadingEvent.SUCCESS -> {
                     Text("Play ad ▶\uFE0F")
                 }
 
-                AdClientStatus.ERROR -> {
+                AdClientLoadingEvent.ERROR -> {
                     Text("⛔ Error ⛔")
                 }
             }

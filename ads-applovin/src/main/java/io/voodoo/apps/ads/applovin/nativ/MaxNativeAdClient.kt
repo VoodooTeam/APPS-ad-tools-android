@@ -50,9 +50,7 @@ class MaxNativeAdClient(
         require(appLovinSdk.isInitialized) { "AppLovin instance not initialized" }
         loader.setNativeAdListener(maxNativeAdListener)
         loader.setRevenueListener { ad ->
-            val adWrapper = findAdOrNull { it.ad === ad }
-                ?: MaxNativeAdWrapper(ad, loader, null, adViewPool)
-
+            val adWrapper = findOrCreateAdWrapper(ad)
             runRevenueListener { it.onAdRevenuePaid(this, adWrapper) }
         }
 
@@ -60,6 +58,11 @@ class MaxNativeAdClient(
             override fun onNativeAdExpired(ad: MaxAd) {
                 // ad expired, can't be served anymore
                 checkAndNotifyAvailableAdCountChanges()
+            }
+
+            override fun onNativeAdClicked(ad: MaxAd) {
+                val adWrapper = findOrCreateAdWrapper(ad)
+                runClickListener { it.onAdClick(this@MaxNativeAdClient, adWrapper) }
             }
         })
 
@@ -164,6 +167,11 @@ class MaxNativeAdClient(
         addLoadedAd(ad)
         runLoadingListeners { it.onAdLoadingFinished(this, ad) }
         return ad
+    }
+
+    private fun findOrCreateAdWrapper(ad: MaxAd): MaxNativeAdWrapper {
+        return findAdOrNull { it.ad === ad }
+            ?: MaxNativeAdWrapper(ad, loader, null, adViewPool)
     }
 }
 

@@ -79,14 +79,7 @@ class MaxRewardedAdClient(
         }
         maxRewardedAdListener.add(object : DefaultMaxRewardedAdListener() {
             override fun onUserRewarded(ad: MaxAd, reward: MaxReward) {
-                val adWrapper = findAdOrNull { it.ad === ad }
-                    ?: MaxRewardedAdWrapper(
-                        ad = ad,
-                        loader = loader,
-                        apphrbrModerationResult = null,
-                        placement = config.placement
-                    )
-
+                val adWrapper = findOrCreateAdWrapper(ad)
                 runRevenueListener { it.onAdRevenuePaid(this@MaxRewardedAdClient, adWrapper) }
             }
 
@@ -97,6 +90,11 @@ class MaxRewardedAdClient(
             override fun onAdHidden(ad: MaxAd) {
                 isShowing = false
                 releaseAd(findAdOrNull { true } ?: return)
+            }
+
+            override fun onAdClicked(ad: MaxAd) {
+                val adWrapper = findOrCreateAdWrapper(ad)
+                runClickListener { it.onAdClick(this@MaxRewardedAdClient, adWrapper) }
             }
         })
 
@@ -254,6 +252,16 @@ class MaxRewardedAdClient(
                 Log.e("MaxRewardedAdClient", "Failed to run plugin", e)
             }
         }
+    }
+
+    private fun findOrCreateAdWrapper(ad: MaxAd): MaxRewardedAdWrapper {
+        return findAdOrNull { it.ad === ad }
+            ?: MaxRewardedAdWrapper(
+                ad = ad,
+                loader = loader,
+                apphrbrModerationResult = null,
+                placement = config.placement
+            )
     }
 }
 

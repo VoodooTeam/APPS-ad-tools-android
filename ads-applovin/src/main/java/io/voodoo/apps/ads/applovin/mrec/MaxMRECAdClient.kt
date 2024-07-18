@@ -160,6 +160,7 @@ class MaxMRECAdClient(
     private suspend fun createView(activity: Activity): MaxAdView {
         return withContext(Dispatchers.Main.immediate) {
             MaxAdView(config.adUnit, MaxAdFormat.MREC, activity).apply {
+                val view = this
                 val widthPx = AppLovinSdkUtils.dpToPx(activity, 300)
                 val heightPx = AppLovinSdkUtils.dpToPx(activity, 250)
                 layoutParams = ViewGroup.LayoutParams(widthPx, heightPx)
@@ -167,11 +168,22 @@ class MaxMRECAdClient(
                 setBackgroundColor(Color.TRANSPARENT)
                 setListener(maxAdViewListener)
                 setRevenueListener { ad ->
-                    val adWrapper = findAdOrNull { it.ad === ad }
-                        ?: MaxMRECAdWrapper(ad, this)
-
+                    val adWrapper = findOrCreateAdWrapper(ad, view)
                     runRevenueListener { it.onAdRevenuePaid(this@MaxMRECAdClient, adWrapper) }
                 }
+
+                // Re-wrap the multi listener with another layer to have a specific AdClick listener
+                // because we need the view instance to call findOrCreateWrapperAd :facepalm:
+                val wrappedListener = MultiMaxAdViewAdListener().apply {
+                    add(object : DefaultMaxAdViewAdListener() {
+                        override fun onAdClicked(ad: MaxAd) {
+                            val adWrapper = findOrCreateAdWrapper(ad, view)
+                            runClickListener { it.onAdClick(this@MaxMRECAdClient, adWrapper) }
+                        }
+                    })
+                    add(maxAdViewListener)
+                }
+                setListener(wrappedListener)
 
                 config.placement?.let { placement = it }
 
@@ -216,5 +228,10 @@ class MaxMRECAdClient(
                 Log.e("MaxMRECAdClient", "Failed to run plugin", e)
             }
         }
+    }
+
+    private fun findOrCreateAdWrapper(ad: MaxAd, view: MaxAdView): MaxMRECAdWrapper {
+        return findAdOrNull { it.ad === ad }
+            ?: MaxMRECAdWrapper(ad, view)
     }
 }

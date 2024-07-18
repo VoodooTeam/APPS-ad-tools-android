@@ -6,6 +6,7 @@ import androidx.annotation.IntRange
 import androidx.annotation.MainThread
 import androidx.lifecycle.Lifecycle
 import io.voodoo.apps.ads.api.lifecycle.CloseOnDestroyLifecycleObserver
+import io.voodoo.apps.ads.api.listener.AdClickListener
 import io.voodoo.apps.ads.api.listener.AdListenerHolder
 import io.voodoo.apps.ads.api.listener.AdLoadingListener
 import io.voodoo.apps.ads.api.listener.AdModerationListener
@@ -113,6 +114,7 @@ abstract class BaseAdClient<ActualType : PublicType, PublicType : Ad>(
     protected val adLoadingListeners = CopyOnWriteArraySet<AdLoadingListener>()
     protected val adModerationListeners = CopyOnWriteArraySet<AdModerationListener>()
     protected val adRevenueListeners = CopyOnWriteArraySet<AdRevenueListener>()
+    protected val adClickListeners = CopyOnWriteArraySet<AdClickListener>()
     protected val onAdAvailableAdCountChangedListeners =
         CopyOnWriteArraySet<OnAvailableAdCountChangedListener>()
 
@@ -271,6 +273,14 @@ abstract class BaseAdClient<ActualType : PublicType, PublicType : Ad>(
         onAdAvailableAdCountChangedListeners.remove(listener)
     }
 
+    override fun addAdClickListener(listener: AdClickListener) {
+        adClickListeners.add(listener)
+    }
+
+    override fun removeAdClickListener(listener: AdClickListener) {
+        adClickListeners.remove(listener)
+    }
+
     protected fun findAdOrNull(predicate: (ActualType) -> Boolean): ActualType? {
         return synchronized(loadedAds) {
             loadedAds.firstOrNull(predicate)
@@ -331,6 +341,10 @@ abstract class BaseAdClient<ActualType : PublicType, PublicType : Ad>(
 
     protected inline fun runRevenueListener(body: (AdRevenueListener) -> Unit) {
         adRevenueListeners.forEach(body)
+    }
+
+    protected inline fun runClickListener(body: (AdClickListener) -> Unit) {
+        adClickListeners.forEach(body)
     }
 
     protected inline fun runOnAdAvailableAdCountChangedListeners(

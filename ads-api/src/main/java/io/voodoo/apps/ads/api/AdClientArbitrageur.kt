@@ -3,6 +3,7 @@ package io.voodoo.apps.ads.api
 import androidx.annotation.MainThread
 import androidx.lifecycle.Lifecycle
 import io.voodoo.apps.ads.api.lifecycle.CloseOnDestroyLifecycleObserver
+import io.voodoo.apps.ads.api.listener.AdClickListener
 import io.voodoo.apps.ads.api.listener.AdListenerHolder
 import io.voodoo.apps.ads.api.listener.AdListenerHolderWrapper
 import io.voodoo.apps.ads.api.listener.AdLoadingListener
@@ -30,10 +31,12 @@ class AdClientArbitrageur(
     private val adLoadingListeners = CopyOnWriteArraySet<AdLoadingListener>()
     private val adModerationListeners = CopyOnWriteArraySet<AdModerationListener>()
     private val adRevenueListeners = CopyOnWriteArraySet<AdRevenueListener>()
+    private val adClickListeners = CopyOnWriteArraySet<AdClickListener>()
     private val listenersWrapper: AdListenerHolderWrapper = AdListenerHolderWrapper(
         adLoadingListeners = adLoadingListeners,
         adModerationListeners = adModerationListeners,
         adRevenueListeners = adRevenueListeners,
+        adClickListeners = adClickListeners,
     )
 
     private var lifecycleObserver: CloseOnDestroyLifecycleObserver? = null
@@ -191,5 +194,13 @@ class AdClientArbitrageur(
 
     override fun removeAdRevenueListener(listener: AdRevenueListener) {
         adRevenueListeners.remove(listener)
+    }
+
+    override fun addAdClickListener(listener: AdClickListener) {
+        adClickListeners.add(listener)
+    }
+
+    override fun removeAdClickListener(listener: AdClickListener) {
+        adClickListeners.remove(listener)
     }
 }
