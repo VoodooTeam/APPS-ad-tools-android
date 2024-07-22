@@ -16,6 +16,7 @@ import io.voodoo.apps.ads.applovin.util.buildInfo
 import io.voodoo.apps.ads.applovin.util.id
 import io.voodoo.apps.ads.applovin.util.removeFromParent
 import io.voodoo.apps.ads.applovin.util.toModerationResult
+import java.util.Date
 
 class MaxNativeAdWrapper internal constructor(
     val ad: MaxAd,
@@ -23,6 +24,7 @@ class MaxNativeAdWrapper internal constructor(
     internal val renderListener: MaxNativeAdRenderListener?,
     internal val viewPool: MaxNativeAdViewPool,
     internal val apphrbrModerationResult: AdResult? = null,
+    override val loadedAt: Date,
 ) : Ad.Native() {
 
     override val id: Id = ad.id

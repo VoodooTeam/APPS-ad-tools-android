@@ -1,12 +1,14 @@
 package io.voodoo.apps.ads.api.model
 
 import android.view.View
+import java.util.Date
 
 sealed class Ad {
 
     abstract val id: Id
     abstract val type: Type
     abstract val info: Info
+    abstract val loadedAt: Date
     abstract val moderationResult: ModerationResult?
 
     val isBlocked: Boolean get() = moderationResult == ModerationResult.BLOCKED

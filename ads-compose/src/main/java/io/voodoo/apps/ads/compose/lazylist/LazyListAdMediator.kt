@@ -156,6 +156,11 @@ class LazyListAdMediator internal constructor(
         adIndices.clear()
     }
 
+    fun destroyAdsIf(predicate: (Ad) -> Boolean) {
+        adClientArbitrageur?.arbitrageur?.destroyAdsIf(predicate)
+        adIndices.clear()
+    }
+
     fun getAdAt(index: Int): Ad? {
         val ad = adClientArbitrageur?.arbitrageur?.getAd(requestId = index.toString())
         Log.d("LazyListAdMediator", "Returning ad $ad at $index")

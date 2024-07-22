@@ -9,12 +9,14 @@ import io.voodoo.apps.ads.applovin.util.MaxDummyAd
 import io.voodoo.apps.ads.applovin.util.buildInfo
 import io.voodoo.apps.ads.applovin.util.id
 import io.voodoo.apps.ads.applovin.util.toModerationResult
+import java.util.Date
 
 class MaxRewardedAdWrapper internal constructor(
     val ad: MaxAd,
     internal val loader: MaxRewardedAd,
     internal var apphrbrModerationResult: AdResult? = null,
     private val placement: String?,
+    override val loadedAt: Date,
 ) : Ad.Rewarded() {
 
     override val id: Id = ad.id

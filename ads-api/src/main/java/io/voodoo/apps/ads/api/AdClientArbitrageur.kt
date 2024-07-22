@@ -49,6 +49,12 @@ class AdClientArbitrageur(
         }
     }
 
+    fun destroyAdsIf(predicate: (Ad) -> Boolean) {
+        clients.forEach { client ->
+            client.destroyAdsIf(predicate)
+        }
+    }
+
     @MainThread
     fun registerToLifecycle(lifecycle: Lifecycle) {
         lifecycleObserver?.removeFromLifecycle()

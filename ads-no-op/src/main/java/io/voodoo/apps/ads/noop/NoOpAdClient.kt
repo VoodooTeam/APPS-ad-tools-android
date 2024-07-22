@@ -74,4 +74,8 @@ class NoOpAdClient : AdClient<NoOpMRECAd> {
     override fun removeOnAvailableAdCountChangedListener(listener: OnAvailableAdCountChangedListener) {
         // no-op
     }
+
+    override fun destroyAdsIf(predicate: (Ad) -> Boolean) {
+        // no-op
+    }
 }

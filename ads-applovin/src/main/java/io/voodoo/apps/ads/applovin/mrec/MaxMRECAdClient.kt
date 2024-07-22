@@ -28,6 +28,7 @@ import io.voodoo.apps.ads.applovin.util.MaxDummyAd
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
+import java.util.Date
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 
@@ -99,7 +100,11 @@ class MaxMRECAdClient(
                     val callback = object : DefaultMaxAdViewAdListener() {
                         override fun onAdLoaded(ad: MaxAd) {
                             maxAdViewListener.remove(this)
-                            val adWrapper = MaxMRECAdWrapper(ad = ad, view = view)
+                            val adWrapper = MaxMRECAdWrapper(
+                                ad = ad,
+                                view = view,
+                                loadedAt = Date(),
+                            )
                             try {
                                 continuation.resume(adWrapper)
                             } catch (e: Exception) {
@@ -142,7 +147,8 @@ class MaxMRECAdClient(
                 // If none, add to pool with a MaxDummyAd to re-use the same view next call
                 val ad = reusedAd ?: MaxMRECAdWrapper(
                     ad = MaxDummyAd(adUnit = config.adUnit, format = MaxAdFormat.MREC),
-                    view = view
+                    view = view,
+                    loadedAt = Date(),
                 )
                 addLoadedAd(ad, isAlreadyServed = reusedAd != null)
 
@@ -232,6 +238,10 @@ class MaxMRECAdClient(
 
     private fun findOrCreateAdWrapper(ad: MaxAd, view: MaxAdView): MaxMRECAdWrapper {
         return findAdOrNull { it.ad === ad }
-            ?: MaxMRECAdWrapper(ad, view)
+            ?: MaxMRECAdWrapper(
+                ad = ad,
+                view = view,
+                loadedAt = Date(),
+            )
     }
 }
