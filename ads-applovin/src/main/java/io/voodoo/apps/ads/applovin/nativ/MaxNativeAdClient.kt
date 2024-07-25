@@ -21,6 +21,7 @@ import io.voodoo.apps.ads.applovin.listener.MultiMaxNativeAdListener
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
+import java.util.Date
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 
@@ -104,6 +105,7 @@ class MaxNativeAdClient(
                             maxNativeAdListener.remove(this)
                             val adWrapper = MaxNativeAdWrapper(
                                 ad = ad,
+                                loadedAt = Date(),
                                 loader = loader,
                                 renderListener = renderListener,
                                 viewPool = adViewPool,
@@ -171,7 +173,13 @@ class MaxNativeAdClient(
 
     private fun findOrCreateAdWrapper(ad: MaxAd): MaxNativeAdWrapper {
         return findAdOrNull { it.ad === ad }
-            ?: MaxNativeAdWrapper(ad, loader, null, adViewPool)
+            ?: MaxNativeAdWrapper(
+                ad = ad,
+                loader = loader,
+                renderListener = null,
+                viewPool = adViewPool,
+                loadedAt = Date(),
+            )
     }
 }
 

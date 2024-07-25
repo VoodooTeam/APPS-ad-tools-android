@@ -2,10 +2,12 @@ package io.voodoo.apps.ads.noop
 
 import android.view.View
 import io.voodoo.apps.ads.api.model.Ad
+import java.util.Date
 import java.util.UUID
 
 class NoOpMRECAd(
     override val id: Id = Id(UUID.randomUUID().toString()),
+    override val loadedAt: Date = Date(),
 ) : Ad.MREC() {
 
     override val moderationResult: ModerationResult

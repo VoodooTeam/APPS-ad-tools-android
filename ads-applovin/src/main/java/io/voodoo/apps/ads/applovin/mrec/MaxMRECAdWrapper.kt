@@ -11,10 +11,12 @@ import io.voodoo.apps.ads.applovin.util.buildInfo
 import io.voodoo.apps.ads.applovin.util.id
 import io.voodoo.apps.ads.applovin.util.removeFromParent
 import io.voodoo.apps.ads.applovin.util.toModerationResult
+import java.util.Date
 
 class MaxMRECAdWrapper internal constructor(
     val ad: MaxAd,
     val view: MaxAdView,
+    override val loadedAt: Date,
 ) : Ad.MREC() {
 
     override val id: Id = ad.id

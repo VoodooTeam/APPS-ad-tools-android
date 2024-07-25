@@ -10,12 +10,18 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.voodoo.apps.ads.MockData
+import io.voodoo.apps.ads.api.model.Ad
 import io.voodoo.apps.ads.compose.lazylist.DefaultScrollAdBehaviorEffect
 import io.voodoo.apps.ads.compose.lazylist.LazyListAdMediator
 import io.voodoo.apps.ads.compose.lazylist.items
@@ -25,6 +31,7 @@ import io.voodoo.apps.ads.feature.feed.component.FeedAdItem
 import io.voodoo.apps.ads.feature.feed.component.FeedErrorState
 import io.voodoo.apps.ads.feature.feed.component.FeedItem
 import io.voodoo.apps.ads.feature.feed.component.FeedTopAppBar
+import java.util.Date
 import java.util.concurrent.TimeUnit
 
 @Composable
@@ -42,6 +49,10 @@ fun FeedScreen(
         lazyListState = listState,
         adClientArbitrageur = adClientArbitrageur,
         adInterval = 3,
+    )
+    ClearRenderedAdsWhenFirstCellVisible(
+        listState = listState,
+        adMediator = adMediator,
     )
 
     Scaffold(
@@ -82,6 +93,33 @@ fun FeedScreen(
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun ClearRenderedAdsWhenFirstCellVisible(
+    adMediator: LazyListAdMediator,
+    listState: LazyListState,
+) {
+    val firstVisibleItemIndex by remember { derivedStateOf { listState.firstVisibleItemIndex } }
+    var lastVisibleIndex by remember { mutableIntStateOf(0) }
+    LaunchedEffect(firstVisibleItemIndex) {
+        if(lastVisibleIndex != firstVisibleItemIndex && firstVisibleItemIndex == 0) {
+            val olderThan = Date(System.currentTimeMillis() - TimeUnit.SECONDS.toMillis(30))
+
+            adMediator.destroyAdsIf {
+                it.rendered && it.isOlderThan(olderThan)
+            }
+        }
+        lastVisibleIndex = firstVisibleItemIndex
+    }
+}
+
+private fun Ad.isOlderThan(olderThan: Date?): Boolean {
+    return if (olderThan == null) {
+        true
+    } else {
+        this.loadedAt <= olderThan
     }
 }
 

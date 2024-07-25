@@ -27,6 +27,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
+import java.util.Date
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlin.time.Duration.Companion.seconds
@@ -171,7 +172,8 @@ class MaxRewardedAdClient(
                                 } else {
                                     null
                                 },
-                                placement = config.placement
+                                placement = config.placement,
+                                loadedAt = Date(),
                             )
                             try {
                                 continuation.resume(adWrapper)
@@ -259,7 +261,8 @@ class MaxRewardedAdClient(
                 ad = ad,
                 loader = loader,
                 apphrbrModerationResult = null,
-                placement = config.placement
+                placement = config.placement,
+                loadedAt = Date(),
             )
     }
 }
