@@ -20,7 +20,8 @@ import java.util.concurrent.CopyOnWriteArraySet
 // TODO: check if we can factorize some AdClient api in a common interface (registerToLifecycle, availableAdCount, ...)
 class AdClientArbitrageur(
     clients: List<AdClient<*>>,
-    private val requiredAvailableAdCount: Int = 1
+    private val requiredAvailableAdCount: Int = 1,
+    private val enforceRequiredAvailableAdCount: Boolean = false
 ) : Closeable, AdListenerHolder {
 
     private val clients = clients.toList()
@@ -155,7 +156,11 @@ class AdClientArbitrageur(
         clients
             .map { client ->
                 async {
-                    if (client.getAvailableAdCount().notLocked < requiredAvailableAdCount) {
+                    val availableAdCount = client.getAvailableAdCount().notLocked
+                    if (
+                        availableAdCount < requiredAvailableAdCount &&
+                        (enforceRequiredAvailableAdCount || requiredAvailableAdCount <= client.config.adCacheSize)
+                    ) {
                         runCatching { client.fetchAd(*localExtras) }
                             // client will throw AdAlreadyLoadingException if already loading
                             .takeIf { it.exceptionOrNull() !is AdAlreadyLoadingException }
