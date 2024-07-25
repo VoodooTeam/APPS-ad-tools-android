@@ -13,8 +13,12 @@ import kotlin.coroutines.resumeWithException
 /**
  * render the ad and suspends until the revenue listener is called
  */
-suspend fun AdClient<Ad.Rewarded>.renderAsync(view: View): Ad.Rewarded {
+suspend fun AdClient<Ad.Rewarded>.renderAsync(
+    view: View,
+    onPreRender: (Ad) -> Unit = {}
+): Ad.Rewarded {
     val ad = getAvailableAd() ?: throw IllegalStateException("No ad available")
+    onPreRender(ad)
 
     suspendCancellableCoroutine { cont ->
         val listener = AdRevenueListener { _, paidAd ->
