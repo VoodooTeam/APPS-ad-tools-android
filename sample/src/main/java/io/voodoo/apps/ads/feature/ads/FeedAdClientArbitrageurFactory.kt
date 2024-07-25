@@ -8,7 +8,7 @@ import io.voodoo.apps.ads.api.AdClientArbitrageur
 import io.voodoo.apps.ads.api.model.Ad
 import io.voodoo.apps.ads.applovin.mrec.MaxMRECAdClient
 import io.voodoo.apps.ads.applovin.nativ.MaxNativeAdClient
-import io.voodoo.apps.ads.applovin.plugin.amazon.AmazonMRECAdClientPlugin
+import io.voodoo.apps.ads.applovin.plugin.amazon.AmazonMaxMRECAdClientPlugin
 import io.voodoo.apps.ads.feature.ads.nativ.MaxNativeAdRenderListener
 import io.voodoo.apps.ads.feature.ads.nativ.MaxNativeAdViewFactory
 
@@ -57,7 +57,7 @@ class FeedAdClientArbitrageurFactory {
                 placement = "feed"
             ),
             activity = activity,
-            plugins = listOf(AmazonMRECAdClientPlugin(MockData.AMAZON_SLOT_ID)),
+            plugins = listOf(AmazonMaxMRECAdClientPlugin(MockData.AMAZON_SLOT_ID)),
             // Provide extras via here if more convenient than the UI
             localExtrasProviders = emptyList(),
         )

@@ -124,7 +124,6 @@ class MaxRewardedAdClient(
     override fun destroyAd(ad: MaxRewardedAdWrapper) {
         runPlugin { it.onDestroyAd(ad) }
         // don't destroy the unique loader
-        Log.e("MaxRewardedAdClient", "destroyAd called, this should never happen")
     }
 
     override fun releaseAd(ad: Ad) {
