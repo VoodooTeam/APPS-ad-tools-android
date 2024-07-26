@@ -25,7 +25,9 @@ class FeedAdClientArbitrageurFactory {
         return AdClientArbitrageur(
             clients = listOf(
                 createNativeClient(activity),
-                createMRECClient(activity),
+                createNativeClient(activity),
+                createNativeClient(activity),
+                //createMRECClient(activity),
             ),
             backoffConfig = BackoffConfig(
                 maxDelay = 30.seconds,
@@ -42,7 +44,7 @@ class FeedAdClientArbitrageurFactory {
     private fun createNativeClient(activity: Activity): AdClient<Ad.Native> {
         return MaxNativeAdClient(
             config = AdClient.Config(
-                adCacheSize = 3,
+                adCacheSize = 1,
                 adUnit = MockData.NATIVE_AD_UNIT,
                 placement = "feed"
             ),
