@@ -191,7 +191,7 @@ class AdClientArbitrageur(
         val lastFailInfo = lastFailInfoByClientMap[client]
         if (backoffConfig != null && lastFailInfo != null) {
             val delayForNextAttemptMillis =
-                backoffConfig.getDelay(lastFailInfo.attempt + 1)
+                backoffConfig.getDelay(lastFailInfo.attempt)
                     ?.inWholeMilliseconds
                     ?: 0
             val timeSinceLastAttempt = System.currentTimeMillis() - lastFailInfo.timestampMillis

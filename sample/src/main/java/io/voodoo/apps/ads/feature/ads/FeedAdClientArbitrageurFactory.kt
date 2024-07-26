@@ -6,11 +6,13 @@ import io.voodoo.apps.ads.MockData
 import io.voodoo.apps.ads.api.AdClient
 import io.voodoo.apps.ads.api.AdClientArbitrageur
 import io.voodoo.apps.ads.api.model.Ad
+import io.voodoo.apps.ads.api.model.BackoffConfig
 import io.voodoo.apps.ads.applovin.mrec.MaxMRECAdClient
 import io.voodoo.apps.ads.applovin.nativ.MaxNativeAdClient
 import io.voodoo.apps.ads.applovin.plugin.amazon.AmazonMaxMRECAdClientPlugin
 import io.voodoo.apps.ads.feature.ads.nativ.MaxNativeAdRenderListener
 import io.voodoo.apps.ads.feature.ads.nativ.MaxNativeAdViewFactory
+import kotlin.time.Duration.Companion.seconds
 
 class FeedAdClientArbitrageurFactory {
 
@@ -24,7 +26,10 @@ class FeedAdClientArbitrageurFactory {
             clients = listOf(
                 createNativeClient(activity),
                 createMRECClient(activity),
-            )
+            ),
+            backoffConfig = BackoffConfig(
+                maxDelay = 30.seconds,
+            ),
         ).also {
             it.registerToLifecycle(activity.lifecycle)
 
