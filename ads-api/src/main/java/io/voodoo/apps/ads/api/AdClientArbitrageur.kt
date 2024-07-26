@@ -122,18 +122,21 @@ class AdClientArbitrageur(
                 }
             }
 
-            if (bestAd != null) {
-                // Store info of which client returned the ad
-                val clientIndex = clients.indexOf(bestAd.first)
-                clientIndexByRequestIdMap[requestId] = clientIndex
-                clientIndexByAdIdMap[bestAd.second.id] = clientIndex
+            // If no previous ad or no fresh ad found, return any ad that can be displayed
+            // to avoid a blank UI
+            val ad = bestAd
+                ?: clients.firstNotNullOfOrNull { client ->
+                    client.getAnyAd()?.let { client to it }
+                }
 
-                bestAd.second
-            } else {
-                // If no previous ad or no fresh ad found, return any ad that can be displayed
-                // to avoid a blank UI
-                clients.firstNotNullOfOrNull { it.getAnyAd() }
+            if (ad != null) {
+                // Store info of which client returned the ad
+                val clientIndex = clients.indexOf(ad.first)
+                clientIndexByRequestIdMap[requestId] = clientIndex
+                clientIndexByAdIdMap[ad.second.id] = clientIndex
             }
+
+            ad?.second
         }
     }
 
