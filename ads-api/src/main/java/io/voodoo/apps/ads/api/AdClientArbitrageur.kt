@@ -11,6 +11,7 @@ import io.voodoo.apps.ads.api.listener.AdModerationListener
 import io.voodoo.apps.ads.api.listener.AdRevenueListener
 import io.voodoo.apps.ads.api.model.Ad
 import io.voodoo.apps.ads.api.model.AdAlreadyLoadingException
+import io.voodoo.apps.ads.api.model.BackoffConfig
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.supervisorScope
@@ -21,13 +22,15 @@ import java.util.concurrent.CopyOnWriteArraySet
 class AdClientArbitrageur(
     clients: List<AdClient<*>>,
     private val requiredAvailableAdCount: Int = 1,
-    private val enforceRequiredAvailableAdCount: Boolean = false
+    private val overrideClientCacheSize: Boolean = false,
+    private val backoffConfig: BackoffConfig? = null,
 ) : Closeable, AdListenerHolder {
 
     private val clients = clients.toList()
 
     private val clientIndexByRequestIdMap = mutableMapOf<String, Int>()
     private val clientIndexByAdIdMap = mutableMapOf<Ad.Id, Int>()
+    private val lastFailInfoByClientMap = mutableMapOf<AdClient<*>, FetchFailInfo>()
 
     private val adLoadingListeners = CopyOnWriteArraySet<AdLoadingListener>()
     private val adModerationListeners = CopyOnWriteArraySet<AdModerationListener>()
@@ -157,26 +160,59 @@ class AdClientArbitrageur(
     suspend fun fetchAdIfNecessary(
         localExtrasProvider: () -> Array<Pair<String, Any>>
     ): List<Result<Ad>?> = supervisorScope {
-        val localExtras by lazy(LazyThreadSafetyMode.PUBLICATION) { localExtrasProvider() }
+        val localExtras = lazy(LazyThreadSafetyMode.PUBLICATION) { localExtrasProvider() }
 
         clients
             .map { client ->
                 async {
-                    val availableAdCount = client.getAvailableAdCount().notLocked
-                    if (
-                        availableAdCount < requiredAvailableAdCount &&
-                        (enforceRequiredAvailableAdCount || requiredAvailableAdCount <= client.config.adCacheSize)
-                    ) {
-                        runCatching { client.fetchAd(*localExtras) }
-                            // client will throw AdAlreadyLoadingException if already loading
-                            .takeIf { it.exceptionOrNull() !is AdAlreadyLoadingException }
-                    } else {
-                        // No fetch needed
-                        null
-                    }
+                    fetchAdIfNecessary(client, localExtras)
                 }
             }
             .awaitAll()
+    }
+
+    private suspend fun fetchAdIfNecessary(
+        client: AdClient<*>,
+        localExtrasProvider: Lazy<Array<Pair<String, Any>>>
+    ): Result<Ad>? {
+        val availableAdCount = client.getAvailableAdCount().notLocked
+        if (availableAdCount >= requiredAvailableAdCount) {
+            return null
+        }
+        if (
+            !overrideClientCacheSize &&
+            client.config.adCacheSize <= requiredAvailableAdCount &&
+            availableAdCount >= client.config.adCacheSize
+        ) {
+            return null
+        }
+
+        // Backoff
+        val lastFailInfo = lastFailInfoByClientMap[client]
+        if (backoffConfig != null && lastFailInfo != null) {
+            val delayForNextAttemptMillis =
+                backoffConfig.getDelay(lastFailInfo.attempt)
+                    ?.inWholeMilliseconds
+                    ?: 0
+            val timeSinceLastAttempt = System.currentTimeMillis() - lastFailInfo.timestampMillis
+            if (timeSinceLastAttempt < delayForNextAttemptMillis) {
+                return null
+            }
+        }
+
+        return runCatching { client.fetchAd(*localExtrasProvider.value) }
+            // client will throw AdAlreadyLoadingException if already loading
+            .takeIf { it.exceptionOrNull() !is AdAlreadyLoadingException }
+            ?.also {
+                if (it.isFailure) {
+                    lastFailInfoByClientMap[client] = FetchFailInfo(
+                        attempt = lastFailInfo?.attempt?.plus(1) ?: 0,
+                        timestampMillis = System.currentTimeMillis()
+                    )
+                } else {
+                    lastFailInfoByClientMap.remove(client)
+                }
+            }
     }
 
     override fun close() {
@@ -214,4 +250,6 @@ class AdClientArbitrageur(
     override fun removeAdClickListener(listener: AdClickListener) {
         adClickListeners.remove(listener)
     }
+
+    private class FetchFailInfo(val attempt: Int, val timestampMillis: Long)
 }
