@@ -175,7 +175,10 @@ class MaxMRECAdClient(
                 setListener(maxAdViewListener)
                 setRevenueListener { ad ->
                     val adWrapper = findOrCreateAdWrapper(ad, view)
-                    runRevenueListener { it.onAdRevenuePaid(this@MaxMRECAdClient, adWrapper) }
+                    adWrapper.markAsPaidInternal()
+                    runRevenueListener {
+                        it.onAdRevenuePaid(this@MaxMRECAdClient, adWrapper)
+                    }
                 }
 
                 // Re-wrap the multi listener with another layer to have a specific AdClick listener

@@ -70,6 +70,10 @@ class MaxNativeAdWrapper internal constructor(
         }
     }
 
+    internal fun markAsPaidInternal() {
+        super.markAsRevenuePaid()
+    }
+
     override fun release() {
         view?.removeFromParent()
         view?.let(viewPool::release)
