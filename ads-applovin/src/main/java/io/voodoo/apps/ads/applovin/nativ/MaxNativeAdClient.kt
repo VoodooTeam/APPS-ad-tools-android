@@ -22,8 +22,11 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 import java.util.Date
+import java.util.concurrent.atomic.AtomicInteger
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
+
+private val allId = AtomicInteger(0)
 
 class MaxNativeAdClient(
     config: AdClient.Config,
@@ -33,6 +36,8 @@ class MaxNativeAdClient(
     private val renderListener: MaxNativeAdRenderListener? = null,
     localExtrasProviders: List<LocalExtrasProvider> = emptyList(),
 ) : BaseAdClient<MaxNativeAdWrapper, Ad.Native>(config = config) {
+
+    val clientId = allId.getAndIncrement()
 
     override val adType: Ad.Type = Ad.Type.NATIVE
 
@@ -98,10 +103,12 @@ class MaxNativeAdClient(
         val providersExtras = localExtrasProviders.flatMap { it.getLocalExtras() }
         val ad = withContext(Dispatchers.IO) {
             try {
+                Log.d("TAG_TAG", "[$clientId] fetchAdIfNecessary")
                 // Wrap ad loading into a coroutine
                 suspendCancellableCoroutine<MaxNativeAdWrapper> { continuation ->
                     val callback = object : MaxNativeAdListener() {
                         override fun onNativeAdLoaded(view: MaxNativeAdView?, ad: MaxAd) {
+                            Log.d("TAG_TAG", "[$clientId] fetchAdIfNecessary - Success")
                             maxNativeAdListener.remove(this)
                             val adWrapper = MaxNativeAdWrapper(
                                 ad = ad,
@@ -124,6 +131,7 @@ class MaxNativeAdClient(
                         }
 
                         override fun onNativeAdLoadFailed(adUnitId: String, error: MaxError) {
+                            Log.e("TAG_TAG", "[$clientId] fetchAdIfNecessary - Error")
                             maxNativeAdListener.remove(this)
                             try {
                                 continuation.resumeWithException(MaxAdLoadException(error))
