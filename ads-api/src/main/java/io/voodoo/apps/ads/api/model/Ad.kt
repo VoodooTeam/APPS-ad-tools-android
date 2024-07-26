@@ -17,6 +17,9 @@ sealed class Ad {
     var rendered: Boolean = false
         private set
 
+    var isRevenuePaid: Boolean = false
+        private set
+
     open fun canBeServed() = !isBlocked && !isExpired
 
     abstract fun render(parent: View)
@@ -24,6 +27,10 @@ sealed class Ad {
 
     protected fun markAsRendered() {
         rendered = true
+    }
+
+    protected fun markAsRevenuePaid() {
+        isRevenuePaid = true
     }
 
     // Inner class

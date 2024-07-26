@@ -42,6 +42,10 @@ class MaxMRECAdWrapper internal constructor(
         markAsRendered()
     }
 
+    internal fun markAsPaidInternal() {
+        super.markAsRevenuePaid()
+    }
+
     override fun release() {
         view.removeFromParent()
     }

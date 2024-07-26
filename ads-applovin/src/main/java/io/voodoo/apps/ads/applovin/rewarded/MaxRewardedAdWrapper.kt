@@ -37,6 +37,10 @@ class MaxRewardedAdWrapper internal constructor(
         markAsRendered()
     }
 
+    internal fun markAsPaidInternal() {
+        super.markAsRevenuePaid()
+    }
+
     override fun release() {
 
     }

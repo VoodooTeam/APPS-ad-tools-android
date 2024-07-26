@@ -103,7 +103,7 @@ class AdClientArbitrageur(
             // Get all available ads and take most profitable
             // Use revenueThreshold parameter to avoid locking ad for no reason in client
             // (which would lead to useless calls of onOnAvailableAdCountChangedListeners
-            var revenue = Double.MIN_VALUE
+            var revenue = -1.0
             val ads = clients.mapNotNull { client ->
                 val ad = client.getAvailableAd(
                     requestId = requestId,
@@ -111,7 +111,7 @@ class AdClientArbitrageur(
                 ) ?: return@mapNotNull null
                 revenue = ad.info.revenue
 
-                client to (ad)
+                client to ad
             }
             val bestAd = ads.maxByOrNull { (_, ad) -> ad.info.revenue }
 
@@ -122,18 +122,21 @@ class AdClientArbitrageur(
                 }
             }
 
-            if (bestAd != null) {
-                // Store info of which client returned the ad
-                val clientIndex = clients.indexOf(bestAd.first)
-                clientIndexByRequestIdMap[requestId] = clientIndex
-                clientIndexByAdIdMap[bestAd.second.id] = clientIndex
+            // If no previous ad or no fresh ad found, return any ad that can be displayed
+            // to avoid a blank UI
+            val ad = bestAd
+                ?: clients.firstNotNullOfOrNull { client ->
+                    client.getAnyAd()?.let { client to it }
+                }
 
-                bestAd.second
-            } else {
-                // If no previous ad or no fresh ad found, return any ad that can be displayed
-                // to avoid a blank UI
-                clients.firstNotNullOfOrNull { it.getAnyAd() }
+            if (ad != null) {
+                // Store info of which client returned the ad
+                val clientIndex = clients.indexOf(ad.first)
+                clientIndexByRequestIdMap[requestId] = clientIndex
+                clientIndexByAdIdMap[ad.second.id] = clientIndex
             }
+
+            ad?.second
         }
     }
 
