@@ -81,7 +81,10 @@ class MaxRewardedAdClient(
         maxRewardedAdListener.add(object : DefaultMaxRewardedAdListener() {
             override fun onUserRewarded(ad: MaxAd, reward: MaxReward) {
                 val adWrapper = findOrCreateAdWrapper(ad)
-                runRevenueListener { it.onAdRevenuePaid(this@MaxRewardedAdClient, adWrapper) }
+                adWrapper.markAsPaidInternal()
+                runRevenueListener {
+                    it.onAdRevenuePaid(this@MaxRewardedAdClient, adWrapper)
+                }
             }
 
             override fun onAdDisplayed(ad: MaxAd) {
