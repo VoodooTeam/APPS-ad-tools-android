@@ -103,7 +103,7 @@ class AdClientArbitrageur(
             // Get all available ads and take most profitable
             // Use revenueThreshold parameter to avoid locking ad for no reason in client
             // (which would lead to useless calls of onOnAvailableAdCountChangedListeners
-            var revenue = Double.MIN_VALUE
+            var revenue = -1.0
             val ads = clients.mapNotNull { client ->
                 val ad = client.getAvailableAd(
                     requestId = requestId,
@@ -111,7 +111,7 @@ class AdClientArbitrageur(
                 ) ?: return@mapNotNull null
                 revenue = ad.info.revenue
 
-                client to (ad)
+                client to ad
             }
             val bestAd = ads.maxByOrNull { (_, ad) -> ad.info.revenue }
 
