@@ -108,7 +108,7 @@ private fun ClearRenderedAdsWhenFirstCellVisible(
         if(lastVisibleIndex != firstVisibleItemIndex && firstVisibleItemIndex == 0) {
             val olderThan = Date(System.currentTimeMillis() - TimeUnit.SECONDS.toMillis(30))
 
-            adMediator.destroyAdsIf {
+            adMediator.destroyAdsIf(clearIndices = true) {
                 it.rendered && it.isOlderThan(olderThan)
             }
         }
@@ -131,6 +131,7 @@ private fun FeedScreenContent(
     adMediator: LazyListAdMediator,
     modifier: Modifier = Modifier,
 ) {
+    ClearWatchedAdsWhenScreenExit(adMediator)
     adMediator.RefreshAdsWithPollingEffect(
         delayBetweenAdsPollings = 500.milliseconds,
         localExtrasProvider = {
