@@ -33,6 +33,7 @@ import io.voodoo.apps.ads.feature.feed.component.FeedItem
 import io.voodoo.apps.ads.feature.feed.component.FeedTopAppBar
 import java.util.Date
 import java.util.concurrent.TimeUnit
+import kotlin.time.Duration.Companion.milliseconds
 
 @Composable
 fun FeedScreen(
@@ -130,6 +131,18 @@ private fun FeedScreenContent(
     adMediator: LazyListAdMediator,
     modifier: Modifier = Modifier,
 ) {
+    adMediator.RefreshAdsWithPollingEffect(
+        delayBetweenAdsPollings = 500.milliseconds,
+        localExtrasProvider = {
+            // Provide extra if needed (see readme)
+            arrayOf(
+                "bigoads_age" to 32,
+                "bigoads_gender" to 2, // gender male
+                "bigoads_activated_time" to TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis())
+            )
+        }
+    )
+    /*
     adMediator.DefaultScrollAdBehaviorEffect(
         localExtrasProvider = {
             // Provide extra if needed (see readme)
@@ -140,6 +153,7 @@ private fun FeedScreenContent(
             )
         }
     )
+     */
 
     LazyColumn(
         state = listState,
