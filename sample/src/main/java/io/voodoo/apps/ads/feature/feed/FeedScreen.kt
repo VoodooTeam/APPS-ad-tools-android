@@ -108,9 +108,10 @@ private fun ClearRenderedAdsWhenFirstCellVisible(
         if(lastVisibleIndex != firstVisibleItemIndex && firstVisibleItemIndex == 0) {
             val olderThan = Date(System.currentTimeMillis() - TimeUnit.SECONDS.toMillis(30))
 
-            adMediator.destroyAdsIf(clearIndices = true) {
+            adMediator.destroyAdsIf {
                 it.rendered && it.isOlderThan(olderThan)
             }
+            adMediator.clearAdIndices()
         }
         lastVisibleIndex = firstVisibleItemIndex
     }

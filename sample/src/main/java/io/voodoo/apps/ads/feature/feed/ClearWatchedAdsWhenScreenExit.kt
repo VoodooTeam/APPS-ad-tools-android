@@ -12,8 +12,9 @@ internal fun ClearWatchedAdsWhenScreenExit(
 ) {
     LifecycleEventEffect(event = Lifecycle.Event.ON_PAUSE) {
         Log.d("TAG_TAG", "ClearRenderedAdsWhenScreenExit")
-        adMediator.destroyAdsIf(clearIndices = false) {
+        adMediator.destroyAdsIf {
             it.isRevenuePaid
         }
+        // do not call clear indices
     }
 }
