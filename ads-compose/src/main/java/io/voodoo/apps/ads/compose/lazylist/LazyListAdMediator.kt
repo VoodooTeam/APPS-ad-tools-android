@@ -156,8 +156,11 @@ class LazyListAdMediator internal constructor(
         adIndices.clear()
     }
 
-    fun destroyAdsIf(predicate: (Ad) -> Boolean) {
-        adClientArbitrageur?.arbitrageur?.destroyAdsIf(predicate)
+    /**
+     * @return number of elements being destroyed
+     */
+    fun destroyAdsIf(predicate: (Ad) -> Boolean) : Int {
+        return adClientArbitrageur?.arbitrageur?.destroyAdsIf(predicate) ?: 0
     }
 
     fun getAdAt(index: Int): Ad? {

@@ -77,7 +77,13 @@ interface AdClient<T : Ad> : Closeable, AdListenerHolder {
     fun addOnAvailableAdCountChangedListener(listener: OnAvailableAdCountChangedListener)
     fun removeOnAvailableAdCountChangedListener(listener: OnAvailableAdCountChangedListener)
 
-    fun destroyAdsIf(predicate: (Ad) -> Boolean)
+    /**
+     * @return number of elements being destroyed
+     *
+     * Note: if an ad is locked (being used somewhere after a [getAvailableAd] call),
+     * it won't get destroyed until being released via a call to [releaseAd]
+     */
+    fun destroyAdsIf(predicate: (Ad) -> Boolean) : Int
 
     data class Config(
         /**
@@ -284,17 +290,19 @@ abstract class BaseAdClient<ActualType : PublicType, PublicType : Ad>(
         adClickListeners.remove(listener)
     }
 
-    override fun destroyAdsIf(predicate: (Ad) -> Boolean) {
+    override fun destroyAdsIf(predicate: (Ad) -> Boolean) : Int {
         synchronized(loadedAds) {
-            val renderedAds = loadedAds.filter(predicate)
+            val adsToDestroy = loadedAds.filter(predicate)
 
-            val renderedAdsNotLocked = loadedAds.filter { it.isLocked().not() }
+            val adsToDestroyNotLocked = loadedAds.filter { it.isLocked().not() }
             pendingAdsToRelease.addAll(loadedAds.filter { it.isLocked() }.map { it.id })
 
-            if (renderedAdsNotLocked.isEmpty()) return
+            if (adsToDestroyNotLocked.isEmpty()) return adsToDestroy.size
 
-            Log.d("AdClient", "Destroying already rendered ads ${renderedAds.map { it.id }}")
-            destroyAds(renderedAdsNotLocked)
+            Log.d("AdClient", "Destroying already rendered ads ${adsToDestroy.map { it.id }}")
+            destroyAds(adsToDestroyNotLocked)
+
+            return adsToDestroy.size
         }
     }
 
