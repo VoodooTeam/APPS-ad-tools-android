@@ -53,7 +53,7 @@ class AdClientArbitrageur(
         }
     }
 
-    fun destroyAdsIf(predicate: (Ad) -> Boolean) : Int {
+    fun destroyAdsIf(predicate: (Ad) -> Boolean): Int {
         return clients.sumOf { client ->
             client.destroyAdsIf(predicate)
         }

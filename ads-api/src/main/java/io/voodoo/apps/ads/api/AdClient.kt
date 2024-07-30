@@ -83,7 +83,7 @@ interface AdClient<T : Ad> : Closeable, AdListenerHolder {
      * Note: if an ad is locked (being used somewhere after a [getAvailableAd] call),
      * it won't get destroyed until being released via a call to [releaseAd]
      */
-    fun destroyAdsIf(predicate: (Ad) -> Boolean) : Int
+    fun destroyAdsIf(predicate: (Ad) -> Boolean): Int
 
     data class Config(
         /**
@@ -290,7 +290,7 @@ abstract class BaseAdClient<ActualType : PublicType, PublicType : Ad>(
         adClickListeners.remove(listener)
     }
 
-    override fun destroyAdsIf(predicate: (Ad) -> Boolean) : Int {
+    override fun destroyAdsIf(predicate: (Ad) -> Boolean): Int {
         synchronized(loadedAds) {
             val adsToDestroy = loadedAds.filter(predicate)
 
@@ -412,7 +412,8 @@ abstract class BaseAdClient<ActualType : PublicType, PublicType : Ad>(
 
     /** unsafe threading, call in `syncrhonized(loadedAds)` block */
     private fun getAdsToDestroy(): List<ActualType> {
-        val pendingAdsDestruction = loadedAds.filter { !it.isLocked() && it.id in pendingAdsToRelease }
+        val pendingAdsDestruction =
+            loadedAds.filter { !it.isLocked() && it.id in pendingAdsToRelease }
 
         val adsToDestroyCount = (loadedAds.size - config.adCacheSize).coerceAtLeast(0)
         if (adsToDestroyCount == 0 && pendingAdsDestruction.isEmpty()) return emptyList()

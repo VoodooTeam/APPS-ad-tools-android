@@ -42,10 +42,12 @@ class AdsInitiliazer {
                         MockData.BANNER_AD_UNIT
                     )
                 )
-                .setTestDeviceAdvertisingIds(listOf(
-                    "a6e26802-9759-4801-b8b6-10ca1ad1abe1",
-                    "579823b0-0ce3-4847-ba62-10ca1ad1abe1",
-                ))
+                .setTestDeviceAdvertisingIds(
+                    listOf(
+                        "a6e26802-9759-4801-b8b6-10ca1ad1abe1",
+                        "579823b0-0ce3-4847-ba62-10ca1ad1abe1",
+                    )
+                )
                 .build()
 
         AppLovinSdk.getInstance(context).apply {

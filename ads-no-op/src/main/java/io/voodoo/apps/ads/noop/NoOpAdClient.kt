@@ -75,7 +75,7 @@ class NoOpAdClient : AdClient<NoOpMRECAd> {
         // no-op
     }
 
-    override fun destroyAdsIf(predicate: (Ad) -> Boolean) : Int {
+    override fun destroyAdsIf(predicate: (Ad) -> Boolean): Int {
         return 0
     }
 }

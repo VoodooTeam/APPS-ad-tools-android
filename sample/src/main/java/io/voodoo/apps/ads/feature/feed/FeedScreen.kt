@@ -104,7 +104,7 @@ private fun ClearRenderedAdsWhenFirstCellVisible(
     val firstVisibleItemIndex by remember { derivedStateOf { listState.firstVisibleItemIndex } }
     var lastVisibleIndex by remember { mutableIntStateOf(0) }
     LaunchedEffect(firstVisibleItemIndex) {
-        if(lastVisibleIndex != firstVisibleItemIndex && firstVisibleItemIndex == 0) {
+        if (lastVisibleIndex != firstVisibleItemIndex && firstVisibleItemIndex == 0) {
             val olderThan = Date(System.currentTimeMillis() - TimeUnit.SECONDS.toMillis(30))
 
             adMediator.destroyAdsIf {
