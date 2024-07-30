@@ -101,14 +101,18 @@ class LazyListAdMediator internal constructor(
      */
     var lazyListIndexOffset by mutableIntStateOf(lazyListIndexOffset)
 
-    private val adIndices = mutableStateListOf(*adIndices.toTypedArray())
-    private val latestAdIndex get() = adIndices.lastOrNull()
-
     /**
      * the actual item count + the ad count,
      * pass this value to [androidx.compose.foundation.lazy.LazyListScope.items] builder
      */
     val totalItemCount by derivedStateOf { computeTotalItemCount() }
+
+    val firstAdIndex get() = adIndices.firstOrNull()
+    val lastAdIndex get() = adIndices.lastOrNull()
+    val adCount get() = adIndices.size
+
+    private val adIndices = mutableStateListOf(*adIndices.toTypedArray())
+    private val latestAdIndex get() = adIndices.lastOrNull()
 
     suspend fun fetchAdIfNecessary(localExtrasProvider: () -> Array<Pair<String, Any>>) {
         val arbitrageur = adClientArbitrageur?.arbitrageur ?: return
@@ -153,13 +157,14 @@ class LazyListAdMediator internal constructor(
      * since you can keep the ads depending on how many items were added.
      */
     fun clearAdIndices() {
+        Log.w("LazyListAdMediator", "clearAdIndices")
         adIndices.clear()
     }
 
     /**
      * @return number of elements being destroyed
      */
-    fun destroyAdsIf(predicate: (Ad) -> Boolean) : Int {
+    fun destroyAdsIf(predicate: (Ad) -> Boolean): Int {
         return adClientArbitrageur?.arbitrageur?.destroyAdsIf(predicate) ?: 0
     }
 
@@ -265,6 +270,7 @@ class LazyListAdMediator internal constructor(
 
 @Composable
 fun LazyListAdMediator.DefaultScrollAdBehaviorEffect(
+    clearAdIndicesOnScrollTop: Boolean = true,
     localExtrasProvider: () -> Array<Pair<String, Any>> = { emptyArray() }
 ) {
     val coroutineScope = rememberCoroutineScope()
@@ -290,6 +296,20 @@ fun LazyListAdMediator.DefaultScrollAdBehaviorEffect(
                 // We check if we should add one everytime the current index in LazyList changes
                 checkAndInsertAvailableAds()
             }
+    }
+
+    if (clearAdIndicesOnScrollTop) {
+        LaunchedEffect(this) {
+            snapshotFlow { adClientArbitrageur }
+                .flatMapLatest {
+                    snapshotFlow { lazyListState?.layoutInfo?.visibleItemsInfo?.lastOrNull()?.index }
+                        .conflate()
+                }
+                .filter { it != null && it < (firstAdIndex ?: 0) && adCount > 1 }
+                .collect {
+                    clearAdIndices()
+                }
+        }
     }
 
     AdFetchResultEffect {
