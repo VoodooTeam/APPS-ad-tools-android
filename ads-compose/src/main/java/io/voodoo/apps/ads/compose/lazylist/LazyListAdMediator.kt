@@ -156,6 +156,7 @@ class LazyListAdMediator internal constructor(
      * since you can keep the ads depending on how many items were added.
      */
     fun clearAdIndices() {
+        Log.w("LazyListAdMediator", "clearAdIndices")
         adIndices.clear()
     }
 
