@@ -109,6 +109,7 @@ class LazyListAdMediator internal constructor(
 
     val firstAdIndex get() = adIndices.firstOrNull()
     val lastAdIndex get() = adIndices.lastOrNull()
+    val adCount get() = adIndices.size
 
     private val adIndices = mutableStateListOf(*adIndices.toTypedArray())
     private val latestAdIndex get() = adIndices.lastOrNull()
@@ -304,7 +305,7 @@ fun LazyListAdMediator.DefaultScrollAdBehaviorEffect(
                     snapshotFlow { lazyListState?.layoutInfo?.visibleItemsInfo?.lastOrNull()?.index }
                         .conflate()
                 }
-                .filter { it != null && it < (firstAdIndex ?: 0) }
+                .filter { it != null && it < (firstAdIndex ?: 0) && adCount > 1 }
                 .collect {
                     clearAdIndices()
                 }
