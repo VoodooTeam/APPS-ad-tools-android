@@ -200,7 +200,7 @@ class LazyListAdMediator internal constructor(
                 .coerceAtLeast(0)
         if (
             firstVisibleItemIndex > (_adIndices.firstOrNull() ?: Int.MAX_VALUE) &&
-            firstVisibleItemIndex < (this.lastAdIndex ?: Int.MIN_VALUE)
+            firstVisibleItemIndex < (lastAdIndex ?: Int.MIN_VALUE)
         ) {
             Log.d("LazyListAdMediator", "checkAndInsertAvailableAds skip")
             return
@@ -231,7 +231,7 @@ class LazyListAdMediator internal constructor(
             (getLastRenderedItemIndex() + 1)
                 .coerceAtLeast(adPreferredInitialIndex)
                 .coerceAtMost(totalItemCount),
-            this.lastAdIndex?.plus(adInterval + 1) ?: Int.MIN_VALUE
+            lastAdIndex?.plus(adInterval + 1) ?: Int.MIN_VALUE
         )
 
         if (index !in adRequiredMinInitialIndex..totalItemCount) {
@@ -248,7 +248,7 @@ class LazyListAdMediator internal constructor(
         return (itemCount + _adIndices.size)
             // Remove all ads if actual content changed and we have ads outside the dataset
             // Note: this is just a nice-to-have, you should call clearAdIndices() manually when content changes
-            .also { if ((this.lastAdIndex ?: Int.MIN_VALUE) > it) clearAdIndices() }
+            .also { if ((lastAdIndex ?: Int.MIN_VALUE) > it) clearAdIndices() }
     }
 
     companion object {
