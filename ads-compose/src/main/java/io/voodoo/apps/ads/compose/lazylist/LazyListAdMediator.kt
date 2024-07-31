@@ -107,12 +107,12 @@ class LazyListAdMediator internal constructor(
      */
     val totalItemCount by derivedStateOf { computeTotalItemCount() }
 
-    val firstAdIndex get() = adIndices.firstOrNull()
-    val lastAdIndex get() = adIndices.lastOrNull()
-    val adCount get() = adIndices.size
+    val firstAdIndex get() = _adIndices.firstOrNull()
+    val lastAdIndex get() = _adIndices.lastOrNull()
+    val adCount get() = _adIndices.size
+    val adIndices get() = _adIndices.toList()
 
-    private val adIndices = mutableStateListOf(*adIndices.toTypedArray())
-    private val latestAdIndex get() = adIndices.lastOrNull()
+    private val _adIndices = mutableStateListOf(*adIndices.toTypedArray())
 
     suspend fun fetchAdIfNecessary(localExtrasProvider: () -> Array<Pair<String, Any>>) {
         val arbitrageur = adClientArbitrageur?.arbitrageur ?: return
@@ -124,7 +124,7 @@ class LazyListAdMediator internal constructor(
 
     fun hasAdAt(index: Int): Boolean {
         // index in adIndices but for sorted array
-        adIndices.forEach { adIndex ->
+        _adIndices.forEach { adIndex ->
             when {
                 adIndex == index -> return true
                 adIndex > index -> return false
@@ -136,9 +136,9 @@ class LazyListAdMediator internal constructor(
 
     fun getAdCountUntil(indexExclusive: Int): Int {
         // adIndices.count { it < index } but for sorted array
-        if (adIndices.isEmpty()) return 0
+        if (_adIndices.isEmpty()) return 0
         var count = 0
-        for (adIndex in adIndices) {
+        for (adIndex in _adIndices) {
             if (adIndex >= indexExclusive) break
             count++
         }
@@ -158,7 +158,17 @@ class LazyListAdMediator internal constructor(
      */
     fun clearAdIndices() {
         Log.w("LazyListAdMediator", "clearAdIndices")
-        adIndices.clear()
+        _adIndices.clear()
+    }
+
+    /**
+     * Remove all ads from the list that are below the list of rendered items.
+     * A good moment to call this is when the app comes back to foreground.
+     */
+    fun clearAdIndicesBelowViewport() {
+        Log.w("LazyListAdMediator", "clearAdIndicesBelowViewport")
+        val lastRenderedItemIndex = getLastRenderedItemIndex()
+        _adIndices.removeAll { it > lastRenderedItemIndex }
     }
 
     /**
@@ -189,15 +199,15 @@ class LazyListAdMediator internal constructor(
             (lazyListState.firstVisibleItemIndex - lazyListIndexOffset)
                 .coerceAtLeast(0)
         if (
-            firstVisibleItemIndex > (adIndices.firstOrNull() ?: Int.MAX_VALUE) &&
-            firstVisibleItemIndex < (latestAdIndex ?: Int.MIN_VALUE)
+            firstVisibleItemIndex > (_adIndices.firstOrNull() ?: Int.MAX_VALUE) &&
+            firstVisibleItemIndex < (lastAdIndex ?: Int.MIN_VALUE)
         ) {
             Log.d("LazyListAdMediator", "checkAndInsertAvailableAds skip")
             return
         }
 
         val availableAdCount = arbitrageur.getAvailableAdCount().notLocked
-        val insertedNextAdCount = adIndices.count { it > firstVisibleItemIndex }
+        val insertedNextAdCount = _adIndices.count { it > firstVisibleItemIndex }
         val adsToInsert = (availableAdCount - insertedNextAdCount).coerceAtLeast(0)
         Log.d("LazyListAdMediator", "checkAndInsertAvailableAds insert $adsToInsert ads")
 
@@ -206,20 +216,22 @@ class LazyListAdMediator internal constructor(
         }
     }
 
+    internal fun getLastRenderedItemIndex(): Int {
+        return lazyListState?.layoutInfo?.visibleItemsInfo
+            ?.maxByOrNull { it.index }?.index
+            ?.minus(lazyListIndexOffset)
+            ?.coerceAtLeast(0)
+            ?: 0
+    }
+
     private fun insertAdIndex() {
-        val lastRenderedItem =
-            lazyListState?.layoutInfo?.visibleItemsInfo
-                ?.maxByOrNull { it.index }?.index
-                ?.minus(lazyListIndexOffset)
-                ?.coerceAtLeast(0)
-                ?: 0
         val totalItemCount = totalItemCount
 
         val index = max(
-            (lastRenderedItem + 1)
+            (getLastRenderedItemIndex() + 1)
                 .coerceAtLeast(adPreferredInitialIndex)
                 .coerceAtMost(totalItemCount),
-            latestAdIndex?.plus(adInterval + 1) ?: Int.MIN_VALUE
+            lastAdIndex?.plus(adInterval + 1) ?: Int.MIN_VALUE
         )
 
         if (index !in adRequiredMinInitialIndex..totalItemCount) {
@@ -229,14 +241,14 @@ class LazyListAdMediator internal constructor(
         }
 
         Log.d("LazyListAdMediator", "insert ad at $index (totalItemCount $totalItemCount)")
-        adIndices.add(index)
+        _adIndices.add(index)
     }
 
     private fun computeTotalItemCount(): Int {
-        return (itemCount + adIndices.size)
+        return (itemCount + _adIndices.size)
             // Remove all ads if actual content changed and we have ads outside the dataset
             // Note: this is just a nice-to-have, you should call clearAdIndices() manually when content changes
-            .also { if ((latestAdIndex ?: Int.MIN_VALUE) > it) clearAdIndices() }
+            .also { if ((lastAdIndex ?: Int.MIN_VALUE) > it) clearAdIndices() }
     }
 
     companion object {
@@ -247,7 +259,7 @@ class LazyListAdMediator internal constructor(
             save = {
                 listOf(
                     it.adInterval,
-                    it.adIndices.toIntArray(),
+                    it._adIndices.toIntArray(),
                     it.adPreferredInitialIndex,
                     it.adRequiredMinInitialIndex,
                     it.lazyListIndexOffset,
@@ -302,10 +314,10 @@ fun LazyListAdMediator.DefaultScrollAdBehaviorEffect(
         LaunchedEffect(this) {
             snapshotFlow { adClientArbitrageur }
                 .flatMapLatest {
-                    snapshotFlow { lazyListState?.layoutInfo?.visibleItemsInfo?.lastOrNull()?.index }
+                    snapshotFlow { getLastRenderedItemIndex() }
                         .conflate()
                 }
-                .filter { it != null && it < (firstAdIndex ?: 0) && adCount > 1 }
+                .filter { it < (firstAdIndex ?: 0) && adCount > 1 }
                 .collect {
                     clearAdIndices()
                 }
