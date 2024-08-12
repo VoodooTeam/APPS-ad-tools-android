@@ -19,6 +19,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import com.google.android.gms.ads.MobileAds
+import com.google.android.gms.ads.RequestConfiguration
 import io.voodoo.apps.ads.compose.model.AdClientArbitrageurHolder
 import io.voodoo.apps.ads.feature.ads.AdsInitiliazer
 import io.voodoo.apps.ads.feature.ads.FeedAdClientArbitrageurFactory
@@ -123,8 +124,10 @@ class MainActivity : ComponentActivity() {
         if (consent.adConsent || !consent.gdprApplicable) {
             //Ads can only being initialized when consent is retrieved / when privacy is not applicable
             lifecycleScope.launch(Dispatchers.Default) {
-                AdsInitiliazer().init(this@MainActivity, consent.doNotSellDataEnabled)
-                MobileAds.initialize(this@MainActivity) {}
+                RequestConfiguration.Builder().setTestDeviceIds(listOf("62F1537DEE5A7D64BBEF426DF068B441"))
+                MobileAds.initialize(this@MainActivity) {
+                    AdsInitiliazer().init(this@MainActivity, consent.doNotSellDataEnabled)
+                }
             }
         }
     }

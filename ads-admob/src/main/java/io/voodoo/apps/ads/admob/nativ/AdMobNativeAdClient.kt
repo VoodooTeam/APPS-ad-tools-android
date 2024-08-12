@@ -8,18 +8,17 @@ import com.google.android.gms.ads.AdLoader
 import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.LoadAdError
 import com.google.android.gms.ads.nativead.NativeAd
-import com.google.android.gms.ads.nativead.NativeAdOptions
+import io.voodoo.apps.ads.admob.exception.AdMobAdLoadException
+import io.voodoo.apps.ads.admob.listener.AdMobNativeAdViewListener
+import io.voodoo.apps.ads.admob.listener.MultiAdMobNativeAdViewListener
 import io.voodoo.apps.ads.api.AdClient
 import io.voodoo.apps.ads.api.BaseAdClient
 import io.voodoo.apps.ads.api.LocalExtrasProvider
 import io.voodoo.apps.ads.api.model.Ad
-import io.voodoo.apps.ads.admob.exception.AdMobAdLoadException
-import io.voodoo.apps.ads.admob.listener.AdMobNativeAdViewListener
-import io.voodoo.apps.ads.admob.listener.MultiAdMobNativeAdViewListener
 import kotlinx.coroutines.CompletableDeferred
 import java.util.Date
 
-sealed interface LoadingAd {
+private sealed interface LoadingAd {
     data class Success(val ad: NativeAd) : LoadingAd
     data class Failure(val error: LoadAdError) : LoadingAd
 }
@@ -97,16 +96,11 @@ class AdMobNativeAdClient(
             activity,
             config.adUnit,
         ).forNativeAd { ad: NativeAd ->
-            if (loader.isLoading) {
-                // If this callback occurs after the activity is destroyed, you
-                // must call destroy and return or you may get a memory leak.
-                // Note `isDestroyed` is a method on Activity.
-                if (activity.isDestroyed) {
-                    ad.destroy()
-                    return@forNativeAd
-                } else {
-                    loadingAdLocal.complete(LoadingAd.Success(ad))
-                }
+            if (activity.isDestroyed) {
+                ad.destroy()
+                return@forNativeAd
+            } else if (!loader.isLoading) {
+                loadingAdLocal.complete(LoadingAd.Success(ad))
             }
         }.withAdListener(object : AdListener() {
             override fun onAdClicked() {
@@ -122,7 +116,7 @@ class AdMobNativeAdClient(
             }
 
             override fun onAdLoaded() {
-                adMobNativeAdListener.onAdLoaded(_loadingAd)
+                //adMobNativeAdListener.onAdLoaded(_loadingAd)
             }
 
             override fun onAdOpened() {
@@ -135,21 +129,21 @@ class AdMobNativeAdClient(
 
             override fun onAdFailedToLoad(adError: LoadAdError) {
                 loadingAdLocal.complete(LoadingAd.Failure(adError))
-                adMobNativeAdListener.onAdFailedToLoad(adError)
             }
         })
-            .withNativeAdOptions(
-                NativeAdOptions.Builder()
-                    // Methods in the NativeAdOptions.Builder class can be
-                    // used here to specify individual options settings.
-                    .build()
-            )
+            //.withNativeAdOptions(
+            //    NativeAdOptions.Builder()
+            //        // Methods in the NativeAdOptions.Builder class can be
+            //        // used here to specify individual options settings.
+            //        .build()
+            //)
             .build()
 
-        loader.loadAd(AdRequest.Builder()
-            .apply {
-                //this.setNeighboringContentUrls() TODO
-            }.build()
+        loader.loadAd(
+            AdRequest.Builder()
+                .apply {
+                    //this.setNeighboringContentUrls() TODO
+                }.build()
         )
 
         val result = loadingAdLocal.await()
@@ -229,8 +223,10 @@ class AdMobNativeAdClient(
         when (result) {
             is LoadingAd.Failure -> {
                 _loadingAd = null
+                adMobNativeAdListener.onAdFailedToLoad(result.error)
                 throw AdMobAdLoadException(result.error)
             }
+
             is LoadingAd.Success -> {
                 Log.i("AdMobNativeAdClient", "fetchAd success")
 
