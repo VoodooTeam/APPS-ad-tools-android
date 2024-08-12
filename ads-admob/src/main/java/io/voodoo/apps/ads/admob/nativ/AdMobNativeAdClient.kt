@@ -94,7 +94,7 @@ class AdMobNativeAdClient(
 
         lateinit var loader: AdLoader
         loader = AdLoader.Builder(
-            activity.applicationContext,
+            activity,
             config.adUnit,
         ).forNativeAd { ad: NativeAd ->
             if (loader.isLoading) {
