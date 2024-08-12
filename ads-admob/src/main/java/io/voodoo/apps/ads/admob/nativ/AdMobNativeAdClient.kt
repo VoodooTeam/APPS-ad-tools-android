@@ -36,59 +36,6 @@ class AdMobNativeAdClient(
 
     private val adMobNativeAdListener = MultiAdMobNativeAdViewListener()
 
-    private var loadingAd: CompletableDeferred<LoadingAd>? = null
-    private var _loadingAd: NativeAd? = null
-
-    private val loader = AdLoader.Builder(
-        activity.applicationContext,
-        config.adUnit,
-    ).forNativeAd { ad: NativeAd ->
-        // If this callback occurs after the activity is destroyed, you
-        // must call destroy and return or you may get a memory leak.
-        // Note `isDestroyed` is a method on Activity.
-        if (activity.isDestroyed) {
-            ad.destroy()
-            return@forNativeAd
-        } else {
-            loadingAd?.complete(LoadingAd.Success(ad))
-        }
-    }.withAdListener(object : AdListener() {
-        override fun onAdClicked() {
-            adMobNativeAdListener.onAdClicked(_loadingAd)
-        }
-
-        override fun onAdClosed() {
-            adMobNativeAdListener.onAdClosed(_loadingAd)
-        }
-
-        override fun onAdImpression() {
-            adMobNativeAdListener.onAdImpression(_loadingAd)
-        }
-
-        override fun onAdLoaded() {
-            adMobNativeAdListener.onAdLoaded(_loadingAd)
-        }
-
-        override fun onAdOpened() {
-            adMobNativeAdListener.onAdOpened(_loadingAd)
-        }
-
-        override fun onAdSwipeGestureClicked() {
-            adMobNativeAdListener.onAdSwipeGestureClicked(_loadingAd)
-        }
-
-        override fun onAdFailedToLoad(adError: LoadAdError) {
-            loadingAd?.complete(LoadingAd.Failure(adError))
-            adMobNativeAdListener.onAdFailedToLoad(adError)
-        }
-    })
-        .withNativeAdOptions(
-            NativeAdOptions.Builder()
-                // Methods in the NativeAdOptions.Builder class can be
-                // used here to specify individual options settings.
-                .build()
-        )
-        .build()
     private val adViewPool = AdMobNativeAdViewPool(adViewFactory)
 
     private val localExtrasProviders = localExtrasProviders.toList()
@@ -141,8 +88,64 @@ class AdMobNativeAdClient(
     override suspend fun fetchAdSafe(vararg localExtras: Pair<String, Any>): AdmobNativeAdWrapper {
         runLoadingListeners { it.onAdLoadingStarted(this) }
 
+        var _loadingAd: NativeAd? = null
+
         val loadingAdLocal = CompletableDeferred<LoadingAd>()
-        loadingAd = loadingAdLocal
+
+        lateinit var loader: AdLoader
+        loader = AdLoader.Builder(
+            activity.applicationContext,
+            config.adUnit,
+        ).forNativeAd { ad: NativeAd ->
+            if (loader.isLoading) {
+                // If this callback occurs after the activity is destroyed, you
+                // must call destroy and return or you may get a memory leak.
+                // Note `isDestroyed` is a method on Activity.
+                if (activity.isDestroyed) {
+                    ad.destroy()
+                    return@forNativeAd
+                } else {
+                    loadingAdLocal.complete(LoadingAd.Success(ad))
+                }
+            }
+        }.withAdListener(object : AdListener() {
+            override fun onAdClicked() {
+                adMobNativeAdListener.onAdClicked(_loadingAd)
+            }
+
+            override fun onAdClosed() {
+                adMobNativeAdListener.onAdClosed(_loadingAd)
+            }
+
+            override fun onAdImpression() {
+                adMobNativeAdListener.onAdImpression(_loadingAd)
+            }
+
+            override fun onAdLoaded() {
+                adMobNativeAdListener.onAdLoaded(_loadingAd)
+            }
+
+            override fun onAdOpened() {
+                adMobNativeAdListener.onAdOpened(_loadingAd)
+            }
+
+            override fun onAdSwipeGestureClicked() {
+                adMobNativeAdListener.onAdSwipeGestureClicked(_loadingAd)
+            }
+
+            override fun onAdFailedToLoad(adError: LoadAdError) {
+                loadingAdLocal.complete(LoadingAd.Failure(adError))
+                adMobNativeAdListener.onAdFailedToLoad(adError)
+            }
+        })
+            .withNativeAdOptions(
+                NativeAdOptions.Builder()
+                    // Methods in the NativeAdOptions.Builder class can be
+                    // used here to specify individual options settings.
+                    .build()
+            )
+            .build()
+
         loader.loadAd(AdRequest.Builder()
             .apply {
                 //this.setNeighboringContentUrls() TODO
