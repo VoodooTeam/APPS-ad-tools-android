@@ -85,6 +85,7 @@ dependencies {
     if (true) {
         implementation(project(":ads-api"))
         implementation(project(":ads-applovin"))
+        implementation(project(":ads-admob"))
         implementation(project(":ads-compose"))
         implementation(project(":ads-applovin-plugin-amazon"))
     } else {
