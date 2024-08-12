@@ -102,7 +102,7 @@ instagram.
     * For native ads, you need to implement the whole layout in an XML layout file with views for
       each element (title, body, icon, ...) (applovin requirement). You'll need to pass a view
       factory instance to your `MaxNativeAdClient`.
-      See [MaxNativeAdViewFactory](sample/src/main/java/io/voodoo/apps/ads/feature/ads/nativ/MaxNativeAdViewFactory.kt)
+      See [MaxNativeAdViewFactory](sample/src/main/java/io/voodoo/apps/ads/feature/ads/nativ/AdMobNativeAdViewFactory.kt)
       for sample.
       see https://developers.applovin.com/en/android/ad-formats/native-ads#manual
     * For MREC ads, the applovin SDK provides us with a 300dp x 250dp view, and we can use it as we
