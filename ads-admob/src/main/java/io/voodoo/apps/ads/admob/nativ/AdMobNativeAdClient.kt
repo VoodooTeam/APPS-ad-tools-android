@@ -27,6 +27,7 @@ class AdMobNativeAdClient(
     config: AdClient.Config,
     private val activity: Activity,
     adViewFactory: AdMobNativeAdViewFactory,
+    private val adViewRenderer: AdMobNativeAdViewRenderer,
     //private val renderListener: MaxNativeAdRenderListener? = null,
     localExtrasProviders: List<LocalExtrasProvider> = emptyList(),
 ) : BaseAdClient<AdmobNativeAdWrapper, Ad.Native>(config = config) {
@@ -35,7 +36,9 @@ class AdMobNativeAdClient(
 
     private val adMobNativeAdListener = MultiAdMobNativeAdViewListener()
 
-    private val adViewPool = AdMobNativeAdViewPool(adViewFactory)
+    private val adViewPool = AdMobNativeAdViewPool(
+        adViewFactory,
+    )
 
     private val localExtrasProviders = localExtrasProviders.toList()
 
@@ -236,6 +239,7 @@ class AdMobNativeAdClient(
                     ad = result.ad,
                     loadedAt = Date(),
                     viewPool = adViewPool,
+                    adViewRenderer = adViewRenderer,
                 )
 
                 runLoadingListeners { it.onAdLoadingFinished(this, adWrapper) }

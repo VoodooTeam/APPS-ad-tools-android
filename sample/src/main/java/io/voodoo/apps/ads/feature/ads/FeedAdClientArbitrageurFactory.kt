@@ -43,6 +43,7 @@ class FeedAdClientArbitrageurFactory {
     }
 
     private fun createAdmobNativeClient(activity: Activity) : AdClient<Ad.Native> {
+        val factory = MyAdMobNativeAdViewFactory()
         return AdMobNativeAdClient(
             config = AdClient.Config(
                 adCacheSize = 1,
@@ -50,7 +51,8 @@ class FeedAdClientArbitrageurFactory {
                 placement = "feed"
             ),
             activity = activity,
-            adViewFactory = MyAdMobNativeAdViewFactory(),
+            adViewFactory = factory,
+            adViewRenderer = factory,
             // Provide extras via here if more convenient than the UI
             localExtrasProviders = emptyList(),
         )

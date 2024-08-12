@@ -13,6 +13,7 @@ import java.util.Date
 class AdmobNativeAdWrapper internal constructor(
     val ad: NativeAd,
     internal val viewPool: AdMobNativeAdViewPool,
+    internal val adViewRenderer: AdMobNativeAdViewRenderer,
     override val loadedAt: Date,
 ) : Ad.Native() {
 
@@ -33,6 +34,9 @@ class AdmobNativeAdWrapper internal constructor(
 
         val view = viewPool.getOrCreate(parent.context)
             .also { this.view = it }
+
+        adViewRenderer.render(view, ad)
+
         parent.addView(view)
 
         markAsRendered()

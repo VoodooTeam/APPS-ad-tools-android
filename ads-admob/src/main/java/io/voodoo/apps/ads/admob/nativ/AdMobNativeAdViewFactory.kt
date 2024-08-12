@@ -9,3 +9,4 @@ interface AdMobNativeAdViewFactory {
     @UiThread
     fun create(context: Context): NativeAdView
 }
+

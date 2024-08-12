@@ -1,12 +1,65 @@
 package io.voodoo.apps.ads.feature.ads.nativ.admob
 
 import android.content.Context
+import android.content.res.Resources
+import android.graphics.Rect
 import android.view.LayoutInflater
+import android.view.View
+import android.widget.Button
+import android.widget.ImageView
+import android.widget.TextView
+import androidx.core.view.postDelayed
+import com.google.android.gms.ads.nativead.MediaView
+import com.google.android.gms.ads.nativead.NativeAd
 import com.google.android.gms.ads.nativead.NativeAdView
 import io.voodoo.apps.ads.R
 import io.voodoo.apps.ads.admob.nativ.AdMobNativeAdViewFactory
+import io.voodoo.apps.ads.admob.nativ.AdMobNativeAdViewRenderer
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
 
-class MyAdMobNativeAdViewFactory : AdMobNativeAdViewFactory {
+class MyAdMobNativeAdViewFactory : AdMobNativeAdViewFactory, AdMobNativeAdViewRenderer {
+
+    override fun render(nativeAdView: NativeAdView, nativeAd: NativeAd) {
+        // Set the media view.
+        nativeAdView.mediaView?.let { mediaView ->
+            nativeAd.mediaContent?.let { content -> mediaView.mediaContent = content }
+            //mediaView.setImageScaleType(ImageView.ScaleType.CENTER_CROP)
+        }
+
+        // Set other ad assets.
+        (nativeAdView.bodyView as? TextView)?.let {
+            it.text = nativeAd.body
+        }
+        (nativeAdView.callToActionView as? Button)?.let {
+            it.text = nativeAd.callToAction
+        }
+        (nativeAdView.iconView as? ImageView)?.let {
+            it.setImageDrawable(nativeAd.icon?.drawable)
+        }
+        //nativeAdView.priceView = unifiedAdBinding.adPrice
+        //nativeAdView.starRatingView = unifiedAdBinding.adStars
+        //nativeAdView.storeView = unifiedAdBinding.adStore
+        (nativeAdView.advertiserView as? TextView)?.let {
+            it.text = nativeAd.advertiser
+        }
+
+        (nativeAdView.headlineView as? TextView)?.let {
+            it.text = nativeAd.headline
+        }
+
+        nativeAdView.addOnAttachStateChangeListener(object : View.OnAttachStateChangeListener {
+            override fun onViewAttachedToWindow(v: View) {
+                nativeAdView.doOnVisible(pollInterval = 1.seconds) {
+                    nativeAdView.updateState(visible = true)
+                }
+            }
+
+            override fun onViewDetachedFromWindow(v: View) {
+                nativeAdView.updateState(visible = false)
+            }
+        })
+    }
 
     override fun create(context: Context): NativeAdView {
         val inflater = LayoutInflater.from(context)
@@ -14,54 +67,34 @@ class MyAdMobNativeAdViewFactory : AdMobNativeAdViewFactory {
             inflater.inflate(R.layout.layout_admob_feed_ad_item, null) as NativeAdView
 
         // Set the media view.
-        nativeAdView.mediaView = nativeAdView.findViewById(R.id.media_view_container)
-        //adView.mediaView.imageScaleType = ImageView.ScaleType.CENTER_CROP
-
+        nativeAdView.mediaView = nativeAdView.findViewById<MediaView>(R.id.media_view_container)
         // Set other ad assets.
-        //nativeAdView.headlineView = unifiedAdBinding.adHeadline
-        nativeAdView.bodyView = nativeAdView.findViewById(R.id.body_text_view)
-        nativeAdView.callToActionView = nativeAdView.findViewById(R.id.cta_button)
-        //nativeAdView.iconView = unifiedAdBinding.adAppIcon
+        nativeAdView.bodyView = nativeAdView.findViewById<TextView>(R.id.body_text_view)
+        nativeAdView.callToActionView = nativeAdView.findViewById<Button>(R.id.cta_button)
+        nativeAdView.iconView = nativeAdView.findViewById<ImageView>(R.id.icon_image_view)
         //nativeAdView.priceView = unifiedAdBinding.adPrice
         //nativeAdView.starRatingView = unifiedAdBinding.adStars
         //nativeAdView.storeView = unifiedAdBinding.adStore
-        nativeAdView.advertiserView = nativeAdView.findViewById(R.id.advertiser_textView)
-
-
-        /*
-        adView.addOnAttachStateChangeListener(object : OnAttachStateChangeListener {
-            override fun onViewAttachedToWindow(v: View) {
-                doOnVisible(pollInterval = 1.seconds) {
-                    updateState(visible = true)
-                }
-            }
-
-            override fun onViewDetachedFromWindow(v: View) {
-                updateState(visible = false)
-            }
-        })
-         */
+        nativeAdView.advertiserView = nativeAdView.findViewById<TextView>(R.id.advertiser_textView)
+        nativeAdView.headlineView = nativeAdView.findViewById<TextView>(R.id.title_text_view)
 
         return nativeAdView
     }
 
-    /*
     // TODO: implement animation in bg_feed_ad_button.xml and txt_feed_ad_button.xml
     //   to crossfade colors
     private fun NativeAdView.updateState(visible: Boolean) {
         if (visible) {
             postDelayed(3_000) {
-                callToActionButton.isActivated = true
+                callToActionView?.isActivated = true
             }
         } else {
             // Reset for next ad
-            callToActionButton.isActivated = false
+            callToActionView?.isActivated = false
         }
     }
-     */
 
-    /*
-    private fun MaxNativeAdView.doOnVisible(
+    private fun NativeAdView.doOnVisible(
         pollInterval: Duration,
         body: () -> Unit
     ) {
@@ -87,5 +120,4 @@ class MyAdMobNativeAdViewFactory : AdMobNativeAdViewFactory {
         val screen = Rect(0, 0, screenWidth, screenHeight)
         return isGlobalVisible && Rect.intersects(actualPosition, screen)
     }
-     */
 }
