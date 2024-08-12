@@ -16,9 +16,9 @@
             android:layout_height="32dp"
             android:layout_marginStart="16dp"
             android:layout_marginEnd="8dp"
-            app:layout_constraintBottom_toBottomOf="@id/body_text_view"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="@id/title_text_view" />
+            app:layout_constraintTop_toTopOf="parent"
+             />
 
         <TextView
             android:id="@+id/title_text_view"
@@ -89,9 +89,8 @@
                 <com.google.android.gms.ads.nativead.MediaView
                     android:id="@+id/media_view_container"
                     android:layout_width="match_parent"
-                    android:layout_height="0dp"
+                    android:layout_height="175dp"
                     android:background="#0E0E0E"
-                    app:layout_constraintDimensionRatio="3:4"
                     app:layout_constraintTop_toTopOf="parent"
                     tools:foreground="#805B5B" />
             </androidx.constraintlayout.widget.ConstraintLayout>

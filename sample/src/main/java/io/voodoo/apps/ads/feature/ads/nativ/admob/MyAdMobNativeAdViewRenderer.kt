@@ -1,30 +1,25 @@
 package io.voodoo.apps.ads.feature.ads.nativ.admob
 
-import android.content.Context
 import android.content.res.Resources
 import android.graphics.Rect
-import android.view.LayoutInflater
 import android.view.View
 import android.widget.Button
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.core.view.postDelayed
-import com.google.android.gms.ads.nativead.MediaView
 import com.google.android.gms.ads.nativead.NativeAd
 import com.google.android.gms.ads.nativead.NativeAdView
-import io.voodoo.apps.ads.R
-import io.voodoo.apps.ads.admob.nativ.AdMobNativeAdViewFactory
 import io.voodoo.apps.ads.admob.nativ.AdMobNativeAdViewRenderer
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
-class MyAdMobNativeAdViewFactory : AdMobNativeAdViewFactory, AdMobNativeAdViewRenderer {
+class MyAdMobNativeAdViewRenderer : AdMobNativeAdViewRenderer {
 
     override fun render(nativeAdView: NativeAdView, nativeAd: NativeAd) {
         // Set the media view.
         nativeAdView.mediaView?.let { mediaView ->
             nativeAd.mediaContent?.let { content -> mediaView.mediaContent = content }
-            //mediaView.setImageScaleType(ImageView.ScaleType.CENTER_CROP)
+            mediaView.setImageScaleType(ImageView.ScaleType.CENTER_CROP)
         }
 
         // Set other ad assets.
@@ -59,26 +54,11 @@ class MyAdMobNativeAdViewFactory : AdMobNativeAdViewFactory, AdMobNativeAdViewRe
                 nativeAdView.updateState(visible = false)
             }
         })
-    }
 
-    override fun create(context: Context): NativeAdView {
-        val inflater = LayoutInflater.from(context)
-        val nativeAdView =
-            inflater.inflate(R.layout.layout_admob_feed_ad_item, null) as NativeAdView
+        // This method tells the Google Mobile Ads SDK that you have finished populating your
+        // native ad view with this native ad.
+        nativeAdView.setNativeAd(nativeAd)
 
-        // Set the media view.
-        nativeAdView.mediaView = nativeAdView.findViewById<MediaView>(R.id.media_view_container)
-        // Set other ad assets.
-        nativeAdView.bodyView = nativeAdView.findViewById<TextView>(R.id.body_text_view)
-        nativeAdView.callToActionView = nativeAdView.findViewById<Button>(R.id.cta_button)
-        nativeAdView.iconView = nativeAdView.findViewById<ImageView>(R.id.icon_image_view)
-        //nativeAdView.priceView = unifiedAdBinding.adPrice
-        //nativeAdView.starRatingView = unifiedAdBinding.adStars
-        //nativeAdView.storeView = unifiedAdBinding.adStore
-        nativeAdView.advertiserView = nativeAdView.findViewById<TextView>(R.id.advertiser_textView)
-        nativeAdView.headlineView = nativeAdView.findViewById<TextView>(R.id.title_text_view)
-
-        return nativeAdView
     }
 
     // TODO: implement animation in bg_feed_ad_button.xml and txt_feed_ad_button.xml

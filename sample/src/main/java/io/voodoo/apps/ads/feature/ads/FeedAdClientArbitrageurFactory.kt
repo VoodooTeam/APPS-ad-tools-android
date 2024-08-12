@@ -14,6 +14,7 @@ import io.voodoo.apps.ads.applovin.plugin.amazon.AmazonMaxMRECAdClientPlugin
 import io.voodoo.apps.ads.feature.ads.nativ.MaxNativeAdRenderListener
 import io.voodoo.apps.ads.feature.ads.nativ.MaxNativeAdViewFactory
 import io.voodoo.apps.ads.feature.ads.nativ.admob.MyAdMobNativeAdViewFactory
+import io.voodoo.apps.ads.feature.ads.nativ.admob.MyAdMobNativeAdViewRenderer
 import kotlin.time.Duration.Companion.seconds
 
 class FeedAdClientArbitrageurFactory {
@@ -43,7 +44,6 @@ class FeedAdClientArbitrageurFactory {
     }
 
     private fun createAdmobNativeClient(activity: Activity) : AdClient<Ad.Native> {
-        val factory = MyAdMobNativeAdViewFactory()
         return AdMobNativeAdClient(
             config = AdClient.Config(
                 adCacheSize = 1,
@@ -51,8 +51,8 @@ class FeedAdClientArbitrageurFactory {
                 placement = "feed"
             ),
             activity = activity,
-            adViewFactory = factory,
-            adViewRenderer = factory,
+            adViewFactory = MyAdMobNativeAdViewFactory(),
+            adViewRenderer = MyAdMobNativeAdViewRenderer(),
             // Provide extras via here if more convenient than the UI
             localExtrasProviders = emptyList(),
         )
