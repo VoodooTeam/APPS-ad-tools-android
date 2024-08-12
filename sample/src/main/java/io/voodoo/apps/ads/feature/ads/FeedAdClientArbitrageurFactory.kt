@@ -27,8 +27,8 @@ class FeedAdClientArbitrageurFactory {
         return AdClientArbitrageur(
             clients = listOf(
                 createAdmobNativeClient(activity),
-                //createNativeClient(activity),
-                //createMRECClient(activity),
+                //git createNativeClient(activity),
+                //git createMRECClient(activity),
             ),
             backoffConfig = BackoffConfig(
                 maxDelay = 30.seconds,

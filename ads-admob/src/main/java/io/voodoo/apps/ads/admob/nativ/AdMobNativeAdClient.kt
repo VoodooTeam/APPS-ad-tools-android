@@ -78,6 +78,7 @@ class AdMobNativeAdClient(
         }
 
         override fun onAdFailedToLoad(adError: LoadAdError) {
+            loadingAd?.complete(LoadingAd.Failure(adError))
             adMobNativeAdListener.onAdFailedToLoad(adError)
         }
     })
@@ -86,7 +87,8 @@ class AdMobNativeAdClient(
                 // Methods in the NativeAdOptions.Builder class can be
                 // used here to specify individual options settings.
                 .build()
-        ).build()
+        )
+        .build()
     private val adViewPool = AdMobNativeAdViewPool(adViewFactory)
 
     private val localExtrasProviders = localExtrasProviders.toList()

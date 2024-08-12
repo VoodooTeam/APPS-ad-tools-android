@@ -18,6 +18,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
+import com.google.android.gms.ads.MobileAds
 import io.voodoo.apps.ads.compose.model.AdClientArbitrageurHolder
 import io.voodoo.apps.ads.feature.ads.AdsInitiliazer
 import io.voodoo.apps.ads.feature.ads.FeedAdClientArbitrageurFactory
@@ -25,6 +26,7 @@ import io.voodoo.apps.ads.feature.feed.FeedViewModel
 import io.voodoo.apps.privacy.VoodooPrivacyManager
 import io.voodoo.apps.privacy.config.SourcepointConfiguration
 import io.voodoo.apps.privacy.model.VoodooPrivacyConsent
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
@@ -122,6 +124,7 @@ class MainActivity : ComponentActivity() {
             //Ads can only being initialized when consent is retrieved / when privacy is not applicable
             lifecycleScope.launch(Dispatchers.Default) {
                 AdsInitiliazer().init(this@MainActivity, consent.doNotSellDataEnabled)
+                MobileAds.initialize(this@MainActivity) {}
             }
         }
     }
