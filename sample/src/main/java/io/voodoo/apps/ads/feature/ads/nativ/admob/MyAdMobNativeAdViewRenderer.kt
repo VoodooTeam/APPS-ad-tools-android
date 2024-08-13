@@ -6,7 +6,9 @@ import android.view.View
 import android.widget.Button
 import android.widget.ImageView
 import android.widget.TextView
+import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.view.postDelayed
+import androidx.core.view.updateLayoutParams
 import com.google.android.gms.ads.nativead.NativeAd
 import com.google.android.gms.ads.nativead.NativeAdView
 import io.voodoo.apps.ads.admob.nativ.AdMobNativeAdViewRenderer
@@ -19,6 +21,13 @@ class MyAdMobNativeAdViewRenderer : AdMobNativeAdViewRenderer {
         // Set the media view.
         nativeAdView.mediaView?.let { mediaView ->
             nativeAd.mediaContent?.let { content -> mediaView.mediaContent = content }
+            nativeAd.mediaContent?.aspectRatio?.let { ratio ->
+                mediaView.updateLayoutParams {
+                    (this as? ConstraintLayout.LayoutParams)?.let {
+                        it.dimensionRatio = ratio.toString()
+                    } ?: this
+                }
+            }
             mediaView.setImageScaleType(ImageView.ScaleType.CENTER_CROP)
         }
 

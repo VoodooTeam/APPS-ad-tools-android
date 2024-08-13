@@ -88,9 +88,10 @@
 
                 <com.google.android.gms.ads.nativead.MediaView
                     android:id="@+id/media_view_container"
+                    android:layout_height="0dp"
                     android:layout_width="match_parent"
-                    android:layout_height="175dp"
                     android:background="#0E0E0E"
+                    app:layout_constraintDimensionRatio="16:9"
                     app:layout_constraintTop_toTopOf="parent"
                     tools:foreground="#805B5B" />
             </androidx.constraintlayout.widget.ConstraintLayout>

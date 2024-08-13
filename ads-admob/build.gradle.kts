@@ -15,7 +15,7 @@ android {
 
 dependencies {
     implementation(project(":ads-api"))
-    implementation("com.google.android.gms:play-services-ads:23.2.0")
+    implementation(libs.play.services.ads)
 
 }
 
