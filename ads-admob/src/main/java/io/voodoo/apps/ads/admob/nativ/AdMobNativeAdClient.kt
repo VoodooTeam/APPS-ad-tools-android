@@ -90,7 +90,7 @@ class AdMobNativeAdClient(
     override suspend fun fetchAdSafe(vararg localExtras: Pair<String, Any>): AdmobNativeAdWrapper {
         runLoadingListeners { it.onAdLoadingStarted(this) }
 
-        var _loadingAd: NativeAd? = null
+        var _currentAdWrapper: AdmobNativeAdWrapper? = null
 
         val loadingAdLocal = CompletableDeferred<LoadingAd>()
 
@@ -107,27 +107,33 @@ class AdMobNativeAdClient(
             }
         }.withAdListener(object : AdListener() {
             override fun onAdClicked() {
-                adMobNativeAdListener.onAdClicked(_loadingAd)
+                _currentAdWrapper?.let { adWrapper ->
+                    adMobNativeAdListener.onAdClicked(adWrapper.ad)
+                    runClickListener { it.onAdClick(this@AdMobNativeAdClient, adWrapper) }
+                }
             }
 
             override fun onAdClosed() {
-                adMobNativeAdListener.onAdClosed(_loadingAd)
+                adMobNativeAdListener.onAdClosed(_currentAdWrapper?.ad)
             }
 
             override fun onAdImpression() {
-                adMobNativeAdListener.onAdImpression(_loadingAd)
+                _currentAdWrapper?.let { adWrapper ->
+                    adMobNativeAdListener.onAdImpression(_currentAdWrapper?.ad)
+                    runRevenueListener { it.onAdRevenuePaid(this@AdMobNativeAdClient, adWrapper) }
+                }
             }
 
             override fun onAdLoaded() {
-                //adMobNativeAdListener.onAdLoaded(_loadingAd)
+                // will be called with deffered
             }
 
             override fun onAdOpened() {
-                adMobNativeAdListener.onAdOpened(_loadingAd)
+                adMobNativeAdListener.onAdOpened(_currentAdWrapper?.ad)
             }
 
             override fun onAdSwipeGestureClicked() {
-                adMobNativeAdListener.onAdSwipeGestureClicked(_loadingAd)
+                adMobNativeAdListener.onAdSwipeGestureClicked(_currentAdWrapper?.ad)
             }
 
             override fun onAdFailedToLoad(adError: LoadAdError) {
@@ -141,6 +147,8 @@ class AdMobNativeAdClient(
             //        .build()
             //)
             .build()
+
+        runLoadingListeners { it.onAdLoadingStarted(this@AdMobNativeAdClient) }
 
         loader.loadAd(
             AdRequest.Builder()
@@ -225,15 +233,15 @@ class AdMobNativeAdClient(
         //}
         when (result) {
             is LoadingAd.Failure -> {
-                _loadingAd = null
+                _currentAdWrapper = null
+                val error = AdMobAdLoadException(result.error)
+                runLoadingListeners { it.onAdLoadingFailed(this@AdMobNativeAdClient, error) }
                 adMobNativeAdListener.onAdFailedToLoad(result.error)
-                throw AdMobAdLoadException(result.error)
+                throw error
             }
 
             is LoadingAd.Success -> {
                 Log.i("AdMobNativeAdClient", "fetchAd success")
-
-                _loadingAd = result.ad
 
                 val adWrapper = AdmobNativeAdWrapper(
                     ad = result.ad,
@@ -242,31 +250,12 @@ class AdMobNativeAdClient(
                     adViewRenderer = adViewRenderer,
                 )
 
+                _currentAdWrapper = adWrapper
+
                 runLoadingListeners { it.onAdLoadingFinished(this, adWrapper) }
                 addLoadedAd(adWrapper)
                 return adWrapper
             }
         }
-
-
     }
-
-    /*
-    private fun findOrCreateAdWrapper(ad: MaxAd): AdmobNativeAdWrapper {
-        return findAdOrNull { it.ad === ad }
-            ?: AdmobNativeAdWrapper(
-                ad = ad,
-                loader = loader,
-                renderListener = null,
-                viewPool = adViewPool,
-                loadedAt = Date(),
-            )
-    }
-     */
 }
-
-/*
-private fun MaxAd.getNativeAdModerationResult(): AdResult {
-    return AppHarbr.shouldBlockNativeAd(AdSdk.MAX, this, null, adUnitId)
-}
- */
