@@ -24,7 +24,7 @@ class MyAdMobNativeAdViewRenderer : AdMobNativeAdViewRenderer {
             nativeAd.mediaContent?.aspectRatio?.let { ratio ->
                 mediaView.updateLayoutParams {
                     (this as? ConstraintLayout.LayoutParams)?.let {
-                        it.dimensionRatio = ratio.toString()
+                        it.dimensionRatio = "$ratio:1"
                     } ?: this
                 }
             }
