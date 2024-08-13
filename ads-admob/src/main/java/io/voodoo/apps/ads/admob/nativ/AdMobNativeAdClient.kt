@@ -83,7 +83,7 @@ class AdMobNativeAdClient(
 
     override fun destroyAd(ad: AdmobNativeAdWrapper) {
         Log.w("AdClient", "destroyAd ${ad.id}")
-        //loader.destroy(ad.ad)
+        ad.ad.destroy()
     }
 
     /** see https://developers.applovin.com/en/android/ad-formats/native-ads#templates */
@@ -118,10 +118,7 @@ class AdMobNativeAdClient(
             }
 
             override fun onAdImpression() {
-                _currentAdWrapper?.let { adWrapper ->
-                    adMobNativeAdListener.onAdImpression(_currentAdWrapper?.ad)
-                    runRevenueListener { it.onAdRevenuePaid(this@AdMobNativeAdClient, adWrapper) }
-                }
+                adMobNativeAdListener.onAdImpression(_currentAdWrapper?.ad)
             }
 
             override fun onAdLoaded() {
@@ -244,11 +241,17 @@ class AdMobNativeAdClient(
                 Log.i("AdMobNativeAdClient", "fetchAd success")
 
                 val adWrapper = AdmobNativeAdWrapper(
+                    adUnit = config.adUnit,
                     ad = result.ad,
                     loadedAt = Date(),
                     viewPool = adViewPool,
                     adViewRenderer = adViewRenderer,
                 )
+
+                adWrapper.ad.setOnPaidEventListener { adValue ->
+                    adWrapper.revenue = adValue
+                    runRevenueListener { it.onAdRevenuePaid(this@AdMobNativeAdClient, adWrapper) }
+                }
 
                 _currentAdWrapper = adWrapper
 

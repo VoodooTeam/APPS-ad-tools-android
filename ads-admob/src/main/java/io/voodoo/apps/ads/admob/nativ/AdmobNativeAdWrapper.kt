@@ -2,6 +2,7 @@ package io.voodoo.apps.ads.admob.nativ
 
 import android.view.View
 import android.view.ViewGroup
+import com.google.android.gms.ads.AdValue
 import com.google.android.gms.ads.nativead.NativeAd
 import com.google.android.gms.ads.nativead.NativeAdView
 import io.voodoo.apps.ads.api.model.Ad
@@ -12,13 +13,19 @@ import java.util.Date
 
 class AdmobNativeAdWrapper internal constructor(
     val ad: NativeAd,
+    private val adUnit: String,
     internal val viewPool: AdMobNativeAdViewPool,
     internal val adViewRenderer: AdMobNativeAdViewRenderer,
     override val loadedAt: Date,
 ) : Ad.Native() {
 
+    internal var revenue: AdValue? = null
+
     override val id: Id = ad.id
-    override val info: Info = ad.buildInfo()
+    override val info: Info = ad.buildInfo(
+        adUnit = adUnit,
+        revenue = revenue,
+    )
 
     override val moderationResult: ModerationResult = ModerationResult.UNKNOWN // TODO
 
