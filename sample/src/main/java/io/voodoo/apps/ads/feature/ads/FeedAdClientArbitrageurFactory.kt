@@ -3,6 +3,7 @@ package io.voodoo.apps.ads.feature.ads
 import android.app.Activity
 import androidx.activity.ComponentActivity
 import io.voodoo.apps.ads.MockData
+import io.voodoo.apps.ads.admob.nativ.AdMobNativeAdClient
 import io.voodoo.apps.ads.api.AdClient
 import io.voodoo.apps.ads.api.AdClientArbitrageur
 import io.voodoo.apps.ads.api.model.Ad
@@ -12,6 +13,8 @@ import io.voodoo.apps.ads.applovin.nativ.MaxNativeAdClient
 import io.voodoo.apps.ads.applovin.plugin.amazon.AmazonMaxMRECAdClientPlugin
 import io.voodoo.apps.ads.feature.ads.nativ.MaxNativeAdRenderListener
 import io.voodoo.apps.ads.feature.ads.nativ.MaxNativeAdViewFactory
+import io.voodoo.apps.ads.feature.ads.nativ.admob.MyAdMobNativeAdViewFactory
+import io.voodoo.apps.ads.feature.ads.nativ.admob.MyAdMobNativeAdViewRenderer
 import kotlin.time.Duration.Companion.seconds
 
 class FeedAdClientArbitrageurFactory {
@@ -24,8 +27,9 @@ class FeedAdClientArbitrageurFactory {
     fun create(activity: ComponentActivity): AdClientArbitrageur {
         return AdClientArbitrageur(
             clients = listOf(
-                createNativeClient(activity),
-                createMRECClient(activity),
+                createAdmobNativeClient(activity),
+                //git createNativeClient(activity),
+                //git createMRECClient(activity),
             ),
             backoffConfig = BackoffConfig(
                 maxDelay = 30.seconds,
@@ -37,6 +41,21 @@ class FeedAdClientArbitrageurFactory {
             it.addAdRevenueListener(adTracker)
             it.addAdModerationListener(adTracker)
         }
+    }
+
+    private fun createAdmobNativeClient(activity: Activity) : AdClient<Ad.Native> {
+        return AdMobNativeAdClient(
+            config = AdClient.Config(
+                adCacheSize = 1,
+                adUnit = MockData.ADMOB_TEST_AD,
+                placement = "feed"
+            ),
+            activity = activity,
+            adViewFactory = MyAdMobNativeAdViewFactory(),
+            adViewRenderer = MyAdMobNativeAdViewRenderer(),
+            // Provide extras via here if more convenient than the UI
+            localExtrasProviders = emptyList(),
+        )
     }
 
     private fun createNativeClient(activity: Activity): AdClient<Ad.Native> {
