@@ -1,14 +1,14 @@
 [versions]
-agp = "8.4.1"
-kotlin = "1.9.0"
-androidx-appCompat = "1.6.1"
-androidx-activity-compose = "1.9.0"
+agp = "8.4.2"
+kotlin = "1.9.25"
+androidx-appCompat = "1.7.0"
+androidx-activity-compose = "1.9.2"
 androidx-constraintLayout = "2.1.4"
-androidx-compose-bom = "2024.05.00"
+androidx-compose-bom = "2024.09.00"
 androidx-compose-compiler = "1.5.1"
 androidx-core = "1.13.1"
-androidx-lifecycle = "2.8.1"
-androidx-navigation = "2.7.7"
+androidx-lifecycle = "2.8.5"
+androidx-navigation = "2.8.0"
 retrofit = "2.11.0"
 
 [libraries]
@@ -41,7 +41,7 @@ androidx-material3 = { group = "androidx.compose.material3", name = "material3" 
 # Misc for demo app
 retrofit-core = { group = "com.squareup.retrofit2", name = "retrofit", version.ref = "retrofit" }
 retrofit-converter-serializer = { group = "com.squareup.retrofit2", name = "converter-kotlinx-serialization", version.ref = "retrofit" }
-coil = "io.coil-kt:coil-compose:2.6.0"
+coil = "io.coil-kt:coil-compose:2.7.0"
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }
