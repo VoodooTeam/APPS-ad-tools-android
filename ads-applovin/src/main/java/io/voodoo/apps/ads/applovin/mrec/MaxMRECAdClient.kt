@@ -28,6 +28,7 @@ import io.voodoo.apps.ads.applovin.util.MaxDummyAd
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
+import java.util.Date
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 
@@ -38,7 +39,7 @@ class MaxMRECAdClient(
     localExtrasProviders: List<LocalExtrasProvider> = emptyList(),
 ) : BaseAdClient<MaxMRECAdWrapper, Ad.MREC>(config = config) {
 
-    private val type: Ad.Type = Ad.Type.MREC
+    override val adType: Ad.Type = Ad.Type.MREC
 
     private val useModeration by lazy { AppHarbr.isInitialized() }
     private val appharbrListener: AHListener
@@ -70,6 +71,7 @@ class MaxMRECAdClient(
     }
 
     override fun destroyAd(ad: MaxMRECAdWrapper) {
+        Log.w("AdClient", "destroyAd ${ad.id}")
         if (useModeration) {
             AppHarbr.removeBannerView(ad.view)
         }
@@ -78,8 +80,8 @@ class MaxMRECAdClient(
     }
 
     /** see https://developers.applovin.com/en/android/ad-formats/banner-mrec-ads/ */
-    override suspend fun fetchAd(vararg localExtras: Pair<String, Any>): MaxMRECAdWrapper {
-        runLoadingListeners { it.onAdLoadingStarted(type) }
+    override suspend fun fetchAdSafe(vararg localExtras: Pair<String, Any>): MaxMRECAdWrapper {
+        runLoadingListeners { it.onAdLoadingStarted(this) }
 
         val reusedAd = getReusableAd()
         val view = reusedAd?.view ?: createView(activity).apply {
@@ -98,7 +100,11 @@ class MaxMRECAdClient(
                     val callback = object : DefaultMaxAdViewAdListener() {
                         override fun onAdLoaded(ad: MaxAd) {
                             maxAdViewListener.remove(this)
-                            val adWrapper = MaxMRECAdWrapper(ad = ad, view = view)
+                            val adWrapper = MaxMRECAdWrapper(
+                                ad = ad,
+                                view = view,
+                                loadedAt = Date(),
+                            )
                             try {
                                 continuation.resume(adWrapper)
                             } catch (e: Exception) {
@@ -135,13 +141,14 @@ class MaxMRECAdClient(
             } catch (e: MaxAdLoadException) {
                 Log.e("MaxMRECAdClient", "Failed to load ad", e)
                 runPlugin { it.onAdLoadException(view, e.error) }
-                runLoadingListeners { it.onAdLoadingFailed(type, e) }
+                runLoadingListeners { it.onAdLoadingFailed(this@MaxMRECAdClient, e) }
 
                 // Keep reused ad instead of destroying it
                 // If none, add to pool with a MaxDummyAd to re-use the same view next call
                 val ad = reusedAd ?: MaxMRECAdWrapper(
                     ad = MaxDummyAd(adUnit = config.adUnit, format = MaxAdFormat.MREC),
-                    view = view
+                    view = view,
+                    loadedAt = Date(),
                 )
                 addLoadedAd(ad, isAlreadyServed = reusedAd != null)
 
@@ -151,14 +158,15 @@ class MaxMRECAdClient(
 
         runPlugin { it.onAdLoaded(view, ad) }
         Log.i("MaxMRECAdClient", "fetchAd success")
-        runLoadingListeners { it.onAdLoadingFinished(ad) }
         addLoadedAd(ad)
+        runLoadingListeners { it.onAdLoadingFinished(this, ad) }
         return ad
     }
 
     private suspend fun createView(activity: Activity): MaxAdView {
         return withContext(Dispatchers.Main.immediate) {
             MaxAdView(config.adUnit, MaxAdFormat.MREC, activity).apply {
+                val view = this
                 val widthPx = AppLovinSdkUtils.dpToPx(activity, 300)
                 val heightPx = AppLovinSdkUtils.dpToPx(activity, 250)
                 layoutParams = ViewGroup.LayoutParams(widthPx, heightPx)
@@ -166,11 +174,27 @@ class MaxMRECAdClient(
                 setBackgroundColor(Color.TRANSPARENT)
                 setListener(maxAdViewListener)
                 setRevenueListener { ad ->
-                    val adWrapper = findAdOrNull { it.ad === ad }
-                        ?: MaxMRECAdWrapper(ad, this)
-
-                    runRevenueListener { it.onAdRevenuePaid(adWrapper) }
+                    val adWrapper = findOrCreateAdWrapper(ad, view)
+                    adWrapper.markAsPaidInternal()
+                    runRevenueListener {
+                        it.onAdRevenuePaid(this@MaxMRECAdClient, adWrapper)
+                    }
                 }
+
+                // Re-wrap the multi listener with another layer to have a specific AdClick listener
+                // because we need the view instance to call findOrCreateWrapperAd :facepalm:
+                val wrappedListener = MultiMaxAdViewAdListener().apply {
+                    add(object : DefaultMaxAdViewAdListener() {
+                        override fun onAdClicked(ad: MaxAd) {
+                            val adWrapper = findOrCreateAdWrapper(ad, view)
+                            runClickListener { it.onAdClick(this@MaxMRECAdClient, adWrapper) }
+                        }
+                    })
+                    add(maxAdViewListener)
+                }
+                setListener(wrappedListener)
+
+                config.placement?.let { placement = it }
 
                 if (useModeration) {
                     AppHarbr.addBannerView(
@@ -187,6 +211,10 @@ class MaxMRECAdClient(
     // TODO: the ad value could change before apphrbr listener call
     //  thus calling this listener with incorrect ad
     private fun markAdAsBlocked(view: MaxAdView, reasons: Array<AdBlockReason>) {
+        Log.e(
+            "MaxMRECAdClient",
+            "Ad blocked: ${reasons.joinToString { it.reason }}"
+        )
         val ad = findAdOrNull { it.view === view } ?: return
 
         // Ad was already moderated, drop event
@@ -196,7 +224,8 @@ class MaxMRECAdClient(
             blockReasons.addAll(reasons)
         }
         ad.apphrbrModerationResult = moderationResult
-        runModerationListener { it.onAdBlocked(ad) }
+        runModerationListener { it.onAdBlocked(this, ad) }
+        checkAndNotifyAvailableAdCountChanges()
     }
 
     private inline fun runPlugin(body: (MaxMRECAdClientPlugin) -> Unit) {
@@ -208,5 +237,14 @@ class MaxMRECAdClient(
                 Log.e("MaxMRECAdClient", "Failed to run plugin", e)
             }
         }
+    }
+
+    private fun findOrCreateAdWrapper(ad: MaxAd, view: MaxAdView): MaxMRECAdWrapper {
+        return findAdOrNull { it.ad === ad }
+            ?: MaxMRECAdWrapper(
+                ad = ad,
+                view = view,
+                loadedAt = Date(),
+            )
     }
 }

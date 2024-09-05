@@ -13,7 +13,7 @@ import io.voodoo.apps.ads.applovin.mrec.MaxMRECAdWrapper
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 
-class AmazonMRECAdClientPlugin(
+class AmazonMaxMRECAdClientPlugin(
     private val amazonSlotId: String
 ) : MaxMRECAdClientPlugin {
 

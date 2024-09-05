@@ -124,6 +124,10 @@ of `LazyListScope.items` that takes a `adMediator: LazyListAdMediator` parameter
 ## Integration steps
 
 * Add SDK dependencies (see Setup section above)
+* Add the content of the [compose compiler stability config file](compose-compiler-config.conf) to
+  your file
+    *
+  See https://developer.android.com/develop/ui/compose/performance/stability/fix#configuration-file
 * Check sample `AdsInitiliazer` + https://developers.applovin.com/en/android/overview/integration/
   for reference
 * Add the dependency for each network in your app module (not in the `ads` module, cf above)

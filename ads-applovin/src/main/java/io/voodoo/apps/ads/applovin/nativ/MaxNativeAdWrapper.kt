@@ -16,6 +16,7 @@ import io.voodoo.apps.ads.applovin.util.buildInfo
 import io.voodoo.apps.ads.applovin.util.id
 import io.voodoo.apps.ads.applovin.util.removeFromParent
 import io.voodoo.apps.ads.applovin.util.toModerationResult
+import java.util.Date
 
 class MaxNativeAdWrapper internal constructor(
     val ad: MaxAd,
@@ -23,6 +24,7 @@ class MaxNativeAdWrapper internal constructor(
     internal val renderListener: MaxNativeAdRenderListener?,
     internal val viewPool: MaxNativeAdViewPool,
     internal val apphrbrModerationResult: AdResult? = null,
+    override val loadedAt: Date,
 ) : Ad.Native() {
 
     override val id: Id = ad.id
@@ -42,9 +44,12 @@ class MaxNativeAdWrapper internal constructor(
     }
 
     override fun render(parent: View) {
+        // safety in case the view is already render (shouldn't happen, but be safe)
+        release()
         require(parent is ViewGroup) { "parent is not a ViewGroup" }
 
         val view = viewPool.getOrCreate(parent.context)
+            .also { this.view = it }
         parent.addView(view)
 
         renderListener?.onPreRender(this, view)
@@ -63,6 +68,10 @@ class MaxNativeAdWrapper internal constructor(
                 Log.e("MaxNativeAdWrapper", "media not displayed (height = 0)")
             }
         }
+    }
+
+    internal fun markAsPaidInternal() {
+        super.markAsRevenuePaid()
     }
 
     override fun release() {

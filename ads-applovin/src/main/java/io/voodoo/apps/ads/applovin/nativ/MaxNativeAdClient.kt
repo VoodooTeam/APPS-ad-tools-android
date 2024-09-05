@@ -21,6 +21,7 @@ import io.voodoo.apps.ads.applovin.listener.MultiMaxNativeAdListener
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
+import java.util.Date
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 
@@ -33,7 +34,7 @@ class MaxNativeAdClient(
     localExtrasProviders: List<LocalExtrasProvider> = emptyList(),
 ) : BaseAdClient<MaxNativeAdWrapper, Ad.Native>(config = config) {
 
-    private val type: Ad.Type = Ad.Type.NATIVE
+    override val adType: Ad.Type = Ad.Type.NATIVE
 
     private val maxNativeAdListener = MultiMaxNativeAdListener()
 
@@ -50,13 +51,24 @@ class MaxNativeAdClient(
         require(appLovinSdk.isInitialized) { "AppLovin instance not initialized" }
         loader.setNativeAdListener(maxNativeAdListener)
         loader.setRevenueListener { ad ->
-            val adWrapper = findAdOrNull { it.ad === ad }
-                ?: MaxNativeAdWrapper(ad, loader, null, adViewPool)
-
-            runRevenueListener { it.onAdRevenuePaid(adWrapper) }
+            val adWrapper = findOrCreateAdWrapper(ad)
+            runRevenueListener { it.onAdRevenuePaid(this, adWrapper) }
         }
 
+        maxNativeAdListener.add(object : MaxNativeAdListener() {
+            override fun onNativeAdExpired(ad: MaxAd) {
+                // ad expired, can't be served anymore
+                checkAndNotifyAvailableAdCountChanges()
+            }
+
+            override fun onNativeAdClicked(ad: MaxAd) {
+                val adWrapper = findOrCreateAdWrapper(ad)
+                runClickListener { it.onAdClick(this@MaxNativeAdClient, adWrapper) }
+            }
+        })
+
         (activity as? LifecycleOwner)?.lifecycle?.let(::registerToLifecycle)
+        config.placement?.let { loader.placement = it }
     }
 
     fun addMaxNativeAdListener(listener: MaxNativeAdListener) {
@@ -73,12 +85,13 @@ class MaxNativeAdClient(
     }
 
     override fun destroyAd(ad: MaxNativeAdWrapper) {
+        Log.w("AdClient", "destroyAd ${ad.id}")
         loader.destroy(ad.ad)
     }
 
     /** see https://developers.applovin.com/en/android/ad-formats/native-ads#templates */
-    override suspend fun fetchAd(vararg localExtras: Pair<String, Any>): MaxNativeAdWrapper {
-        runLoadingListeners { it.onAdLoadingStarted(type) }
+    override suspend fun fetchAdSafe(vararg localExtras: Pair<String, Any>): MaxNativeAdWrapper {
+        runLoadingListeners { it.onAdLoadingStarted(this) }
 
         val reusedAd = getReusableAd()
 
@@ -92,6 +105,7 @@ class MaxNativeAdClient(
                             maxNativeAdListener.remove(this)
                             val adWrapper = MaxNativeAdWrapper(
                                 ad = ad,
+                                loadedAt = Date(),
                                 loader = loader,
                                 renderListener = renderListener,
                                 viewPool = adViewPool,
@@ -136,7 +150,7 @@ class MaxNativeAdClient(
                 }
             } catch (e: MaxAdLoadException) {
                 Log.e("MaxNativeAdClient", "Failed to load ad", e)
-                runLoadingListeners { it.onAdLoadingFailed(type, e) }
+                runLoadingListeners { it.onAdLoadingFailed(this@MaxNativeAdClient, e) }
 
                 // Keep reused ad instead of destroying it
                 reusedAd?.let { addLoadedAd(it, isAlreadyServed = true) }
@@ -145,14 +159,27 @@ class MaxNativeAdClient(
             }
         }
 
+        reusedAd?.let(::destroyAd)
+
         if (ad.isBlocked) {
-            runModerationListener { it.onAdBlocked(ad) }
+            runModerationListener { it.onAdBlocked(this, ad) }
         }
 
         Log.i("MaxNativeAdClient", "fetchAd success")
-        runLoadingListeners { it.onAdLoadingFinished(ad) }
         addLoadedAd(ad)
+        runLoadingListeners { it.onAdLoadingFinished(this, ad) }
         return ad
+    }
+
+    private fun findOrCreateAdWrapper(ad: MaxAd): MaxNativeAdWrapper {
+        return findAdOrNull { it.ad === ad }
+            ?: MaxNativeAdWrapper(
+                ad = ad,
+                loader = loader,
+                renderListener = null,
+                viewPool = adViewPool,
+                loadedAt = Date(),
+            )
     }
 }
 

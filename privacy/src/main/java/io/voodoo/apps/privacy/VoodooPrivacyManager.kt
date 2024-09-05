@@ -24,6 +24,7 @@ import io.voodoo.apps.privacy.config.CmpVendorHelper
 import io.voodoo.apps.privacy.config.SourcepointConfiguration
 import io.voodoo.apps.privacy.model.VoodooPrivacyConsent
 import org.json.JSONObject
+import java.lang.ref.WeakReference
 
 /**
  *
@@ -39,14 +40,19 @@ class VoodooPrivacyManager(
     private var onStatusUpdate: ((ConsentStatus) -> Unit)? = null
 ) : DefaultLifecycleObserver {
 
-    init {
-        lifecycleOwner.lifecycle.addObserver(this)
-    }
-
     private var doNotSellDataEnabled = false
     private var forceAutoShow = false
     private var consentStatus: ConsentStatus = ConsentStatus.NA
     private var receivedConsent: SPConsents? = null
+    private var isInitializing = false
+
+    init {
+        lifecycleOwner.lifecycle.addObserver(this)
+        if (weakRefConsent?.get() != null)
+            receivedConsent = weakRefConsent?.get()!!
+    }
+
+
     private val cmpConfig: SpConfig = config {
         accountId = sourcepointConfiguration.accountId
         propertyId = sourcepointConfiguration.propertyId
@@ -139,6 +145,11 @@ class VoodooPrivacyManager(
      * Initialize the consent manager and download the FTL message
      */
     fun initializeConsent() {
+        if ((isPrivacyInitialized && receivedConsent != null) || isInitializing) {
+            return
+        }
+
+        isInitializing = true
         loadMessage()
     }
 
@@ -181,7 +192,7 @@ class VoodooPrivacyManager(
         this.onError = onError
     }
 
-    private fun getPrivacyConsent(): VoodooPrivacyConsent {
+    fun getPrivacyConsent(): VoodooPrivacyConsent {
         return VoodooPrivacyConsent(
             adConsent = CmpPurposeHelper.get(CmpPurpose.STORE_AND_ACCESS_INFO_ON_DEVICE) &&
                     CmpPurposeHelper.get(CmpPurpose.USE_LIMITED_DATA_TO_SELECT_ADVERTISING) &&
@@ -247,11 +258,16 @@ class VoodooPrivacyManager(
         } else
             status
         onStatusUpdate?.invoke(consentStatus)
+        if (status == ConsentStatus.RECEIVED || status == ConsentStatus.ERROR) {
+            isInitializing = false
+            if (status == ConsentStatus.RECEIVED) isPrivacyInitialized = true
+        }
     }
 
     fun clearConsent() {
         clearAllData(context = currentActivity)
         receivedConsent = null
+        weakRefConsent?.clear()
         setConsentStatus(ConsentStatus.NA)
     }
 
@@ -283,6 +299,7 @@ class VoodooPrivacyManager(
             onError?.invoke(error)
         }
 
+        @Deprecated("Will be removed in next version of SP")
         override fun onMessageReady(message: JSONObject) {
 
         }
@@ -290,6 +307,10 @@ class VoodooPrivacyManager(
         override fun onConsentReady(consent: SPConsents) {
             processConsent(consent)
             receivedConsent = consent
+            if (weakRefConsent?.get() == null) {
+                weakRefConsent = WeakReference(consent)
+            }
+
             setConsentStatus(ConsentStatus.RECEIVED)
             onConsentReceived?.invoke(getPrivacyConsent())
         }
@@ -317,6 +338,11 @@ class VoodooPrivacyManager(
         UI_SHOWN,
         ERROR,
         RECEIVED
+    }
+
+    companion object {
+        var isPrivacyInitialized = false
+        var weakRefConsent: WeakReference<SPConsents>? = null
     }
 }
 

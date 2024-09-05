@@ -5,6 +5,7 @@ import io.voodoo.apps.ads.api.AdClientArbitrageur
 
 // wrapper for compose stability
 @Immutable
+@Deprecated("Use compose config file instead for stability")
 class AdClientArbitrageurHolder(val arbitrageur: AdClientArbitrageur) {
 
     override fun equals(other: Any?): Boolean {

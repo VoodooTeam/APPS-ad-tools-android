@@ -1,6 +1,7 @@
 package io.voodoo.apps.ads.feature.ads
 
 import android.util.Log
+import io.voodoo.apps.ads.api.AdClient
 import io.voodoo.apps.ads.api.listener.AdLoadingListener
 import io.voodoo.apps.ads.api.listener.AdModerationListener
 import io.voodoo.apps.ads.api.listener.AdRevenueListener
@@ -11,25 +12,25 @@ class AdTracker(
     private val mrecAdUnit: String,
 ) : AdLoadingListener, AdRevenueListener, AdModerationListener {
 
-    override fun onAdLoadingStarted(type: Ad.Type) {
-        track(AD_LOADING_STARTED, type, null)
+    override fun onAdLoadingStarted(adClient: AdClient<*>) {
+        track(AD_LOADING_STARTED, adClient.adType, null)
         startTimedEvent(AD_LOADING_FINISHED)
         startTimedEvent(AD_LOADING_FAILED)
     }
 
-    override fun onAdLoadingFailed(type: Ad.Type, exception: Exception) {
-        track(AD_LOADING_FAILED, type, null)
+    override fun onAdLoadingFailed(adClient: AdClient<*>, exception: Exception) {
+        track(AD_LOADING_FAILED, adClient.adType, null)
     }
 
-    override fun onAdLoadingFinished(ad: Ad) {
+    override fun onAdLoadingFinished(adClient: AdClient<*>, ad: Ad) {
         track(AD_LOADING_FINISHED, ad.type, ad.info)
     }
 
-    override fun onAdBlocked(ad: Ad) {
+    override fun onAdBlocked(adClient: AdClient<*>, ad: Ad) {
         track(AD_LOADING_BLOCKED, ad.type, ad.info)
     }
 
-    override fun onAdRevenuePaid(ad: Ad) {
+    override fun onAdRevenuePaid(adClient: AdClient<*>, ad: Ad) {
         track(AD_WATCHED, ad.type, ad.info)
     }
 
