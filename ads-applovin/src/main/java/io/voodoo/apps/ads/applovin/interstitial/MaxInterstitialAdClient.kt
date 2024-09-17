@@ -96,15 +96,14 @@ class MaxInterstitialAdClient(
         }
 
         (activity as? LifecycleOwner)?.lifecycle?.let(::registerToLifecycle)
+    }
 
+    fun addMaxAdListener(listener: MaxAdListener) {
+        maxAdListener.add(listener)
+    }
 
-        fun addMaxAdListener(listener: MaxAdListener) {
-            maxAdListener.add(listener)
-        }
-
-        fun removeMaxAdListener(listener: MaxAdListener) {
-            maxAdListener.remove(listener)
-        }
+    fun removeMaxAdListener(listener: MaxAdListener) {
+        maxAdListener.remove(listener)
     }
 
     override fun close() {
