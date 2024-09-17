@@ -266,5 +266,5 @@ class MaxInterstitialAdClient(
 }
 
 private fun MaxInterstitialAd.getInterstitialAdModerationResult(): AdResult {
-    return AppHarbr.getRewardedResult(this)
+    return AppHarbr.getInterstitialResult(this)
 }
