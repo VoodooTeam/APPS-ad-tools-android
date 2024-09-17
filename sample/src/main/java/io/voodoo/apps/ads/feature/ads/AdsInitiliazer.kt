@@ -39,6 +39,7 @@ class AdsInitiliazer {
                         MockData.NATIVE_AD_UNIT,
                         MockData.MREC_AD_UNIT,
                         MockData.REWARDED_AD_UNIT,
+                        MockData.INTERSTITIAL_AD_UNIT,
                         MockData.BANNER_AD_UNIT
                     )
                 )

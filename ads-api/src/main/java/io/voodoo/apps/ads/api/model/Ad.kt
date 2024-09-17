@@ -59,7 +59,7 @@ sealed class Ad {
     value class Id(val id: String)
 
     enum class Type {
-        NATIVE, MREC, REWARDED
+        NATIVE, MREC, REWARDED, INTERSTITIAL
     }
 
     // Implem
@@ -80,5 +80,11 @@ sealed class Ad {
 
         override val type: Type
             get() = Type.REWARDED
+    }
+
+    abstract class Interstitial : Ad() {
+
+        override val type: Type
+            get() = Type.INTERSTITIAL
     }
 }

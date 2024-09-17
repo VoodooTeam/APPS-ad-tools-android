@@ -48,5 +48,7 @@ private fun ProfileContent(
 ) {
     Column(modifier = modifier) {
         ProfileRewardedAdSection(modifier = modifier.padding(16.dp))
+
+        ProfileInterstitialAdSection(modifier = modifier.padding(16.dp))
     }
 }
