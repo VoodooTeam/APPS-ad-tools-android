@@ -15,7 +15,8 @@ import kotlin.coroutines.suspendCoroutine
 
 // Note: create a new instance for each AdClient
 class AmazonMaxInterstitialAdClientPlugin(
-    private val amazonSlotId: String
+    private val amazonSlotId: String,
+    private val isVideo: Boolean
 ) : MaxInterstitialAdClientPlugin {
 
     private var amazonLoader: DTBAdRequest? = null
@@ -25,9 +26,13 @@ class AmazonMaxInterstitialAdClientPlugin(
 
         // Only run once per MaxInterstitialAd
         if (amazonLoader != null) return
-
+        val sizes = if (isVideo) {
+            DTBAdSize.DTBVideo(320, 480, amazonSlotId)
+        } else {
+            DTBAdSize.DTBInterstitialAdSize(amazonSlotId)
+        }
         val amazonLoader = DTBAdRequest().also {
-            it.setSizes(DTBAdSize.DTBVideo(320, 480, amazonSlotId))
+            it.setSizes(sizes)
         }.also { this.amazonLoader = it }
 
         suspendCoroutine {
