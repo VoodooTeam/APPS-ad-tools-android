@@ -3,9 +3,9 @@ ext {
     TARGET_SDK = 34
     COMPILE_SDK = 34
 
-    APPLOVIN = '12.6.0'
+    APPLOVIN = '12.6.1'
     APPLOVIN_AD_REVIEW = '5.4.5'
-    APPHRBR = '2.20.1'
+    APPHRBR = '2.21.0'
     AMAZON_ADAPTER = '9.9.5.0'
 
     // To know exactly which version of applovin is used in the wrapper SDK, we use the same
