@@ -20,15 +20,15 @@ import io.voodoo.apps.ads.api.model.Ad
 import io.voodoo.apps.ads.applovin.exception.MaxAdLoadException
 import io.voodoo.apps.ads.applovin.listener.DefaultMaxAdListener
 import io.voodoo.apps.ads.applovin.listener.MultiMaxAdListener
-import java.util.Date
-import kotlin.coroutines.resume
-import kotlin.coroutines.resumeWithException
-import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
+import java.util.Date
+import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
+import kotlin.time.Duration.Companion.seconds
 
 @ExperimentalStdlibApi
 class MaxInterstitialAdClient(
@@ -62,8 +62,8 @@ class MaxInterstitialAdClient(
                 null,
                 maxAdListener,
                 (activity as LifecycleOwner).lifecycle
-            ) { _, _, _, reasons ->
-                markAdAsBlocked(reasons)
+            ) { infos ->
+                markAdAsBlocked(infos?.blockReasons.orEmpty())
             }
         } else {
             maxAdListener
@@ -224,7 +224,7 @@ class MaxInterstitialAdClient(
 
     // TODO: the ad value could change before apphrbr listener call
     //  thus calling this listener with incorrect ad
-    private fun markAdAsBlocked(reasons: Array<AdBlockReason>) {
+    private fun markAdAsBlocked(reasons: Array<out AdBlockReason>) {
         Log.e(
             "MaxInterstitialAdClient",
             "Ad blocked: ${reasons.joinToString { it.reason }}"

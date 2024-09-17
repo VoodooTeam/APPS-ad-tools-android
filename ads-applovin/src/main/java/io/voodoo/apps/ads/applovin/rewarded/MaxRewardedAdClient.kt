@@ -66,8 +66,8 @@ class MaxRewardedAdClient(
                 null,
                 maxRewardedAdListener,
                 (activity as LifecycleOwner).lifecycle
-            ) { _, _, _, reasons ->
-                markAdAsBlocked(reasons)
+            ) { infos ->
+                markAdAsBlocked(infos?.blockReasons.orEmpty())
             }
         } else {
             maxRewardedAdListener
@@ -229,7 +229,7 @@ class MaxRewardedAdClient(
 
     // TODO: the ad value could change before apphrbr listener call
     //  thus calling this listener with incorrect ad
-    private fun markAdAsBlocked(reasons: Array<AdBlockReason>) {
+    private fun markAdAsBlocked(reasons: Array<out AdBlockReason>) {
         Log.e(
             "MaxRewardedAdClient",
             "Ad blocked: ${reasons.joinToString { it.reason }}"

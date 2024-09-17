@@ -50,8 +50,11 @@ class MaxMRECAdClient(
     private val maxAdViewListener = MultiMaxAdViewAdListener()
 
     init {
-        appharbrListener = AHListener { view, _, _, reasons ->
-            markAdAsBlocked(view as MaxAdView, reasons)
+        appharbrListener = AHListener { infos ->
+            markAdAsBlocked(
+                view = (infos?.view as? MaxAdView) ?: return@AHListener,
+                reasons = infos.blockReasons
+            )
         }
 
         (activity as? LifecycleOwner)?.lifecycle?.let(::registerToLifecycle)
@@ -210,7 +213,7 @@ class MaxMRECAdClient(
 
     // TODO: the ad value could change before apphrbr listener call
     //  thus calling this listener with incorrect ad
-    private fun markAdAsBlocked(view: MaxAdView, reasons: Array<AdBlockReason>) {
+    private fun markAdAsBlocked(view: MaxAdView, reasons: Array<out AdBlockReason>) {
         Log.e(
             "MaxMRECAdClient",
             "Ad blocked: ${reasons.joinToString { it.reason }}"
