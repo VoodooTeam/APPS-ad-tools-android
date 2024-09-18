@@ -70,8 +70,9 @@ class MaxInterstitialAdClient(
         }
         loader.setListener(loaderListener)
         loader.setRevenueListener { ad ->
-            val adWrapper = findOrCreateAdWrapper(ad)
-            runRevenueListener { it.onAdRevenuePaid(this, adWrapper) }
+            // in wizz this is done in onAdHidden, check what behavior we actually want
+            // this listener is called when the video start playing whereas onAdHidden is called
+            // after the video is closed (after being watched completely)
         }
         maxAdListener.add(object : DefaultMaxAdListener() {
 
@@ -80,6 +81,12 @@ class MaxInterstitialAdClient(
             }
 
             override fun onAdHidden(ad: MaxAd) {
+                val adWrapper = findOrCreateAdWrapper(ad)
+                adWrapper.markAsPaidInternal()
+                runRevenueListener {
+                    it.onAdRevenuePaid(this@MaxInterstitialAdClient, adWrapper)
+                }
+
                 isShowing = false
                 releaseAd(findAdOrNull { true } ?: return)
             }
