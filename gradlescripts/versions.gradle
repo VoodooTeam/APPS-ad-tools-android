@@ -3,15 +3,15 @@ ext {
     TARGET_SDK = 34
     COMPILE_SDK = 34
 
-    APPLOVIN = '12.6.1'
-    APPLOVIN_AD_REVIEW = '5.4.5'
-    APPHRBR = '2.21.0'
-    AMAZON_ADAPTER = '9.9.5.0'
+    APPLOVIN = '13.0.1'
+    APPLOVIN_AD_REVIEW = '5.6.5'
+    APPHRBR = '2.22.1'
+    AMAZON_ADAPTER = '9.10.2.0'
 
     // To know exactly which version of applovin is used in the wrapper SDK, we use the same
     // versioning logic that they use, and concat their version number with ours
     // Same thing for amazon plugin using amazon's adapter (itself using amazon versioning as a base)
-    SDK_VERSION_CODE = "39"
+    SDK_VERSION_CODE = "40"
     SDK_VER = "$APPLOVIN.$SDK_VERSION_CODE"
     SDK_AMAZON_PLUGIN_VER = "$AMAZON_ADAPTER.$SDK_VERSION_CODE"
 }
