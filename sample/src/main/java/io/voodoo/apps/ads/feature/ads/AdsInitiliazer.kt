@@ -69,7 +69,6 @@ class AdsInitiliazer {
         // SDK shouldn't be initialized if we don't have user's consent
         AppLovinPrivacySettings.setHasUserConsent(true, context)
         AppLovinPrivacySettings.setDoNotSell(doNotSellDataEnabled, context)
-        AppLovinPrivacySettings.setIsAgeRestrictedUser(false, context)
     }
 
     private fun initModerationSdk(context: Context) {
