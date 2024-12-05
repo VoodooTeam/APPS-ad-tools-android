@@ -58,7 +58,7 @@ class MaxInterstitialAdClient(
         val loaderListener = if (useModeration) {
             AppHarbr.addInterstitial<MaxAdListener>(
                 AdSdk.MAX,
-                this,
+                loader,
                 null,
                 maxAdListener,
                 (activity as LifecycleOwner).lifecycle

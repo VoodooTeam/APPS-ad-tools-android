@@ -62,7 +62,7 @@ class MaxRewardedAdClient(
         val loaderListener = if (useModeration) {
             AppHarbr.addRewardedAd<MaxRewardedAdListener>(
                 AdSdk.MAX,
-                this,
+                loader,
                 null,
                 maxRewardedAdListener,
                 (activity as LifecycleOwner).lifecycle
