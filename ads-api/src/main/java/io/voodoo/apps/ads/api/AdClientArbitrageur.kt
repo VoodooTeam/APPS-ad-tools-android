@@ -83,6 +83,13 @@ class AdClientArbitrageur(
     }
 
     /**
+     * @return true if any client has an available ad
+     */
+    fun hasAnyRequestInProgress(): Boolean {
+        return clients.any { it.isRequestInProgress() }
+    }
+
+    /**
      * Get an ad for the given [requestId].
      *
      * @return in order of priority:
