@@ -3,8 +3,6 @@ package io.voodoo.apps.ads.feature.ads
 import android.content.Context
 import android.util.Log
 import com.amazon.device.ads.AdRegistration
-import com.amazon.device.ads.DTBAdNetwork
-import com.amazon.device.ads.DTBAdNetworkInfo
 import com.amazon.device.ads.MRAIDPolicy
 import com.appharbr.sdk.configuration.AHSdkConfiguration
 import com.appharbr.sdk.engine.AppHarbr
@@ -24,7 +22,6 @@ class AdsInitiliazer {
     fun init(context: Context, doNotSellDataEnabled: Boolean) {
         // Amazon config
         AdRegistration.getInstance(MockData.AMAZON_APP_KEY, context)
-        AdRegistration.setAdNetworkInfo(DTBAdNetworkInfo(DTBAdNetwork.MAX))
         AdRegistration.setMRAIDSupportedVersions(arrayOf("1.0", "2.0", "3.0"))
         AdRegistration.setMRAIDPolicy(MRAIDPolicy.CUSTOM)
 
@@ -67,9 +64,8 @@ class AdsInitiliazer {
         }
 
         // SDK shouldn't be initialized if we don't have user's consent
-        AppLovinPrivacySettings.setHasUserConsent(true, context)
-        AppLovinPrivacySettings.setDoNotSell(doNotSellDataEnabled, context)
-        AppLovinPrivacySettings.setIsAgeRestrictedUser(false, context)
+        AppLovinPrivacySettings.setHasUserConsent(true)
+        AppLovinPrivacySettings.setDoNotSell(doNotSellDataEnabled)
     }
 
     private fun initModerationSdk(context: Context) {

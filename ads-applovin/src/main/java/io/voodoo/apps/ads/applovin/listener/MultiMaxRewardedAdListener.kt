@@ -43,16 +43,6 @@ internal class MultiMaxRewardedAdListener : MaxRewardedAdListener {
         delegates.forEach { it.onAdDisplayFailed(ad, error) }
     }
 
-    @Deprecated("")
-    override fun onRewardedVideoStarted(ad: MaxAd) {
-        delegates.forEach { it.onRewardedVideoStarted(ad) }
-    }
-
-    @Deprecated("")
-    override fun onRewardedVideoCompleted(ad: MaxAd) {
-        delegates.forEach { it.onRewardedVideoCompleted(ad) }
-    }
-
     override fun onUserRewarded(ad: MaxAd, reward: MaxReward) {
         delegates.forEach { it.onUserRewarded(ad, reward) }
     }

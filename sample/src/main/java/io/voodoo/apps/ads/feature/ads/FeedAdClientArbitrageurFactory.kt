@@ -62,7 +62,7 @@ class FeedAdClientArbitrageurFactory {
                 placement = "feed"
             ),
             activity = activity,
-            plugins = listOf(AmazonMaxMRECAdClientPlugin(MockData.AMAZON_SLOT_ID)),
+            plugins = listOf(AmazonMaxMRECAdClientPlugin(activity.applicationContext, MockData.AMAZON_SLOT_ID)),
             // Provide extras via here if more convenient than the UI
             localExtrasProviders = emptyList(),
         )

@@ -19,13 +19,5 @@ internal open class DefaultMaxRewardedAdListener : MaxRewardedAdListener {
 
     override fun onAdDisplayFailed(ad: MaxAd, error: MaxError) {}
 
-    @Deprecated("")
-    override fun onRewardedVideoStarted(ad: MaxAd) {
-    }
-
-    @Deprecated("")
-    override fun onRewardedVideoCompleted(ad: MaxAd) {
-    }
-
     override fun onUserRewarded(ad: MaxAd, reward: MaxReward) {}
 }

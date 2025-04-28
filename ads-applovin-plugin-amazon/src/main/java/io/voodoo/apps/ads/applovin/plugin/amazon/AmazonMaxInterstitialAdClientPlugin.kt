@@ -1,8 +1,11 @@
 package io.voodoo.apps.ads.applovin.plugin.amazon
 
+import android.content.Context
+import com.amazon.aps.ads.model.ApsAdNetwork
 import com.amazon.device.ads.AdError
 import com.amazon.device.ads.AdRegistration
 import com.amazon.device.ads.DTBAdCallback
+import com.amazon.device.ads.DTBAdNetworkInfo
 import com.amazon.device.ads.DTBAdRequest
 import com.amazon.device.ads.DTBAdResponse
 import com.amazon.device.ads.DTBAdSize
@@ -15,10 +18,12 @@ import kotlin.coroutines.suspendCoroutine
 
 // Note: create a new instance for each AdClient
 class AmazonMaxInterstitialAdClientPlugin(
+    context: Context,
     private val amazonSlotId: String,
     private val isVideo: Boolean
 ) : MaxInterstitialAdClientPlugin {
 
+    private val context = context.applicationContext
     private var amazonLoader: DTBAdRequest? = null
 
     override suspend fun onPreLoadAd(loader: MaxInterstitialAd) {
@@ -31,7 +36,8 @@ class AmazonMaxInterstitialAdClientPlugin(
         } else {
             DTBAdSize.DTBInterstitialAdSize(amazonSlotId)
         }
-        val amazonLoader = DTBAdRequest().also {
+
+        val amazonLoader = DTBAdRequest(context, DTBAdNetworkInfo(ApsAdNetwork.MAX)).also {
             it.setSizes(sizes)
         }.also { this.amazonLoader = it }
 

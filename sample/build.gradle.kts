@@ -11,7 +11,7 @@ plugins {
 
 android {
     namespace = "io.voodoo.apps.ads"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "io.voodoo.apps.ads"
@@ -97,29 +97,29 @@ dependencies {
 
     // Ad networks
     // Supported by apphrbr
-    implementation("com.applovin.mediation:google-adapter:23.2.0.0")
-    implementation("com.applovin.mediation:bidmachine-adapter:2.6.0.1")
-    implementation("com.applovin.mediation:chartboost-adapter:9.7.0.0")
-    implementation("com.applovin.mediation:facebook-adapter:6.17.0.0")
-    implementation("com.applovin.mediation:fyber-adapter:8.2.7.0")
-    implementation("com.applovin.mediation:google-ad-manager-adapter:23.2.0.0")
-    implementation("com.applovin.mediation:inmobi-adapter:10.7.4.0")
-    implementation("com.applovin.mediation:mintegral-adapter:16.6.71.0")
-    implementation("com.applovin.mediation:bytedance-adapter:5.9.0.2.0")
-    implementation("com.applovin.mediation:vungle-adapter:7.3.2.0")
-    implementation("com.bigossp:bigo-ads:4.7.0")
-    implementation("com.bigossp:max-mediation:4.7.0.0")
+    implementation("com.applovin.mediation:google-adapter:23.6.0.3")
+    implementation("com.applovin.mediation:google-ad-manager-adapter:23.6.0.3")
+    implementation("com.applovin.mediation:bidmachine-adapter:3.2.1.0")
+    implementation("com.applovin.mediation:chartboost-adapter:9.8.3.0")
+    implementation("com.applovin.mediation:facebook-adapter:6.18.0.0")
+    implementation("com.applovin.mediation:fyber-adapter:8.3.6.1")
+    implementation("com.applovin.mediation:inmobi-adapter:10.8.2.0")
+    implementation("com.applovin.mediation:mintegral-adapter:16.9.61.0")
+    implementation("com.applovin.mediation:bytedance-adapter:7.1.0.7.0")
+    implementation("com.applovin.mediation:vungle-adapter:7.4.3.0")
+    implementation("com.bigossp:bigo-ads:5.2.1")
+    implementation("com.bigossp:max-mediation:5.2.1.0")
+    implementation("com.applovin.mediation:ironsource-adapter:8.7.0.0.0")
+    implementation("com.applovin.mediation:unityads-adapter:4.14.1.0")
 
     // Not supported
-    implementation("com.applovin.mediation:ironsource-adapter:7.9.0.0.0")
-    implementation("com.applovin.mediation:line-adapter:2024.5.15.0")
-    implementation("com.applovin.mediation:ogury-presage-adapter:5.7.0.0")
-    implementation("com.applovin.mediation:unityads-adapter:4.12.0.0")
-    implementation("com.mobilefuse.sdk:mobilefuse-adapter-applovin:1.7.4.0")
+    implementation("com.applovin.mediation:line-adapter:2025.1.10.2")
+    implementation("com.applovin.mediation:ogury-presage-adapter:6.0.1.1")
+    implementation("com.mobilefuse.sdk:mobilefuse-adapter-applovin:1.9.0.0")
 
     // Sub-dependencies
     implementation("com.google.android.gms:play-services-base:16.1.0") // for chartboost
-    implementation("com.squareup.picasso:picasso:2.71828") // for inmobi
+    implementation("com.squareup.picasso:picasso:2.8") // for inmobi
     implementation("androidx.recyclerview:recyclerview:1.1.0") // for inmobi
 
     // Consent
